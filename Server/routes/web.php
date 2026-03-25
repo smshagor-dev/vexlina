@@ -44,6 +44,7 @@ use App\Http\Controllers\Payment\VoguepayController;
 use App\Http\Controllers\ProductQueryController;
 use App\Http\Controllers\PurchaseHistoryController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReelController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SubscriberController;
@@ -215,6 +216,11 @@ Route::controller(CustomerProductController::class)->group(function () {
     Route::get('/customer-product/{slug}', 'customer_product')->name('customer.product');
 });
 
+Route::controller(ReelController::class)->group(function () {
+    Route::get('/reels', 'index')->name('reels.index');
+    Route::get('/reels/{id}', 'show')->name('reels.show');
+});
+
 // Search
 Route::controller(SearchController::class)->group(function () {
     Route::get('/search', 'index')->name('search');
@@ -371,6 +377,16 @@ Route::group(['middleware' => ['customer', 'verified', 'unbanned']], function ()
         Route::post('/customer_products/published', 'updatePublished')->name('customer_products.published');
         Route::post('/customer_products/status', 'updateStatus')->name('customer_products.update.status');
         Route::get('/customer_products/destroy/{id}', 'destroy')->name('customer_products.destroy');
+    });
+
+    Route::controller(ReelController::class)->group(function () {
+        Route::get('/my-reels', 'dashboard')->name('reels.dashboard');
+        Route::post('/reels', 'store')->name('reels.store');
+        Route::post('/reels/{id}/like', 'toggleLike')->name('reels.like');
+        Route::post('/reels/{id}/save', 'toggleSave')->name('reels.save');
+        Route::post('/reels/{id}/comment', 'storeComment')->name('reels.comment');
+        Route::post('/reels/{id}/share', 'share')->name('reels.share');
+        Route::post('/reels/{id}/delete', 'destroy')->name('reels.destroy');
     });
 
     // Product Review

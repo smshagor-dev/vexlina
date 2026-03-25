@@ -177,60 +177,67 @@ class _LoginState extends State<Login> {
       return;
     }
 
-    var loginResponse = await AuthRepository().getLoginResponse(
-      _loginBy == 'email' ? email : _phone,
-      password,
-      _loginBy,
-      googleRecaptchaKey,
-    );
-    Loading.close();
+    try {
+      var loginResponse = await AuthRepository().getLoginResponse(
+        _loginBy == 'email' ? email : _phone,
+        password,
+        _loginBy,
+        googleRecaptchaKey,
+      );
 
-    temp_user_id.$ = "";
-    temp_user_id.save();
+      temp_user_id.$ = "";
+      temp_user_id.save();
 
-    if (loginResponse.result == false) {
-      if (loginResponse.message is List) {
-        ToastComponent.showDialog(loginResponse.message!.join("\n"));
-      } else {
-        ToastComponent.showDialog(loginResponse.message!.toString());
-      }
-    } else {
-      ToastComponent.showDialog(loginResponse.message!);
-      AuthHelper().setUserData(loginResponse);
-
-      if (OtherConfig.USE_PUSH_NOTIFICATION) {
-        final FirebaseMessaging fcm = FirebaseMessaging.instance;
-        await fcm.requestPermission(
-          alert: true,
-          announcement: false,
-          badge: true,
-          carPlay: false,
-          criticalAlert: false,
-          provisional: false,
-          sound: true,
-        );
-        String? fcmToken = await fcm.getToken();
-        if (fcmToken != null && is_logged_in.$) {
-          await ProfileRepository().getDeviceTokenUpdateResponse(fcmToken);
-        }
-      }
-
-      if (loginResponse.user!.emailVerified!) {
-        if (!mounted) return;
-        context.go("/");
-      } else {
-        if ((mail_verification_status.$ && _loginBy == "email") ||
-            (mail_verification_status.$ && _loginBy == "phone")) {
-          if (!mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Otp()),
-          );
+      if (loginResponse.result == false) {
+        if (loginResponse.message is List) {
+          ToastComponent.showDialog(loginResponse.message!.join("\n"));
         } else {
+          ToastComponent.showDialog(loginResponse.message!.toString());
+        }
+      } else {
+        ToastComponent.showDialog(loginResponse.message!);
+        AuthHelper().setUserData(loginResponse);
+
+        if (OtherConfig.USE_PUSH_NOTIFICATION) {
+          final FirebaseMessaging fcm = FirebaseMessaging.instance;
+          await fcm.requestPermission(
+            alert: true,
+            announcement: false,
+            badge: true,
+            carPlay: false,
+            criticalAlert: false,
+            provisional: false,
+            sound: true,
+          );
+          String? fcmToken = await fcm.getToken();
+          if (fcmToken != null && is_logged_in.$) {
+            await ProfileRepository().getDeviceTokenUpdateResponse(fcmToken);
+          }
+        }
+
+        if (loginResponse.user!.emailVerified!) {
           if (!mounted) return;
           context.go("/");
+        } else {
+          if ((mail_verification_status.$ && _loginBy == "email") ||
+              (mail_verification_status.$ && _loginBy == "phone")) {
+            if (!mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Otp()),
+            );
+          } else {
+            if (!mounted) return;
+            context.go("/");
+          }
         }
       }
+    } catch (_) {
+      ToastComponent.showDialog(
+        "Login request failed or timed out. Please try again.",
+      );
+    } finally {
+      Loading.close();
     }
   }
 
@@ -276,11 +283,13 @@ class _LoginState extends State<Login> {
   }
 
   onPressedGoogleLogin() async {
+    Loading.show(context);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
       if (googleUser == null) {
         log("Google sign in was cancelled.");
+        Loading.close();
         return;
       }
 
@@ -313,7 +322,9 @@ class _LoginState extends State<Login> {
       }
     } on Exception catch (e) {
       log("Google login error: $e");
+      ToastComponent.showDialog("Google login failed. Please try again.");
     } finally {
+      Loading.close();
       if (await GoogleSignIn().isSignedIn()) {
         GoogleSignIn().disconnect();
       }

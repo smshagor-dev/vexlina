@@ -19,9 +19,11 @@ import 'package:active_ecommerce_cms_demo_app/screens/classified_ads/my_classifi
 import 'package:active_ecommerce_cms_demo_app/screens/coupon/coupons.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/digital_product/digital_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/filter.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/lottery.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/last_view_product.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/top_selling_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/refund_request.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/reals.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/settings.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/wholesales_screen.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/wishlist/widgets/page_animation.dart';
@@ -861,21 +863,28 @@ class _ProfileState extends State<Profile> {
 
   Widget buildSettingAndAddonsHorizontalMenu() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       margin: EdgeInsets.only(top: 14),
       width: DeviceInfo(context).width,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xffEEF1F5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
 
       child: LayoutBuilder(
         builder: (context, constraints) {
           const int crossAxisCount = 3;
-          const double mainAxisSpacing = 0.0;
-          const double crossAxisSpacing = 0.0;
-
-          const double childAspectRatio = 1.4;
+          const double mainAxisSpacing = 10.0;
+          const double crossAxisSpacing = 10.0;
+          const double childAspectRatio = 1.1;
 
           double itemWidth =
               (constraints.maxWidth -
@@ -999,6 +1008,18 @@ class _ProfileState extends State<Profile> {
                       : () => null,
                 ),
               ),
+            Container(
+              child: buildSettingAndAddonsHorizontalMenuItem(
+                "assets/campaigns.png",
+                "Lottery",
+                () {
+                  Navigator.push(
+                    context,
+                    PageAnimation.fadeRoute(const LotteryScreen()),
+                  );
+                },
+              ),
+            ),
 
             Container(
               child: buildSettingAndAddonsHorizontalMenuItem(
@@ -1041,6 +1062,22 @@ class _ProfileState extends State<Profile> {
                     : () => null,
               ),
             ),
+            Container(
+              child: buildSettingAndAddonsHorizontalMenuItem(
+                "assets/shorts_logo.png",
+                "Upload reels",
+                is_logged_in.$
+                    ? () {
+                        Navigator.push(
+                          context,
+                          PageAnimation.fadeRoute(
+                            const RealsScreen(openComposerOnLoad: true),
+                          ),
+                        );
+                      }
+                    : () => null,
+              ),
+            ),
           ];
 
           return Wrap(
@@ -1065,6 +1102,14 @@ class _ProfileState extends State<Profile> {
     String text,
     Function() onTap,
   ) {
+    final bool isLoggedIn = is_logged_in.$;
+    final Color iconColor = isLoggedIn
+        ? const Color(0xff344054)
+        : const Color(0xff98A2B3);
+    final Color textColor = isLoggedIn
+        ? const Color(0xff344054)
+        : const Color(0xff98A2B3);
+
     return Container(
       alignment: Alignment.center,
       child: InkWell(
@@ -1073,27 +1118,37 @@ class _ProfileState extends State<Profile> {
             : () {
                 showLoginWarning();
               },
+        borderRadius: BorderRadius.circular(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              img,
-              width: 16,
-              height: 16,
-              color: is_logged_in.$
-                  ? MyTheme.dark_font_grey
-                  : MyTheme.medium_grey_50,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xffF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xffEAECF0)),
+              ),
+              alignment: Alignment.center,
+              child: Image.asset(
+                img,
+                width: 18,
+                height: 18,
+                color: iconColor,
+              ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 8),
             Text(
               text,
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: is_logged_in.$
-                    ? MyTheme.dark_font_grey
-                    : MyTheme.medium_grey_50,
+                color: textColor,
                 fontSize: 11.5,
+                height: 1.25,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

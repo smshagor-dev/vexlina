@@ -29,6 +29,7 @@ class HomePresenter extends ChangeNotifier {
   List<AIZSlider> carouselImageList = [];
   List<AIZSlider> bannerOneImageList = [];
   List<AIZSlider> bannerTwoImageList = [];
+  List<AIZSlider> bannerThreeImageList = [];
   List<AIZSlider> flashDealBannerImageList = [];
 
   /// Flash Deal
@@ -44,6 +45,7 @@ class HomePresenter extends ChangeNotifier {
   List<Category> featuredCategoryList = [];
 
   /// Products
+  List<Product> todaysDealProductList = [];
   List<Product> featuredProductList = [];
   List<Product> newArrivalProductList = [];
   List<Product> allProductList = [];
@@ -54,9 +56,11 @@ class HomePresenter extends ChangeNotifier {
   bool isBannerOneInitial = true;
   bool isFlashDealInitial = true;
   bool isBannerTwoInitial = true;
+  bool isBannerThreeInitial = true;
   bool isBannerFlashDeal = true;
 
   bool isFeaturedProductInitial = true;
+  bool isTodaysDealProductInitial = true;
   bool isNewArrivalInitial = true;
   bool isAllProductInitial = true;
 
@@ -84,7 +88,9 @@ class HomePresenter extends ChangeNotifier {
     fetchCarouselImages();
     fetchBannerOneImages();
     fetchBannerTwoImages();
+    fetchBannerThreeImages();
     fetchFeaturedCategories();
+    fetchTodaysDealProducts();
     fetchFeaturedProducts();
     fetchNewArrivalProducts();
     fetchAllProducts();
@@ -131,6 +137,17 @@ class HomePresenter extends ChangeNotifier {
     notifyListeners();
   }
 
+  fetchTodaysDealProducts() async {
+    try {
+      var res = await ProductRepository().getTodaysDealProducts();
+      todaysDealProductList = res.products ?? [];
+      isTodaysDealProductInitial = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Today's deal product error: $e");
+    }
+  }
+
   /// ================= SLIDERS =================
 
   fetchCarouselImages() async {
@@ -151,6 +168,13 @@ class HomePresenter extends ChangeNotifier {
     var res = await SlidersRepository().getBannerTwoImages();
     bannerTwoImageList = res.sliders ?? [];
     isBannerTwoInitial = false;
+    notifyListeners();
+  }
+
+  fetchBannerThreeImages() async {
+    var res = await SlidersRepository().getBannerThreeImages();
+    bannerThreeImageList = res.sliders ?? [];
+    isBannerThreeInitial = false;
     notifyListeners();
   }
 
@@ -234,14 +258,18 @@ class HomePresenter extends ChangeNotifier {
     carouselImageList.clear();
     bannerOneImageList.clear();
     bannerTwoImageList.clear();
+    bannerThreeImageList.clear();
     featuredCategoryList.clear();
     flashDealList.clear();
     flashDealBannerImageList.clear();
+    todaysDealProductList.clear();
 
     isCarouselInitial = true;
     isBannerOneInitial = true;
     isBannerTwoInitial = true;
+    isBannerThreeInitial = true;
     isCategoryInitial = true;
+    isTodaysDealProductInitial = true;
 
     resetFeaturedProductList();
     resetNewArrivalProductList();
@@ -279,11 +307,16 @@ class HomePresenter extends ChangeNotifier {
 
   mainScrollListener() {
     mainScrollController.addListener(() {
-      if (mainScrollController.position.pixels ==
-          mainScrollController.position.maxScrollExtent) {
+      final hasMoreProducts = totalAllProductData != allProductList.length;
+      final reachedBottom =
+          mainScrollController.position.pixels >=
+          (mainScrollController.position.maxScrollExtent - 24);
+
+      if (reachedBottom && hasMoreProducts && !showAllLoadingContainer) {
         allProductPage++;
         ToastComponent.showDialog("More Products Loading...");
         showAllLoadingContainer = true;
+        notifyListeners();
         fetchAllProducts();
       }
     });

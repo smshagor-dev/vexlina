@@ -1,3 +1,5 @@
+import 'dart:async';
+
 // ignore_for_file: file_names
 
 import 'package:active_ecommerce_cms_demo_app/helpers/main_helpers.dart';
@@ -7,6 +9,8 @@ import 'package:active_ecommerce_cms_demo_app/repositories/aiz_api_response.dart
 import 'package:http/http.dart' as http;
 
 class ApiRequest {
+  static const Duration _timeout = Duration(seconds: 30);
+
   static Future<http.Response> get({
     required String url,
     Map<String, String>? headers,
@@ -19,7 +23,7 @@ class ApiRequest {
     if (headers != null) {
       headerMap.addAll(headers);
     }
-    var response = await http.get(uri, headers: headerMap);
+    var response = await http.get(uri, headers: headerMap).timeout(_timeout);
     return AIZApiResponse.check(
       response,
       middleware: middleware,
@@ -40,7 +44,9 @@ class ApiRequest {
     if (headers != null) {
       headerMap.addAll(headers);
     }
-    var response = await http.post(uri, headers: headerMap, body: body);
+    var response = await http
+        .post(uri, headers: headerMap, body: body)
+        .timeout(_timeout);
     return AIZApiResponse.check(
       response,
       middleware: middleware,
@@ -60,7 +66,8 @@ class ApiRequest {
     if (headers != null) {
       headerMap.addAll(headers);
     }
-    var response = await http.delete(uri, headers: headerMap);
+    var response =
+        await http.delete(uri, headers: headerMap).timeout(_timeout);
     return AIZApiResponse.check(
       response,
       middleware: middleware,

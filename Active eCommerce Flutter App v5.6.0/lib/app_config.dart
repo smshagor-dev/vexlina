@@ -18,7 +18,7 @@ class AppConfig {
   static bool app_language_rtl = false;
   //configure this
   static const bool HTTPS =
-      false; //if you are using localhost , set this to false
+      true; //if you are using localhost , set this to false
   static const DOMAIN_PATH =
       "vexlina.com"; //use only domain name without http:// or https://
   //do not configure these below

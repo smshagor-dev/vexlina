@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Middleware\EnsureSystemKey;
+use App\Http\Controllers\Api\V2\ReelController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SteadfastWebhookController;
 
@@ -200,6 +201,29 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
         Route::post('profile/update-image', 'App\Http\Controllers\Api\V2\ProfileController@updateImage')->middleware('auth:sanctum');
         Route::post('profile/image-upload', 'App\Http\Controllers\Api\V2\ProfileController@imageUpload')->middleware('auth:sanctum');
         Route::post('profile/check-phone-and-email', 'App\Http\Controllers\Api\V2\ProfileController@checkIfPhoneAndEmailAvailable')->middleware('auth:sanctum');
+        Route::get('reals/my-permissions', [ReelController::class, 'myPermissions'])->middleware('auth:sanctum');
+        Route::get('reals/my-posts', [ReelController::class, 'myPosts'])->middleware('auth:sanctum');
+        Route::post('reals/store', [ReelController::class, 'store'])->middleware('auth:sanctum');
+        Route::delete('reals/{id}', [ReelController::class, 'destroy'])->middleware('auth:sanctum');
+        Route::post('reals/{id}/like', [ReelController::class, 'toggleLike'])->middleware('auth:sanctum');
+        Route::post('reals/{id}/save', [ReelController::class, 'toggleSave'])->middleware('auth:sanctum');
+        Route::post('reals/{id}/comment', [ReelController::class, 'storeComment'])->middleware('auth:sanctum');
+        Route::post('reals/{id}/share', [ReelController::class, 'recordShare'])->middleware('auth:sanctum');
+        Route::get('lottery/my-summary', [LotteryController::class, 'mySummary'])
+            ->middleware('auth:sanctum')
+            ->withoutMiddleware([EnsureSystemKey::class]);
+        Route::get('lottery/tickets', [LotteryController::class, 'tickets'])
+            ->middleware('auth:sanctum')
+            ->withoutMiddleware([EnsureSystemKey::class]);
+        Route::get('lottery/tickets/{ticketNumber}', [LotteryController::class, 'ticketDetails'])
+            ->middleware('auth:sanctum')
+            ->withoutMiddleware([EnsureSystemKey::class]);
+        Route::get('lottery/wins', [LotteryController::class, 'wins'])
+            ->middleware('auth:sanctum')
+            ->withoutMiddleware([EnsureSystemKey::class]);
+        Route::post('lottery/wins/{winnerId}/claim', [LotteryController::class, 'claimPrize'])
+            ->middleware('auth:sanctum')
+            ->withoutMiddleware([EnsureSystemKey::class]);
 
         Route::post('file/image-upload', 'App\Http\Controllers\Api\V2\FileController@imageUpload')->middleware('auth:sanctum');
         Route::get('file-all', 'App\Http\Controllers\Api\V2\FileController@index')->middleware('auth:sanctum');
@@ -225,7 +249,7 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
             Route::get('notifications/mark-as-read', 'notificationMarkAsRead')->middleware('auth:sanctum');
         });
 
-        Route::get('products/last-viewed', [ProductController::class, 'lastViewedProducts'])->middleware('auth:sanctum');
+    Route::get('products/last-viewed', [ProductController::class, 'lastViewedProducts'])->middleware('auth:sanctum');
     });
 
     //end user bann
@@ -244,10 +268,18 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
         Route::get('classified/related-products/{slug}', 'relatedProducts');
         Route::get('classified/product-details/{slug}', 'productDetails');
     });
+    Route::get('reals', [ReelController::class, 'index']);
+    Route::get('reals/{id}', [ReelController::class, 'show']);
+    Route::get('reals/{id}/comments', [ReelController::class, 'comments']);
+    Route::post('reals/{id}/view', [ReelController::class, 'recordView']);
 
 
 
     Route::get('seller/top', 'App\Http\Controllers\Api\V2\SellerController@topSellers');
+    Route::withoutMiddleware([EnsureSystemKey::class])->group(function () {
+        Route::get('lottery/ping', [LotteryController::class, 'ping']);
+        Route::get('lottery/overview', [LotteryController::class, 'overview']);
+    });
 
     Route::apiResource('banners', 'App\Http\Controllers\Api\V2\BannerController')->only('index');
 

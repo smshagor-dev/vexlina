@@ -193,12 +193,7 @@ class AuthController extends Controller
                 })
                 ->first();
         }
-        // if (!$delivery_boy_condition) {
-        if (!$delivery_boy_condition && !$seller_condition) {
-            if (\App\Utility\PayhereUtility::create_wallet_reference($request->identity_matrix) == false) {
-                return response()->json(['result' => false, 'message' => 'Identity matrix error', 'user' => null], 401);
-            }
-        }
+        // Temporarily skip identity_matrix validation for app login flow.
 
         if ($user != null) {
             if (!$user->banned) {
@@ -275,10 +270,29 @@ class AuthController extends Controller
             return response()->json(['result' => false, 'message' => translate('No social provider matches'), 'user' => null]);
         }
 
-        if ($request->social_provider == 'twitter') {
-            $social_user_details = $social_user->userFromTokenAndSecret($request->access_token, $request->secret_token);
-        } else {
-            $social_user_details = $social_user->userFromToken($request->access_token);
+        try {
+            if ($request->social_provider == 'twitter') {
+                $social_user_details = $social_user->userFromTokenAndSecret($request->access_token, $request->secret_token);
+            } else {
+                $social_user_details = $social_user->userFromToken($request->access_token);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Social login failed', [
+                'social_provider' => $request->social_provider,
+                'provider' => $request->provider,
+                'email' => $request->email,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'result' => false,
+                'message' => $request->social_provider === 'google'
+                    ? 'Google login configuration error'
+                    : translate('Social login failed'),
+                'user' => null
+            ], 500);
         }
 
         if ($social_user_details == null) {

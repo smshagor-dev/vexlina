@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../helpers/shimmer_helper.dart';
 import '../presenter/home_presenter.dart';
-import '../ui_elements/product_card_black.dart';
+import '../ui_elements/home_product_card.dart';
 
 class HomeAllProducts2 extends StatelessWidget {
   final HomePresenter homeData;
@@ -21,27 +20,33 @@ class HomeAllProducts2 extends StatelessWidget {
         ),
       );
     } else if (homeData.allProductList.isNotEmpty) {
-      return MasonryGridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 14.h,
-        crossAxisSpacing: 14.w,
+      return GridView.builder(
         itemCount: homeData.allProductList.length,
         shrinkWrap: true,
         cacheExtent: 500,
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 14.h,
+          crossAxisSpacing: 14.w,
+          childAspectRatio: 0.56,
+        ),
         itemBuilder: (context, index) {
           final product = homeData.allProductList[index];
-          return ProductCardBlack(
+          return HomeProductCard(
             id: product.id,
             slug: product.slug ?? product.id.toString(),
+            width: double.infinity,
             image: product.thumbnailImage,
             name: product.name,
             mainPrice: product.mainPrice,
             strokedPrice: product.strokedPrice,
-            hasDiscount: product.hasDiscount??false,
+            hasDiscount: product.hasDiscount ?? false,
             discount: product.discount,
             isWholesale: product.isWholesale,
+            rating: product.rating ?? 0,
+            reviewCount: product.reviewCount ?? 0,
           );
         },
       );

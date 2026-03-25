@@ -8,19 +8,20 @@ import 'package:active_ecommerce_cms_demo_app/presenter/home_presenter.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/filter.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/flash_deal/flash_deal_list.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/todays_deal_products.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/product/home_section_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/top_selling_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/top_sellers.dart';
 import 'package:flutter/material.dart';
-import '../custom/featured_product_horizontal_list_widget.dart';
 import '../custom/home_all_products_2.dart';
 import '../custom/home_banner_one.dart';
-import '../custom/home_banner_two.dart';
+import '../custom/home_banner_three.dart';
 import '../custom/home_carousel_slider.dart';
 import '../custom/home_search_box.dart';
-import '../custom/new_arrival_horizontal_list_widget.dart';
 import '../custom/pirated_widget.dart';
-import '../data_model/flash_deal_response.dart';
+import '../data_model/flash_deal_response.dart' hide Product;
+import '../data_model/product_mini_response.dart' show Product;
 import '../single_banner/sincle_banner_page.dart';
+import '../ui_elements/home_product_card.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class Home extends StatefulWidget {
@@ -80,150 +81,140 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         child: SafeArea(
           child: Scaffold(
             backgroundColor: Colors.white,
-            body: Stack(
-              children: [
-                RefreshIndicator(
-                  color: MyTheme.accent_color,
-                  backgroundColor: Colors.white,
-                  onRefresh: _fetchData,
-                  displacement: 0,
-                  child: CustomScrollView(
-                    controller: homeData.mainScrollController,
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    slivers: <Widget>[
-                      SliverAppBar(
-                        floating: false,
-                        snap: false,
-                        pinned: true,
-                        backgroundColor: Colors.white,
-                        elevation: 0,
-                        scrolledUnderElevation: 0.0,
-                        automaticallyImplyLeading: false,
-                        toolbarHeight: 50.h,
-                        title: Padding(
-                          padding: EdgeInsets.zero,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const Filter(),
-                                ),
-                              );
-                            },
-                            child: HomeSearchBox(context: context),
-                          ),
-                        ),
-                      ),
-
-                      SliverList(
-                        delegate: SliverChildListDelegate([
-                          if (AppConfig.purchase_code == "")
-                            PiratedWidget(homeData: homeData),
-                          const SizedBox(height: 0),
-                          ListenableBuilder(
-                            listenable: homeData,
-                            builder: (context, child) => HomeCarouselSlider(
-                              homeData: homeData,
-                              context: context,
+            body: RefreshIndicator(
+              color: MyTheme.accent_color,
+              backgroundColor: Colors.white,
+              onRefresh: _fetchData,
+              displacement: 0,
+              child: CustomScrollView(
+                controller: homeData.mainScrollController,
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: <Widget>[
+                  SliverAppBar(
+                    floating: false,
+                    snap: false,
+                    pinned: true,
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    scrolledUnderElevation: 0.0,
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 50.h,
+                    title: Padding(
+                      padding: EdgeInsets.zero,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const Filter(),
                             ),
-                          ),
-                          SizedBox(height: 8.h),
-                        ]),
-                      ),
-
-                      // Sticky Menu
-                      ListenableBuilder(
-                        listenable: homeData,
-                        builder: (context, child) {
-                          return SliverPersistentHeader(
-                            pinned: true,
-                            delegate: StickyMenuDelegate(homeData: homeData),
                           );
                         },
+                        child: HomeSearchBox(context: context),
                       ),
-                      //Featured Products under sticky menu
-                      ListenableBuilder(
-                        listenable: homeData,
-                        builder: (context, child) =>
-                            _buildFeaturedProductsSection(context, homeData),
-                      ),
-                      //Second banner
-                      SliverList(
-                        delegate: SliverChildListDelegate([
-                          SizedBox(height: 5.h),
-                          ListenableBuilder(
-                            listenable: homeData,
-                            builder: (context, child) => HomeBannerOne(
-                              context: context,
-                              homeData: homeData,
-                            ),
-                          ),
-                        ]),
-                      ),
-                      ListenableBuilder(
-                        listenable: homeData,
-                        builder: (context, child) =>
-                            _buildNewArrivalSection(context, homeData),
-                      ),
-                      SliverList(
-                        delegate: SliverChildListDelegate([
-                          ListenableBuilder(
-                            listenable: homeData,
-                            builder: (context, child) => HomeBannerTwo(
-                              context: context,
-                              homeData: homeData,
-                            ),
-                          ),
-                        ]),
-                      ),
-
-                      //Flash Deal
-                      ListenableBuilder(
-                        listenable: homeData,
-                        builder: (context, child) {
-                          final featuredDeal = homeData.getFeaturedFlashDeal();
-                          final bool hasActiveFlashDeal =
-                              featuredDeal != null &&
-                              featuredDeal.date != null &&
-                              DateTime.fromMillisecondsSinceEpoch(
-                                featuredDeal.date! * 1000,
-                              ).isAfter(DateTime.now());
-
-                          if (!hasActiveFlashDeal) {
-                            return const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            );
-                          }
-
-                          return _buildFlashDealSection(context, homeData);
-                        },
-                      ),
-                      //Single Banner
-                      const SliverList(
-                        delegate: SliverChildListDelegate.fixed([
-                          PhotoWidget(),
-                        ]),
-                      ),
-                      //All Products
-                      ListenableBuilder(
-                        listenable: homeData,
-                        builder: (context, child) =>
-                            _buildAllProductsSection(context, homeData),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ListenableBuilder(
+
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      if (AppConfig.purchase_code == "")
+                        PiratedWidget(homeData: homeData),
+                      const SizedBox(height: 0),
+                      ListenableBuilder(
+                        listenable: homeData,
+                        builder: (context, child) => HomeCarouselSlider(
+                          homeData: homeData,
+                          context: context,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                    ]),
+                  ),
+
+                  // Sticky Menu
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) {
+                      return SliverPersistentHeader(
+                        pinned: true,
+                        delegate: StickyMenuDelegate(homeData: homeData),
+                      );
+                    },
+                  ),
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
+                        _buildTodaysDealSection(context, homeData),
+                  ),
+                  //Second banner
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      SizedBox(height: 5.h),
+                      ListenableBuilder(
+                        listenable: homeData,
+                        builder: (context, child) => HomeBannerOne(
+                          context: context,
+                          homeData: homeData,
+                        ),
+                      ),
+                    ]),
+                  ),
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
+                        _buildFeaturedProductsSection(context, homeData),
+                  ),
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
+                        _buildInlineBannerSection(context, homeData),
+                  ),
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
+                        _buildNewArrivalSection(context, homeData),
+                  ),
+                  //Flash Deal
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) {
+                      final featuredDeal = homeData.getFeaturedFlashDeal();
+                      final bool hasActiveFlashDeal =
+                          featuredDeal != null &&
+                          featuredDeal.date != null &&
+                          DateTime.fromMillisecondsSinceEpoch(
+                            featuredDeal.date! * 1000,
+                          ).isAfter(DateTime.now());
+
+                      if (!hasActiveFlashDeal) {
+                        return const SliverToBoxAdapter(
+                          child: SizedBox.shrink(),
+                        );
+                      }
+
+                      return _buildFlashDealSection(context, homeData);
+                    },
+                  ),
+                  //Single Banner
+                  const SliverList(
+                    delegate: SliverChildListDelegate.fixed([
+                      PhotoWidget(),
+                    ]),
+                  ),
+                  //All Products
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
+                        _buildAllProductsSection(context, homeData),
+                  ),
+                  ListenableBuilder(
                     listenable: homeData,
                     builder: (context, child) =>
                         _buildProductLoadingContainer(context, homeData),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -299,32 +290,196 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  SliverList _buildTodaysDealSection(
+    BuildContext context,
+    HomePresenter homeData,
+  ) {
+    return _buildProductShowcaseSection(
+      context,
+      title: AppLocalizations.of(context)!.todays_deal_ucf,
+      products: homeData.todaysDealProductList,
+      isLoading: homeData.isTodaysDealProductInitial,
+      onViewAll: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TodaysDealProducts()),
+        );
+      },
+    );
+  }
+
   SliverList _buildFeaturedProductsSection(
+    BuildContext context,
+    HomePresenter homeData,
+  ) {
+    return _buildProductShowcaseSection(
+      context,
+      title: AppLocalizations.of(context)!.featured_products_ucf,
+      products: homeData.featuredProductList,
+      isLoading: homeData.isFeaturedProductInitial,
+      onViewAll: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeSectionProducts(
+              title: 'Featured Products',
+              type: HomeSectionType.featured,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  SliverList _buildInlineBannerSection(
     BuildContext context,
     HomePresenter homeData,
   ) {
     return SliverList(
       delegate: SliverChildListDelegate([
         Container(
-          color: Color(0xffF2F1F6),
+          color: const Color(0xffF2F1F6),
+          child: HomeBannerThree(homeData: homeData),
+        ),
+      ]),
+    );
+  }
+
+  SliverList _buildNewArrivalSection(
+    BuildContext context,
+    HomePresenter homeData,
+  ) {
+    return _buildProductShowcaseSection(
+      context,
+      title: AppLocalizations.of(context)!.new_arrival_ucf,
+      products: homeData.newArrivalProductList,
+      isLoading: homeData.isNewArrivalInitial,
+      onViewAll: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeSectionProducts(
+              title: 'New Arrival',
+              type: HomeSectionType.newArrival,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  SliverList _buildProductShowcaseSection(
+    BuildContext context, {
+    required String title,
+    required List<Product> products,
+    required bool isLoading,
+    required VoidCallback onViewAll,
+  }) {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        Container(
+          color: const Color(0xffF2F1F6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 12.h, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.featured_products_ucf,
-                  style: MyTheme.homeText_heding(),
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title, style: MyTheme.homeText_heding()),
+                    GestureDetector(
+                      onTap: onViewAll,
+                      child: Row(
+                        children: [
+                          Text(
+                            'View All',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xff475467),
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12.sp,
+                            color: const Color(0xff475467),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 8.h, 0.w, 0),
-                child: FeaturedProductHorizontalListWidget(homeData: homeData),
+                padding: EdgeInsets.fromLTRB(16.w, 8.h, 0, 0),
+                child: _buildProductStrip(products, isLoading),
               ),
             ],
           ),
         ),
       ]),
+    );
+  }
+
+  Widget _buildProductStrip(List<Product> products, bool isLoading) {
+    if (isLoading) {
+      return Row(
+        children: List.generate(
+          3,
+          (index) => Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: index == 2 ? 16.w : 12.w),
+              child: ShimmerHelper().buildBasicShimmer(
+                height: 250.h,
+                width: 152.w,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (products.isEmpty) {
+      return SizedBox(
+        height: 110.h,
+        child: Center(
+          child: Text(
+            AppLocalizations.of(context)!.no_product_is_available,
+            style: TextStyle(color: MyTheme.font_grey),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 286.h,
+      child: ListView.separated(
+        padding: EdgeInsets.only(right: 16.w),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        itemCount: products.length,
+        separatorBuilder: (context, index) => SizedBox(width: 12.w),
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return HomeProductCard(
+            id: product.id,
+            slug: product.slug ?? product.id.toString(),
+            image: product.thumbnailImage,
+            name: product.name,
+            mainPrice: product.mainPrice,
+            strokedPrice: product.strokedPrice,
+            hasDiscount: product.hasDiscount,
+            isWholesale: product.isWholesale,
+            discount: product.discount,
+            rating: product.rating ?? 0,
+            reviewCount: product.reviewCount ?? 0,
+          );
+        },
+      ),
     );
   }
 
@@ -355,49 +510,25 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  SliverList _buildNewArrivalSection(
+  SliverToBoxAdapter _buildProductLoadingContainer(
     BuildContext context,
     HomePresenter homeData,
   ) {
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        Container(
-          color: const Color(0xffF2F1F6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 12.h, 0, 0),
-                child: Text(
-                  AppLocalizations.of(context)!.new_arrival_ucf,
-                  style: MyTheme.homeText_heding(),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 8.h, 0, 0),
-                child: NewArrivalHorizontalListWidget(homeData: homeData),
-              ),
-            ],
-          ),
-        ),
-      ]),
-    );
-  }
+    final bool hasMoreProducts =
+        homeData.totalAllProductData != homeData.allProductList.length;
 
-  Widget _buildProductLoadingContainer(
-    BuildContext context,
-    HomePresenter homeData,
-  ) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      height: homeData.showAllLoadingContainer ? 36.h : 0,
-      width: double.infinity,
-      color: Colors.white,
-      child: Center(
-        child: Text(
-          homeData.totalAllProductData == homeData.allProductList.length
-              ? AppLocalizations.of(context)!.no_more_products_ucf
-              : AppLocalizations.of(context)!.loading_more_products_ucf,
+    return SliverToBoxAdapter(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: homeData.showAllLoadingContainer ? 36.h : 0,
+        width: double.infinity,
+        color: const Color(0xffF2F1F6),
+        child: Center(
+          child: Text(
+            hasMoreProducts
+                ? AppLocalizations.of(context)!.loading_more_products_ucf
+                : AppLocalizations.of(context)!.no_more_products_ucf,
+          ),
         ),
       ),
     );
@@ -429,21 +560,21 @@ class _HomeMenu extends StatelessWidget {
           ),
           child: SizedBox(
             height: 42.h,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.w),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 5,
-                itemBuilder: (context, index) {
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: Row(
+                children: List.generate(5, (index) {
                   return Padding(
-                    padding: EdgeInsets.only(right: 10.w),
+                    padding: EdgeInsets.only(right: index == 4 ? 0 : 12.w),
                     child: ShimmerHelper().buildBasicShimmer(
                       height: 42.h,
                       width: 112.w,
-                      radius: 14.r,
+                      radius: 20.r,
                     ),
                   );
-                },
+                }),
               ),
             ),
           ),
@@ -472,64 +603,73 @@ class _HomeMenu extends StatelessWidget {
         ),
         child: SizedBox(
           height: 42.h,
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 6.w),
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            itemCount: menuItems.length,
-            itemBuilder: (context, index) {
-              final item = menuItems[index];
-              Color containerColor;
-              Color textAndIconColor;
-              BoxBorder? border;
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            child: Row(
+              children: List.generate(menuItems.length, (index) {
+                final item = menuItems[index];
 
-              if (index == 0) {
-                containerColor = const Color(0xff0F172A);
-                textAndIconColor = Colors.white;
-                border = null;
-              } else if (index == 1) {
-                containerColor = MyTheme.accent_color;
-                textAndIconColor = Colors.white;
-                border = null;
-              } else {
-                containerColor = const Color(0xffF7F8FA);
-                textAndIconColor = const Color(0xff263140);
-                border = Border.all(color: const Color(0xffE6E8EC));
-              }
+                Color containerColor;
+                Color textAndIconColor;
+                BoxBorder? border;
 
-              return GestureDetector(
-                onTap: item['onTap'],
-                child: Container(
-                  margin: EdgeInsets.only(right: 10.w),
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  constraints: BoxConstraints(minWidth: 116.w),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14.r),
-                    color: containerColor,
-                    border: border,
+                if (index == 0) {
+                  containerColor = const Color(0xff0F172A);
+                  textAndIconColor = Colors.white;
+                  border = null;
+                } else if (index == 1) {
+                  containerColor = MyTheme.accent_color;
+                  textAndIconColor = Colors.white;
+                  border = null;
+                } else {
+                  containerColor = Colors.white;
+                  textAndIconColor = const Color(0xff263140);
+                  border = Border.all(color: const Color(0xffE6E8EC));
+                }
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index == menuItems.length - 1 ? 0 : 12.w,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        item['image'],
-                        color: textAndIconColor,
-                        height: 16.w,
-                        width: 16.w,
+                  child: GestureDetector(
+                    onTap: item['onTap'],
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 10.h,
                       ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        item['title'],
-                        style: TextStyle(
-                          color: textAndIconColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10.5.sp,
-                        ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        color: containerColor,
+                        border: border,
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            item['image'],
+                            color: textAndIconColor,
+                            height: 16.w,
+                            width: 16.w,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            item['title'],
+                            style: TextStyle(
+                              color: textAndIconColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10.5.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              }),
+            ),
           ),
         ),
       ),
