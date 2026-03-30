@@ -116,7 +116,6 @@ class CartRepository {
         "id": "$id",
         "variant": variant,
         "quantity": "$quantity",
-        "cost_matrix": AppConfig.purchase_code,
         "temp_user_id": temp_user_id.$,
       });
     } else {
@@ -125,7 +124,6 @@ class CartRepository {
         "variant": variant,
         "user_id": "$userId",
         "quantity": "$quantity",
-        "cost_matrix": AppConfig.purchase_code,
       });
     }
 

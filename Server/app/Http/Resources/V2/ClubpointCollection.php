@@ -31,7 +31,9 @@ class ClubpointCollection extends ResourceCollection
     {
         return [
             'success' => true,
-            'status' => 200
+            'status' => 200,
+            'exchange_rate' => (double) get_setting('club_point_convert_rate'),
+            'exchange_wallet_amount' => 1,
         ];
     }
 }

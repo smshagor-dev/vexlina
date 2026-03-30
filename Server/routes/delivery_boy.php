@@ -55,6 +55,7 @@ Route::group(['middleware' => ['user', 'verified', 'unbanned', 'prevent-back-his
 
     Route::controller(DeliveryBoyController::class)->group(function () {
         Route::get('/delivery-boy/order-detail/{id}', 'order_detail')->name('delivery-boy.order-detail');
+        Route::post('/delivery-boy/orders/verify-delivery', 'verify_delivery')->name('delivery-boy.orders.verify_delivery');
     });
     
 });

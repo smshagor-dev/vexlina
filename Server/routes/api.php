@@ -64,6 +64,7 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
             Route::get('deliveries/cancelled/{id}', 'cancelled_delivery')->middleware('auth:sanctum');
             Route::get('deliveries/picked_up/{id}', 'picked_up_delivery')->middleware('auth:sanctum');
             Route::post('change-delivery-status', 'change_delivery_status')->middleware('auth:sanctum');
+            Route::post('orders/verify-delivery', 'verify_delivery')->middleware('auth:sanctum');
             Route::get('deliveries/on_the_way/{id}', 'on_the_way_delivery')->middleware('auth:sanctum');
             //Delivery Boy Order
             Route::get('purchase-history-details/{id}', [DeliveryBoyController::class, 'details'])->middleware('auth:sanctum');

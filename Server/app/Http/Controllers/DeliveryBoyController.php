@@ -9,6 +9,7 @@ use App\Models\DeliveryBoyCollection;
 use App\Models\DeliveryBoyPayment;
 use App\Models\DeliveryHistory;
 use App\Models\Order;
+use App\Services\OrderDeliveryVerificationService;
 use App\Models\State;
 use App\Models\User;
 use Auth;
@@ -18,8 +19,11 @@ use Illuminate\Http\Request;
 
 class DeliveryBoyController extends Controller
 {
+    protected OrderDeliveryVerificationService $orderDeliveryVerificationService;
+
     public function __construct()
     {
+        $this->orderDeliveryVerificationService = new OrderDeliveryVerificationService();
         // Staff Permission Check
         $this->middleware(['permission:view_all_delivery_boy'])->only('index');
         $this->middleware(['permission:add_delivery_boy'])->only('create');
@@ -376,6 +380,24 @@ class DeliveryBoyController extends Controller
     {
         $order = Order::findOrFail(decrypt($id));
         return view('delivery_boys.order_detail', compact('order'));
+    }
+
+    public function verify_delivery(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer',
+            'verification_code' => 'required|string',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+        $result = $this->orderDeliveryVerificationService->verify(
+            $order,
+            $request->verification_code,
+            Auth::user(),
+            'web'
+        );
+
+        return response()->json($result, $result['status'] ?? 200);
     }
 
     /**

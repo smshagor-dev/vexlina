@@ -50,6 +50,8 @@ class DeliveryBoyPurchaseHistoryMiniCollection extends ResourceCollection
                     'date' => Carbon::createFromFormat('Y-m-d H:i:s',$data->delivery_history_date)->format('d-m-Y'),
                     'cancel_request' => $data->cancel_request == 1,
                     'delivery_history_date' => $data->delivery_history_date,
+                    'delivery_verification_status' => (bool) $data->delivery_verification_status,
+                    'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
                     'location_available' => $location_available,
                     'lat' => $lat,
                     'lang' => $lang,

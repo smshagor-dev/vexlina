@@ -110,13 +110,30 @@
         function update_status(selectObject) {
             var order_id = selectObject.value;
             var status = "delivered";
+            var verification_code = prompt("{{ translate('Enter the order verification code from the customer QR') }}");
+
+            if (verification_code === null || verification_code.trim() === '') {
+                selectObject.checked = false;
+                AIZ.plugins.notify('warning', '{{ translate('Verification code is required') }}');
+                return;
+            }
+
             $.post('{{ route('delivery-boy.orders.update_delivery_status') }}', {
                 _token      :'{{ @csrf_token() }}',
                 order_id    :order_id,
-                status      :status
+                status      :status,
+                delivery_verification_code: verification_code.trim()
             }, function(data){
-                AIZ.plugins.notify('success', '{{ translate('Delivery status has been updated') }}');
+                if (data.result === false) {
+                    selectObject.checked = false;
+                    AIZ.plugins.notify('danger', data.message || '{{ translate('Delivery verification failed') }}');
+                    return;
+                }
+                AIZ.plugins.notify('success', data.message || '{{ translate('Delivery status has been updated') }}');
                 location.reload();
+            }).fail(function(xhr) {
+                selectObject.checked = false;
+                AIZ.plugins.notify('danger', xhr.responseJSON?.message || '{{ translate('Delivery verification failed') }}');
             });
         }
     </script>

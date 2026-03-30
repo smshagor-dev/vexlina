@@ -533,6 +533,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get categories_ucf => 'فئات';
 
   @override
+  String get see_all_ucf => 'See All';
+
+  @override
   String get view_products_ucf => 'مشاهدة المنتجات';
 
   @override

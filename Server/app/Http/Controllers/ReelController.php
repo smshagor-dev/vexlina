@@ -57,6 +57,15 @@ class ReelController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        $user = auth()->user();
+
+        return view('frontend.reels.studio', [
+            'canPost' => $this->canPost($user),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $user = auth()->user();

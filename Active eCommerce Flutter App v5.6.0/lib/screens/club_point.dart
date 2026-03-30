@@ -22,16 +22,22 @@ class _ClubpointState extends State<Clubpoint> {
   final ScrollController _xcrollController = ScrollController();
 
   final List<dynamic> _list = [];
+  final List<dynamic> _summaryList = [];
   final List<dynamic> _convertedIds = [];
   bool _isInitial = true;
   int _page = 1;
   int? _totalData = 0;
   bool _showLoadingContainer = false;
+  bool _isBulkConverting = false;
+  bool _isSummaryLoading = true;
+  double? _exchangeRate;
+  double? _exchangeWalletAmount;
 
   @override
   void initState() {
     super.initState();
     fetchData();
+    _fetchSummaryData();
     _xcrollController.addListener(() {
       if (_xcrollController.position.pixels ==
           _xcrollController.position.maxScrollExtent) {
@@ -44,7 +50,7 @@ class _ClubpointState extends State<Clubpoint> {
     });
   }
 
-  fetchData() async {
+  Future<void> fetchData() async {
     var clubpointResponse = await ClubpointRepository()
         .getClubPointListResponse(page: _page);
     setState(() {
@@ -58,17 +64,23 @@ class _ClubpointState extends State<Clubpoint> {
   reset() {
     setState(() {
       _list.clear();
+      _summaryList.clear();
       _convertedIds.clear();
       _isInitial = true;
       _totalData = 0;
       _page = 1;
       _showLoadingContainer = false;
+      _isBulkConverting = false;
+      _isSummaryLoading = true;
+      _exchangeRate = null;
+      _exchangeWalletAmount = null;
     });
   }
 
   Future<void> _onRefresh() async {
     reset();
-    fetchData();
+    await fetchData();
+    await _fetchSummaryData();
   }
 
   onPressConvert(itemId, SnackBar convertedSnackbar) async {
@@ -89,7 +101,147 @@ class _ClubpointState extends State<Clubpoint> {
 
   onPopped(value) async {
     reset();
-    fetchData();
+    await fetchData();
+    await _fetchSummaryData();
+  }
+
+  Future<void> _fetchSummaryData() async {
+    final summaryItems = <dynamic>[];
+    int currentPage = 1;
+    int lastPage = 1;
+
+    do {
+      final clubpointResponse = await ClubpointRepository()
+          .getClubPointListResponse(page: currentPage);
+      summaryItems.addAll(clubpointResponse.clubpoints ?? []);
+      lastPage = clubpointResponse.meta?.lastPage ?? currentPage;
+      _exchangeRate ??= clubpointResponse.exchangeRate;
+      _exchangeWalletAmount ??= clubpointResponse.exchangeWalletAmount;
+      currentPage++;
+    } while (currentPage <= lastPage);
+
+    if (!mounted) return;
+
+    setState(() {
+      _summaryList
+        ..clear()
+        ..addAll(summaryItems);
+      _isSummaryLoading = false;
+    });
+  }
+
+  String? get _exchangeRateText {
+    if (_exchangeRate == null || _exchangeRate! <= 0) {
+      return null;
+    }
+
+    final rate = _exchangeRate! % 1 == 0
+        ? _exchangeRate!.toInt().toString()
+        : _exchangeRate!.toStringAsFixed(2);
+    final walletAmount = (_exchangeWalletAmount ?? 1) % 1 == 0
+        ? (_exchangeWalletAmount ?? 1).toInt().toString()
+        : (_exchangeWalletAmount ?? 1).toStringAsFixed(2);
+
+    return '$rate Points = $walletAmount Wallet Money';
+  }
+
+  List<dynamic> get _pointSourceList =>
+      _summaryList.isNotEmpty ? _summaryList : _list;
+
+  double get _totalUnconvertedPoint {
+    return _pointSourceList.fold<double>(0, (sum, item) {
+      final alreadyConverted =
+          item.convertStatus == 1 || _convertedIds.contains(item.id);
+      if (alreadyConverted) {
+        return sum;
+      }
+
+      final rawValue = item.convertibleClubPoint ?? item.points ?? 0;
+      final numericValue = rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse(rawValue.toString()) ?? 0;
+
+      if (numericValue <= 0) {
+        return sum;
+      }
+
+      return sum + numericValue;
+    });
+  }
+
+  String get _totalUnconvertedPointText {
+    final total = _totalUnconvertedPoint;
+    return total % 1 == 0 ? total.toInt().toString() : total.toStringAsFixed(1);
+  }
+
+  bool get _hasConvertiblePoint {
+    return _pointSourceList.any((item) {
+      final alreadyConverted =
+          item.convertStatus == 1 || _convertedIds.contains(item.id);
+      if (alreadyConverted) {
+        return false;
+      }
+
+      final rawValue = item.convertibleClubPoint ?? item.points ?? 0;
+      final numericValue = rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse(rawValue.toString()) ?? 0;
+      return numericValue > 0;
+    });
+  }
+
+  Future<void> _onPressConvertAll(SnackBar convertedSnackbar) async {
+    if (_isBulkConverting || !_hasConvertiblePoint) return;
+
+    setState(() {
+      _isBulkConverting = true;
+    });
+
+    int convertedCount = 0;
+    String? failedMessage;
+
+    for (final item in _pointSourceList) {
+      final alreadyConverted =
+          item.convertStatus == 1 || _convertedIds.contains(item.id);
+      final rawValue = item.convertibleClubPoint ?? item.points ?? 0;
+      final numericValue = rawValue is num
+          ? rawValue.toDouble()
+          : double.tryParse(rawValue.toString()) ?? 0;
+
+      if (alreadyConverted || numericValue <= 0) {
+        continue;
+      }
+
+      final response = await ClubpointRepository().getClubpointToWalletResponse(
+        item.id,
+      );
+
+      if (response.result == false) {
+        failedMessage = response.message?.toString() ?? "Convert failed";
+        break;
+      }
+
+      convertedCount++;
+      _convertedIds.add(item.id);
+    }
+
+    await _fetchSummaryData();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isBulkConverting = false;
+    });
+
+    if (convertedCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(convertedSnackbar);
+    }
+
+    if (failedMessage != null) {
+      ToastComponent.showDialog(failedMessage);
+    } else if (convertedCount == 0) {
+      ToastComponent.showDialog("No convertible point found");
+    }
   }
 
   @override
@@ -147,7 +299,13 @@ class _ClubpointState extends State<Clubpoint> {
                     delegate: SliverChildListDelegate([
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: buildList(convertedSnackbar),
+                        child: Column(
+                          children: [
+                            buildSummarySection(convertedSnackbar),
+                            const SizedBox(height: 16),
+                            buildList(convertedSnackbar),
+                          ],
+                        ),
                       ),
                     ]),
                   ),
@@ -237,6 +395,181 @@ class _ClubpointState extends State<Clubpoint> {
     } else {
       return Container();
     }
+  }
+
+  Widget buildSummarySection(SnackBar convertedSnackbar) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            MyTheme.accent_color.withValues(alpha: .96),
+            const Color(0xffFF7A2F),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: MyTheme.accent_color.withValues(alpha: .18),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Available Points',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: .92),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          _isSummaryLoading
+              ? const SizedBox(
+                  width: 74,
+                  height: 30,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+              : Text(
+                  _totalUnconvertedPointText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+          const SizedBox(height: 4),
+          Text(
+            _isSummaryLoading
+                ? 'Calculating all available points...'
+                : 'Total points that are not converted yet',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: .88),
+              fontSize: 12,
+            ),
+          ),
+          if (_exchangeRateText != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.currency_exchange_rounded,
+                    size: 14,
+                    color: Colors.white.withValues(alpha: .92),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Exchange Rate: $_exchangeRateText',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .92),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap:
+                _hasConvertiblePoint && !_isBulkConverting && !_isSummaryLoading
+                ? () => _onPressConvertAll(convertedSnackbar)
+                : null,
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: _hasConvertiblePoint && !_isSummaryLoading
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: .25),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: .35)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: _hasConvertiblePoint && !_isSummaryLoading
+                          ? MyTheme.accent_color.withValues(alpha: .12)
+                          : Colors.white.withValues(alpha: .18),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _isBulkConverting
+                        ? Center(
+                            child: SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: MyTheme.accent_color,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            Icons.sync_alt_rounded,
+                            size: 15,
+                            color: _hasConvertiblePoint && !_isSummaryLoading
+                                ? MyTheme.accent_color
+                                : Colors.white,
+                          ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _isBulkConverting ? 'Converting...' : 'Convert All',
+                    style: TextStyle(
+                      color: _hasConvertiblePoint && !_isSummaryLoading
+                          ? MyTheme.accent_color
+                          : Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: _hasConvertiblePoint && !_isSummaryLoading
+                        ? MyTheme.accent_color
+                        : Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildItemCard(int index, SnackBar convertedSnackbar) {

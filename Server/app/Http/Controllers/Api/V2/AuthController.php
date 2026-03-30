@@ -171,30 +171,28 @@ class AuthController extends Controller
         $seller_condition = $request->has('user_type') && $request->user_type == 'seller';
         $req_email = $request->email;
 
+        $userQuery = function ($query) use ($req_email) {
+            $query->where('email', $req_email)
+                ->orWhere('phone', $req_email);
+        };
+
         if ($delivery_boy_condition) {
             $user = User::whereIn('user_type', ['delivery_boy'])
-                ->where(function ($query) use ($req_email) {
-                    $query->where('email', $req_email)
-                        ->orWhere('phone', $req_email);
-                })
+                ->where($userQuery)
                 ->first();
         } elseif ($seller_condition) {
             $user = User::whereIn('user_type', ['seller'])
-                ->where(function ($query) use ($req_email) {
-                    $query->where('email', $req_email)
-                        ->orWhere('phone', $req_email);
-                })
+                ->where($userQuery)
                 ->first();
         } else {
             $user = User::whereIn('user_type', ['customer'])
-                ->where(function ($query) use ($req_email) {
-                    $query->where('email', $req_email)
-                        ->orWhere('phone', $req_email);
-                })
+                ->where($userQuery)
                 ->first();
-        }
-        // Temporarily skip identity_matrix validation for app login flow.
 
+            if ($user == null) {
+                $user = User::where($userQuery)->first();
+            }
+        }
         if ($user != null) {
             if (!$user->banned) {
                 if (Hash::check($request->password, $user->password)) {

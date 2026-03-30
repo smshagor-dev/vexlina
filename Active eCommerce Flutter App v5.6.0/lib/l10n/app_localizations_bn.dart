@@ -4,15 +4,15 @@ import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
-/// The translations for English (`en`).
-class AppLocalizationsEn extends AppLocalizations {
-  AppLocalizationsEn([String locale = 'en']) : super(locale);
+/// The translations for Bengali Bangla (`bn`).
+class AppLocalizationsBn extends AppLocalizations {
+  AppLocalizationsBn([String locale = 'bn']) : super(locale);
 
   @override
   String get auction_product_screen_ => '';
 
   @override
-  String get auction_product_ucf => 'Auction Products';
+  String get auction_product_ucf => 'নিলাম পণ্য';
 
   @override
   String get auction_product_screen_title => 'Auction Product';
@@ -33,10 +33,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auction_order_ucf => 'Auction Orders';
 
   @override
-  String get auction_start_date_ucf => 'Start Date';
+  String get auction_start_date_ucf => 'নিলাম শুরুর তারিখ';
 
   @override
-  String get auction_end_date_ucf => 'End Date';
+  String get auction_end_date_ucf => 'নিলামের শেষ তারিখ';
 
   @override
   String get auction_total_bids_ucf => 'Total Bids';
@@ -58,19 +58,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auction_starting_bid_price_ucf => 'Starting bidding price';
 
   @override
-  String get auction_date_range_ucf => 'Auction Date Range';
+  String get auction_date_range_ucf => 'নিলামের তারিখ পরিসীমা';
 
   @override
   String get auction_will_end => 'Auction Will End';
 
   @override
-  String get starting_bid_ucf => 'Starting Bid';
+  String get starting_bid_ucf => 'বিড শুরু হচ্ছে';
 
   @override
-  String get highest_bid_ucf => 'Highest Bid';
+  String get highest_bid_ucf => 'সর্বোচ্চ দর';
 
   @override
-  String get place_bid_ucf => 'Place Bid';
+  String get place_bid_ucf => 'স্থান বিড';
 
   @override
   String get change_bid_ucf => 'Change Bid';
@@ -103,37 +103,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get select_a_country => 'Select a country';
 
   @override
-  String get address_ucf => 'Address';
+  String get address_ucf => 'ঠিকানা';
 
   @override
-  String get city_ucf => 'City';
+  String get city_ucf => 'শহর';
 
   @override
   String get enter_city_ucf => 'Enter City';
 
   @override
-  String get postal_code_ucf => 'Postal Code';
+  String get postal_code_ucf => 'পোস্টাল কোড';
 
   @override
   String get enter_postal_code_ucf => 'Enter Postal Code';
 
   @override
-  String get country_ucf => 'Country';
+  String get country_ucf => 'দেশ';
 
   @override
   String get enter_country_ucf => 'Enter Country';
 
   @override
-  String get state_ucf => 'State';
+  String get state_ucf => 'জেলা';
 
   @override
   String get enter_state_ucf => 'Enter State';
 
   @override
-  String get phone_ucf => 'Phone Number';
+  String get phone_ucf => 'ফোন';
 
   @override
-  String get enter_phone_ucf => 'Enter Phone';
+  String get enter_phone_ucf => 'ফোন নম্বর লিখুন';
 
   @override
   String get are_you_sure_to_remove_this_address =>
@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit_ucf => 'Edit';
 
   @override
-  String get delete_ucf => 'Delete';
+  String get delete_ucf => 'মুছে ফেলুন';
 
   @override
   String get add_location_ucf => 'Add Location';
@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loading_more_products_ucf => 'Loading More Products ...';
 
   @override
-  String get no_more_products_ucf => 'No More Products';
+  String get no_more_products_ucf => 'আর কোনও পণ্য নেই';
 
   @override
   String get no_product_is_available => 'No product is available';
@@ -292,7 +292,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get close_all_lower => 'close';
 
   @override
-  String get close_ucf => 'Close';
+  String get close_ucf => 'বন্ধ';
 
   @override
   String get cancel_all_capital => 'CANCEL';
@@ -301,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel_all_lower => 'cancel';
 
   @override
-  String get cancel_ucf => 'Cancel';
+  String get cancel_ucf => 'বাতিল করুন';
 
   @override
   String get confirm_all_capital => 'CONFIRM';
@@ -310,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm_all_lower => 'confirm';
 
   @override
-  String get confirm_ucf => 'Confirm';
+  String get confirm_ucf => 'নিশ্চিত করুন';
 
   @override
   String get update_all_capital => 'UPDATE';
@@ -319,7 +319,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get update_all_lower => 'update';
 
   @override
-  String get update_ucf => 'Update';
+  String get update_ucf => 'আপডেট';
 
   @override
   String get send_all_capital => 'SEND';
@@ -328,7 +328,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get send_all_lower => 'send';
 
   @override
-  String get send_ucf => 'Send';
+  String get send_ucf => 'পাঠান';
 
   @override
   String get clear_all_capital => 'CLEAR';
@@ -337,7 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clear_all_lower => 'clear';
 
   @override
-  String get clear_ucf => 'Clear';
+  String get clear_ucf => 'পরিষ্কার';
 
   @override
   String get apply_all_capital => 'APPLY';
@@ -346,7 +346,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apply_all_lower => 'apply';
 
   @override
-  String get apply_ucf => 'Apply';
+  String get apply_ucf => 'আবেদন করুন';
 
   @override
   String get add_all_capital => 'ADD';
@@ -355,25 +355,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add_all_lower => 'add';
 
   @override
-  String get add_ucf => 'Add';
+  String get add_ucf => 'যোগ করুন';
 
   @override
-  String get copied_ucf => 'Copied';
+  String get copied_ucf => 'কপি করা হয়েছে';
 
   @override
-  String get proceed_ucf => 'Proceed';
+  String get proceed_ucf => 'এগিয়ে যান!';
 
   @override
   String get proceed_all_caps => 'PROCEED';
 
   @override
-  String get submit_ucf => 'Submit';
+  String get submit_ucf => 'জমা দিন';
 
   @override
   String get shop_more_ucf => 'Shop More';
 
   @override
-  String get show_less_ucf => 'Show Less';
+  String get show_less_ucf => 'কম দেখান';
 
   @override
   String get selected_ucf => 'Selected';
@@ -394,7 +394,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deny_ucf => 'Deny';
 
   @override
-  String get settings_ucf => 'Settings';
+  String get settings_ucf => 'সেটিংস';
 
   @override
   String get go_to_your_application_settings_and_give_photo_permission =>
@@ -404,13 +404,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no_file_is_chosen => 'No file is chosen';
 
   @override
-  String get yes_ucf => 'Yes';
+  String get yes_ucf => 'হ্যাঁ';
 
   @override
-  String get no_ucf => 'No';
+  String get no_ucf => 'না';
 
   @override
-  String get date_ucf => 'Date';
+  String get date_ucf => 'তারিখ';
 
   @override
   String get follow_ucf => 'Follow';
@@ -428,7 +428,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get day_ucf => 'Day';
 
   @override
-  String get days_ucf => 'Days';
+  String get days_ucf => 'দিন';
 
   @override
   String get network_error => 'Something went wrong. Network Error';
@@ -446,10 +446,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get digital_product_ucf => 'Digital Products';
 
   @override
-  String get dashboard_ucf => 'Dashboard';
+  String get dashboard_ucf => 'ড্যাশবোর্ড';
 
   @override
-  String get earnings_ucf => 'Earnings';
+  String get earnings_ucf => 'আয়';
 
   @override
   String get not_logged_in_ucf => 'Not Logged In';
@@ -458,37 +458,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get change_language_ucf => 'Change Language';
 
   @override
-  String get home_ucf => 'Home';
+  String get home_ucf => 'হোম';
 
   @override
-  String get profile_ucf => 'Profile';
+  String get profile_ucf => 'প্রোফাইল';
 
   @override
-  String get orders_ucf => 'Orders';
+  String get orders_ucf => 'অর্ডার';
 
   @override
-  String get my_wishlist_ucf => 'My Wishlist';
+  String get my_wishlist_ucf => 'আমার ইচ্ছা তালিকা';
 
   @override
   String get messages_ucf => 'Messages';
 
   @override
-  String get wallet_ucf => 'Wallet';
+  String get wallet_ucf => 'ওয়ালেট';
 
   @override
-  String get login_ucf => 'Login';
+  String get login_ucf => 'লগইন';
 
   @override
-  String get logout_ucf => 'Logout';
+  String get logout_ucf => 'লগআউট';
 
   @override
   String get mark_as_picked => 'Mark as picked';
 
   @override
-  String get my_delivery_ucf => 'My Delivery';
+  String get my_delivery_ucf => 'আমার ডেলিভারি';
 
   @override
-  String get my_earnings_ucf => 'My Earnings';
+  String get my_earnings_ucf => 'আমার উপার্জন';
 
   @override
   String get my_collection_ucf => 'My Collection';
@@ -500,25 +500,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get top_categories_ucf => 'Top Categories';
 
   @override
-  String get brands_ucf => 'Brands';
+  String get brands_ucf => 'ব্র্যান্ড';
 
   @override
-  String get top_sellers_ucf => 'Top Sellers';
+  String get top_sellers_ucf => 'শীর্ষ বিক্রেতা';
 
   @override
-  String get todays_deal_ucf => 'Todays Deal';
+  String get todays_deal_ucf => 'আজকের ডিল';
 
   @override
-  String get flash_deal_ucf => 'Flash Deal';
+  String get flash_deal_ucf => 'ফ্ল্যাশ ডিল';
 
   @override
-  String get featured_categories_ucf => 'Featured Categories';
+  String get featured_categories_ucf => 'ফিচারড ক্যাটাগরি';
 
   @override
-  String get featured_products_ucf => 'Featured Products';
+  String get featured_products_ucf => 'ফিচারড পণ্য';
 
   @override
-  String get all_products_ucf => 'All Products';
+  String get all_products_ucf => 'সকল পণ্য';
 
   @override
   String get search_in_active_ecommerce_cms =>
@@ -531,13 +531,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no_category_found => 'No category found';
 
   @override
-  String get categories_ucf => 'Categories';
+  String get categories_ucf => 'ক্যাটাগরি';
 
   @override
-  String get see_all_ucf => 'See All';
+  String get see_all_ucf => 'সবগুলো দেখুন';
 
   @override
-  String get view_products_ucf => 'View Products';
+  String get view_products_ucf => 'পণ্য দেখুন';
 
   @override
   String get view_subcategories_ucf => 'View Sub-Categories';
@@ -562,7 +562,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cart_is_empty => 'Cart is empty';
 
   @override
-  String get total_amount_ucf => 'Total Amount';
+  String get total_amount_ucf => 'মোট পরিমাণ';
 
   @override
   String get update_cart_ucf => 'Update Cart';
@@ -581,16 +581,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel_request_is_already_send => 'Cancel request is already send';
 
   @override
-  String get classified_ads_ucf => 'Classified Ads';
+  String get classified_ads_ucf => 'শ্রেণীবদ্ধ বিজ্ঞাপন';
 
   @override
   String get currency_change_ucf => 'Change Currency';
 
   @override
-  String get collection_ucf => 'Collection';
+  String get collection_ucf => 'সংগ্রহ';
 
   @override
-  String get load_more_ucf => 'Load More';
+  String get load_more_ucf => 'আরো লোড';
 
   @override
   String get type_your_message_here => 'Type your message here ...';
@@ -614,7 +614,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grand_total_all_capital => 'GRAND TOTAL';
 
   @override
-  String get coupon_code_ucf => 'Coupon Code';
+  String get coupon_code_ucf => 'কুপন কোড';
 
   @override
   String get apply_coupon_all_capital => 'APPLY COUPON';
@@ -626,16 +626,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buy_package_ucf => 'Buy Package';
 
   @override
-  String get remove_ucf => 'Remove';
+  String get remove_ucf => 'সরান';
 
   @override
-  String get checkout_ucf => 'Checkout';
+  String get checkout_ucf => 'চেকআউট';
 
   @override
-  String get cancelled_delivery_ucf => 'Cancelled Delivery';
+  String get cancelled_delivery_ucf => 'ডেলিভারি বাতিল করা হয়েছে';
 
   @override
-  String get completed_delivery_ucf => 'Completed Delivery';
+  String get completed_delivery_ucf => 'ডেলিভারি সম্পন্ন';
 
   @override
   String get search_products_from => 'Search products from';
@@ -653,22 +653,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earned_points_ucf => 'Earned Points';
 
   @override
-  String get converted_ucf => 'Converted ';
+  String get converted_ucf => 'রূপান্তরিত';
 
   @override
   String get done_all_capital => 'DONE';
 
   @override
-  String get convert_now_ucf => 'Convert Now';
+  String get convert_now_ucf => 'এখনই রূপান্তর করুন';
 
   @override
   String get my_products_ucf => 'My Products';
 
   @override
-  String get current_package_ucf => 'Current Package';
+  String get current_package_ucf => 'বর্তমান প্যাকেজ';
 
   @override
-  String get upgrade_package_ucf => 'Upgrade Package';
+  String get upgrade_package_ucf => 'প্যাকেজ আপগ্রেড করুন';
 
   @override
   String get add_new_products_ucf => 'Add New Products';
@@ -682,16 +682,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please log in to see the profile';
 
   @override
-  String get notification_ucf => 'Notifications';
+  String get notification_ucf => 'বিজ্ঞপ্তি';
 
   @override
-  String get purchase_history_ucf => 'Purchase History';
+  String get purchase_history_ucf => 'ক্রয়ের ইতিহাস';
 
   @override
   String get earning_points_history_ucf => 'Earning Points History';
 
   @override
-  String get refund_requests_ucf => 'Refund Requests';
+  String get refund_requests_ucf => 'ফেরত অনুরোধ';
 
   @override
   String get in_your_cart_all_lower => 'in your cart';
@@ -703,7 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get your_ordered_all_lower => 'you ordered';
 
   @override
-  String get language_ucf => 'Language';
+  String get language_ucf => 'ভাষা';
 
   @override
   String get currency_ucf => 'Currency';
@@ -712,10 +712,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get my_orders_ucf => 'My Orders';
 
   @override
-  String get downloads_ucf => 'Downloads';
+  String get downloads_ucf => 'ডাউনলোডগুলি';
 
   @override
-  String get coupons_ucf => 'Coupons';
+  String get coupons_ucf => 'কুপন';
 
   @override
   String get favorite_seller_ucf => 'Favorite Seller';
@@ -727,10 +727,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get on_auction_products_ucf => 'On Auction Products';
 
   @override
-  String get bidded_products_ucf => 'Bidded Products';
+  String get bidded_products_ucf => 'বিড করা পণ্য';
 
   @override
-  String get wholesale_products_ucf => 'Wholesale Products';
+  String get wholesale_products_ucf => 'পাইকারি পণ্য';
 
   @override
   String get browse_all_sellers_ucf => 'Browse All Sellers';
@@ -747,16 +747,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Once your account is deleted from our system, you will lose your balance and other information from our system.';
 
   @override
-  String get blogs_ucf => 'Blogs';
+  String get blogs_ucf => 'ব্লগ';
 
   @override
   String get check_balance_ucf => 'Check Balance';
 
   @override
-  String get account_ucf => 'Account';
+  String get account_ucf => 'হিসাব';
 
   @override
-  String get auction_ucf => 'Auction';
+  String get auction_ucf => 'নিলাম';
 
   @override
   String get classified_products => 'Classified products';
@@ -768,35 +768,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upload_limit_ucf => 'Upload Limit';
 
   @override
-  String get pending_delivery_ucf => 'Pending Delivery';
+  String get pending_delivery_ucf => 'অবশিষ্ট বিতরণ';
 
   @override
   String get flash_deal_has_ended => 'Flash deal has ended';
 
   @override
-  String get ended_ucf => 'Ended';
+  String get ended_ucf => 'শেষ হয়েছে';
 
   @override
-  String get flash_deals_ucf => 'Flash Deals';
+  String get flash_deals_ucf => 'ফ্ল্যাশ ডিল';
 
   @override
-  String get top_selling_products_ucf => 'Top Selling Products';
+  String get top_selling_products_ucf => 'সর্বাধিক বিক্রিত পণ্য';
 
   @override
-  String get product_ucf => 'Product';
+  String get product_ucf => 'পণ্য';
 
   @override
-  String get products_ucf => 'Products';
+  String get products_ucf => 'পণ্য(গুলি)';
 
   @override
-  String get sellers_ucf => 'Sellers';
+  String get sellers_ucf => 'বিক্রেতা';
 
   @override
   String get you_can_use_filters_while_searching_for_products =>
       'You can use filters while searching for products.';
 
   @override
-  String get filter_ucf => 'Filter';
+  String get filter_ucf => 'ফিল্টার';
 
   @override
   String get sort_products_by_ucf => 'Sort Products By';
@@ -823,7 +823,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get minimum_ucf => 'Minimum';
 
   @override
-  String get price_range_ucf => 'Price Range';
+  String get price_range_ucf => 'মূল্য পরিসীমা';
 
   @override
   String get search_here_ucf => 'Search here ?';
@@ -858,7 +858,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Min price cannot be larger than max price';
 
   @override
-  String get followed_sellers_ucf => 'Followed Sellers';
+  String get followed_sellers_ucf => 'অনুসরণ করা বিক্রেতারা';
 
   @override
   String get copy_product_link_ucf => 'Copy Product Link';
@@ -867,13 +867,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share_options_ucf => 'Share Options';
 
   @override
-  String get title_ucf => 'Title';
+  String get title_ucf => 'শিরোনাম';
 
   @override
   String get enter_title_ucf => 'Enter Title';
 
   @override
-  String get message_ucf => 'Message';
+  String get message_ucf => 'বার্তা';
 
   @override
   String get enter_message_ucf => 'Enter Message';
@@ -892,52 +892,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get show_cart_all_capital => 'SHOW CART';
 
   @override
-  String get description_ucf => 'Description:';
+  String get description_ucf => 'বিবরণ';
 
   @override
-  String get brand_ucf => 'Brand :';
+  String get brand_ucf => 'ব্র্যান্ড';
 
   @override
-  String get total_price_ucf => 'Total Price  :';
+  String get total_price_ucf => 'মোট মূল্য';
 
   @override
-  String get price_ucf => 'Price';
+  String get price_ucf => 'দাম';
 
   @override
-  String get color_ucf => 'Color';
+  String get color_ucf => 'রঙ';
 
   @override
-  String get seller_ucf => 'Seller';
+  String get seller_ucf => 'বিক্রেতা';
 
   @override
-  String get club_point_ucf => 'Club Point';
+  String get club_point_ucf => 'ক্লাব পয়েন্ট';
 
   @override
-  String get quantity_ucf => 'Quantity:';
+  String get quantity_ucf => 'পরিমাণ';
 
   @override
   String get video_not_available => 'Video not available';
 
   @override
-  String get video_ucf => 'Video';
+  String get video_ucf => 'ভিডিও';
 
   @override
-  String get reviews_ucf => 'Reviews';
+  String get reviews_ucf => 'পর্যালোচনা';
 
   @override
-  String get seller_policy_ucf => 'Seller Policy';
+  String get seller_policy_ucf => 'বিক্রেতা নীতি';
 
   @override
-  String get return_policy_ucf => 'Return Policy';
+  String get return_policy_ucf => 'ফেরত  নীতিমালা';
 
   @override
-  String get support_policy_ucf => 'Support Policy';
+  String get support_policy_ucf => 'সাপোর্ট নীতি';
 
   @override
   String get products_you_may_also_like => 'Frequently Bought Products';
 
   @override
-  String get other_ads_of_ucf => 'Other Ads of';
+  String get other_ads_of_ucf => 'অন্যান্য বিজ্ঞাপন';
 
   @override
   String get top_selling_products_from_seller =>
@@ -950,10 +950,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get available_all_lower => 'available';
 
   @override
-  String get add_to_cart_ucf => 'Add to Cart';
+  String get add_to_cart_ucf => 'কার্ট যোগ করুন';
 
   @override
-  String get buy_now_ucf => 'Buy Now';
+  String get buy_now_ucf => 'এখনই কিনুন';
 
   @override
   String get no_top_selling_products_from_this_seller =>
@@ -963,13 +963,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no_related_product => 'No frequently bought products';
 
   @override
-  String get on_the_way_ucf => 'On The Way';
+  String get on_the_way_ucf => 'অন ​​দ্য ওয়ে';
 
   @override
-  String get all_ucf => 'All';
+  String get all_ucf => 'সব';
 
   @override
-  String get today_ucf => 'Today';
+  String get today_ucf => 'আজ';
 
   @override
   String get this_week_ucf => 'This Week';
@@ -990,16 +990,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get all_deliveries_ucf => 'All Deliveries';
 
   @override
-  String get paid_ucf => 'Paid';
+  String get paid_ucf => 'পেড';
 
   @override
-  String get unpaid_ucf => 'Unpaid';
+  String get unpaid_ucf => 'অবৈতনিক';
 
   @override
-  String get confirmed_ucf => 'Confirmed';
+  String get confirmed_ucf => 'নিশ্চিত করা হয়েছে';
 
   @override
-  String get delivered_ucf => 'Delivered';
+  String get delivered_ucf => 'বিতরণ করা হয়েছে';
 
   @override
   String get no_more_orders_ucf => 'No More Orders';
@@ -1008,22 +1008,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loading_more_orders_ucf => 'Loading More order...';
 
   @override
-  String get payment_status_ucf => 'Payment Status';
+  String get payment_status_ucf => 'পেমেন্ট স্ট্যাটাস';
 
   @override
-  String get delivery_status_ucf => 'Delivery Status';
+  String get delivery_status_ucf => 'ডেলিভারি স্ট্যাটাস';
 
   @override
-  String get product_name_ucf => 'Product Name';
+  String get product_name_ucf => 'পণ্যের নাম';
 
   @override
-  String get product_unit_ucf => 'Product Unit';
+  String get product_unit_ucf => 'পণ্য ইউনিট';
 
   @override
-  String get order_code_ucf => 'Order Code';
+  String get order_code_ucf => 'অর্ডার কোড';
 
   @override
-  String get reason_ucf => 'Reason';
+  String get reason_ucf => 'কারণ';
 
   @override
   String get reason_cannot_be_empty => 'Reason cannot be empty';
@@ -1047,22 +1047,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get order_placed => 'Order placed';
 
   @override
-  String get shipping_method_ucf => 'Shipping Method';
+  String get shipping_method_ucf => 'শিপিং পদ্ধতি';
 
   @override
-  String get order_date_ucf => 'Order Date';
+  String get order_date_ucf => 'অর্ডারের তারিখ';
 
   @override
-  String get payment_method_ucf => 'Payment Method';
+  String get payment_method_ucf => 'পেমেন্ট পদ্ধতি';
 
   @override
-  String get shipping_address_ucf => 'Shipping Address';
+  String get shipping_address_ucf => 'শিপিং ঠিকানা';
 
   @override
   String get name_ucf => 'Name';
 
   @override
-  String get email_ucf => 'Email';
+  String get email_ucf => 'ইমেইল';
 
   @override
   String get postal_code => 'Postal code';
@@ -1074,10 +1074,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ask_for_refund_ucf => 'Ask For Refund';
 
   @override
-  String get refund_status_ucf => 'Refund Status';
+  String get refund_status_ucf => 'রিফান্ড স্ট্যাটাস';
 
   @override
-  String get order_details_ucf => 'Order Details';
+  String get order_details_ucf => 'অর্ডার বিশদ';
 
   @override
   String get make_offline_payment_ucf => 'Make Offline Payment';
@@ -1089,7 +1089,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get choose_delivery_ucf => 'Choose Delivery';
 
   @override
-  String get home_delivery_ucf => 'Home Delivery';
+  String get home_delivery_ucf => 'হোম ডেলিভারি';
 
   @override
   String get choose_an_address_or_pickup_point =>
@@ -1100,7 +1100,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'To add or edit addresses, Go to address page';
 
   @override
-  String get shipping_cost_ucf => 'Shipping Cost';
+  String get shipping_cost_ucf => 'শিপিং খরচ';
 
   @override
   String get shipping_info => 'Shipping Info';
@@ -1110,19 +1110,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Carrier Points Is Unavailable';
 
   @override
-  String get carrier_ucf => 'Carrier';
+  String get carrier_ucf => 'বাহক';
 
   @override
   String get proceed_to_checkout => 'Proceed to checkout';
 
   @override
-  String get continue_to_delivery_info_ucf => 'Continue to Delivery Info';
+  String get continue_to_delivery_info_ucf => 'ডেলিভারি তথ্য অবিরত';
 
   @override
   String get pickup_point_is_unavailable_ucf => 'Pickup Point Is Unavailable';
 
   @override
-  String get pickup_point_ucf => 'Pickup Point';
+  String get pickup_point_ucf => 'পিকআপ পয়েন্ট';
 
   @override
   String get mark_as_delivered => 'Mark as delivered';
@@ -1137,7 +1137,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amount_cannot_be_empty => 'Amount cannot be empty';
 
   @override
-  String get my_wallet_ucf => 'My Wallet';
+  String get my_wallet_ucf => 'আমার ওয়ালেট';
 
   @override
   String get no_recharges_yet => 'No recharges yet';
@@ -1146,25 +1146,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approval_status_ucf => 'Approval Status';
 
   @override
-  String get wallet_balance_ucf => 'Wallet Balance';
+  String get wallet_balance_ucf => 'ওয়ালেট ব্যালেন্স';
 
   @override
   String get last_recharged => 'Last recharged';
 
   @override
-  String get wallet_recharge_history_ucf => 'Wallet Recharge History';
+  String get wallet_recharge_history_ucf => 'ওয়ালেট রিচার্জ ইতিহাস';
 
   @override
-  String get amount_ucf => 'Amount';
+  String get amount_ucf => 'পরিমাণ';
 
   @override
-  String get enter_amount_ucf => 'Enter Amount';
+  String get enter_amount_ucf => 'পরিমাণ লিখুন';
 
   @override
   String get wholesale_product => 'Wholesale product';
 
   @override
-  String get recharge_wallet_ucf => 'Recharge Wallet';
+  String get recharge_wallet_ucf => 'ওয়ালেট রিচার্জ করুন';
 
   @override
   String get please_log_in_to_see_the_wishlist_items =>
@@ -1186,7 +1186,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get or_login_with_an_email => 'or, Login with an email';
 
   @override
-  String get password_ucf => 'Password';
+  String get password_ucf => 'পাসওয়ার্ড';
 
   @override
   String get login_screen_phone => 'Phone';
@@ -1238,7 +1238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get or_register_with_an_email => 'or, Register with an email';
 
   @override
-  String get sign_up_ucf => 'Sign Up';
+  String get sign_up_ucf => 'সাইন আপ করুন';
 
   @override
   String get already_have_an_account => 'Already have an Account ?';
@@ -1271,7 +1271,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get email_account_ucf => 'Email Account';
 
   @override
-  String get phone_number_ucf => 'Phone Number';
+  String get phone_number_ucf => 'ফোন নম্বর';
 
   @override
   String get enter_the_verification_code_that_sent_to_your_email_recently =>
@@ -1282,7 +1282,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the verification code that sent to your phone recently.';
 
   @override
-  String get resend_code_ucf => 'Resend Code';
+  String get resend_code_ucf => 'কোড আবার পাঠান';
 
   @override
   String get enter_the_code => 'Enter the code';
@@ -1291,7 +1291,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enter_the_code_sent => 'Enter the code sent';
 
   @override
-  String get congratulations_ucf => 'Congratulations !!';
+  String get congratulations_ucf => 'অভিনন্দন';
 
   @override
   String get you_have_successfully_changed_your_password =>
@@ -1304,7 +1304,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back_to_Login_ucf => 'Back to Login';
 
   @override
-  String get cart_ucf => 'Cart';
+  String get cart_ucf => 'কার্ট';
 
   @override
   String get fetching_nagad_url => 'Fetching nagad url ...';
@@ -1386,7 +1386,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Correctly fill-up the necessary information. Later you cannot edit or re-submit the form';
 
   @override
-  String get transaction_id_ucf => 'Transaction Id';
+  String get transaction_id_ucf => 'লেনদেন আইডি';
 
   @override
   String get photo_proof_ucf => 'Photo Proof';
@@ -1428,10 +1428,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get basic_information_ucf => 'Basic Information';
 
   @override
-  String get new_password_ucf => 'New Password';
+  String get new_password_ucf => 'নতুন পাসওয়ার্ড';
 
   @override
-  String get update_profile_ucf => 'Update Profile';
+  String get update_profile_ucf => 'প্রোফাইল আপডেট করুন';
 
   @override
   String get update_password_ucf => 'Update Password';
@@ -1443,10 +1443,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get picked_ucf => 'Picked';
 
   @override
-  String get top_selling_ucf => 'Top Selling';
+  String get top_selling_ucf => 'টপ সেলিং';
 
   @override
-  String get store_home_ucf => 'Store Home';
+  String get store_home_ucf => 'স্টোর হোম';
 
   @override
   String get new_arrivals_products_ucf => 'New Arrivals Products';
@@ -1466,7 +1466,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search_products_of_shop => 'Search products of shop';
 
   @override
-  String get total_collected_ucf => 'Total Collected';
+  String get total_collected_ucf => 'মোট সংগৃহীত';
 
   @override
   String get yesterday_ucf => 'Yesterday';
@@ -1478,22 +1478,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get you_are_currently_offline => 'You are currently offline';
 
   @override
-  String get pending_ucf => 'Pending';
+  String get pending_ucf => 'ড্র অপেক্ষমান';
 
   @override
-  String get picked_up_ucf => 'Picked Up';
+  String get picked_up_ucf => 'পিক আপ';
 
   @override
-  String get money_withdraw_ucf => 'Money Withdraw ';
+  String get money_withdraw_ucf => 'টাকা তোলা';
 
   @override
-  String get payment_history_ucf => 'Payment History';
+  String get payment_history_ucf => 'পেমেন্ট ইতিহাস';
 
   @override
-  String get add_new_coupon_ucf => 'Add New Coupon';
+  String get add_new_coupon_ucf => 'নতুন কুপন যোগ করুন';
 
   @override
-  String get warning_ucf => 'Warning!';
+  String get warning_ucf => 'সতর্কতা';
 
   @override
   String get coupon_code_is_empty_ucf => 'Coupon Code Is Empty';
@@ -1512,22 +1512,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalid_maximum_discount_ucf => 'Invalid Maximum Discount';
 
   @override
-  String get edit_coupon_ucf => 'Edit Coupon';
+  String get edit_coupon_ucf => 'কুপন সম্পাদনা করুন';
 
   @override
   String get save_ucf => 'Save';
 
   @override
-  String get discount_ucf => 'Discount';
+  String get discount_ucf => 'ছাড়';
 
   @override
   String get add_your_coupon_code_ucf => 'Add Your Coupon Code';
 
   @override
-  String get minimum_shopping_ucf => 'Minimum Shopping';
+  String get minimum_shopping_ucf => 'ন্যূনতম কেনাকাটা';
 
   @override
-  String get maximum_discount_amount_ucf => 'Maximum Discount Amount';
+  String get maximum_discount_amount_ucf => 'সর্বোচ্চ ছাড়ের পরিমাণ';
 
   @override
   String get coupon_information_adding => 'Coupon information adding';
@@ -1536,16 +1536,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get select_products_ucf => 'Select Products';
 
   @override
-  String get offline_payment_ucf => 'Offline Payment';
+  String get offline_payment_ucf => 'অফলাইন পেমেন্ট';
 
   @override
-  String get youtube_ucf => 'Youtube';
+  String get youtube_ucf => 'ইউটিউব';
 
   @override
-  String get dailymotion_ucf => 'Dailymotion';
+  String get dailymotion_ucf => 'ডেইলিমোশন';
 
   @override
-  String get vimeo_ucf => 'Vimeo';
+  String get vimeo_ucf => 'ভিমিও';
 
   @override
   String get save_n_unpublish_ucf => 'Save & Unpublish';
@@ -1554,10 +1554,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save_n_publish_ucf => 'Save & Publish';
 
   @override
-  String get product_information_ucf => 'Product Information';
+  String get product_information_ucf => 'পণ্য তথ্য';
 
   @override
-  String get unit_ucf => 'Unit';
+  String get unit_ucf => 'ইউনিট';
 
   @override
   String get unit_eg_ucf => 'Unit (e.g. KG, Pc etc)';
@@ -1569,29 +1569,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get minimum_purchase_quantity_ucf => 'Minimum Purchase Quantity';
 
   @override
-  String get tags_ucf => 'Tags';
+  String get tags_ucf => 'ট্যাগ';
 
   @override
   String get type_and_hit_enter_to_add_a_tag_ucf =>
-      'Type and hit enter to add a tag';
+      'ট্যাগ যোগ করতে টাইপ করুন এবং এন্টার টিপুন';
 
   @override
-  String get barcode_ucf => 'Barcode';
+  String get barcode_ucf => 'বারকোড';
 
   @override
-  String get refundable_ucf => 'Refundable';
+  String get refundable_ucf => 'ফেরতযোগ্য';
 
   @override
-  String get product_description_ucf => 'Product Description';
+  String get product_description_ucf => 'পণ্য বিবরণ';
 
   @override
-  String get cash_on_delivery_ucf => 'Cash on Delivery';
+  String get cash_on_delivery_ucf => 'ক্যাশ অন ডেলিভারি';
 
   @override
   String get vat_n_tax_ucf => 'Vat & Tax';
 
   @override
-  String get product_images_ucf => 'Product Images';
+  String get product_images_ucf => 'পণ্য ইমেজ';
 
   @override
   String get thumbnail_image_300_ucf => 'Thumbnail Image (300x300)';
@@ -1601,13 +1601,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'These images are visible in all products box. Use 300x300 size image. Keep some blank space around main object of your image as we had to crop some edge in different devices to make it responsive. ';
 
   @override
-  String get product_videos_ucf => 'Product Videos';
+  String get product_videos_ucf => 'পণ্য ভিডিও';
 
   @override
-  String get video_provider_ucf => 'Video Provider';
+  String get video_provider_ucf => 'ভিডিও প্রদানকারী';
 
   @override
-  String get video_link_ucf => 'Video Link';
+  String get video_link_ucf => 'ভিডিও লিংক';
 
   @override
   String get video_link_des =>
@@ -1617,41 +1617,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdf_description_ucf => 'PDF Description';
 
   @override
-  String get pdf_specification_ucf => 'PDF Specification';
+  String get pdf_specification_ucf => 'পিডিএফ স্পেসিফিকেশন';
 
   @override
-  String get unit_price_ucf => 'Unit Price';
+  String get unit_price_ucf => 'ইউনিট মূল্য';
 
   @override
-  String get discount_date_range_ucf => 'Discount Date Range';
+  String get discount_date_range_ucf => 'ডিসকাউন্ট তারিখ পরিসীমা';
 
   @override
   String get sku_all_capital => 'SKU';
 
   @override
-  String get external_link_ucf => 'External Link';
+  String get external_link_ucf => 'বাহ্যিক লিঙ্ক';
 
   @override
   String get leave_it_blank_if_you_do_not_use_external_site_link =>
       'Leave it blank if you do not use external site link';
 
   @override
-  String get external_link_button_text_ucf => 'External Link Button Text';
+  String get external_link_button_text_ucf => 'বাহ্যিক লিঙ্ক বোতামের টেক্সট';
 
   @override
-  String get low_stock_quantity_warning_ucf => 'Low Stock Quantity Warning';
+  String get low_stock_quantity_warning_ucf => 'কম স্টক পরিমাণ সতর্কতা';
 
   @override
-  String get stock_visibility_state_ucf => 'Stock Visibility State';
+  String get stock_visibility_state_ucf => 'স্টক দৃশ্যমানতা অবস্থা';
 
   @override
-  String get product_variation_ucf => 'Product Variation';
+  String get product_variation_ucf => 'পণ্যের বৈচিত্র';
 
   @override
-  String get colors_ucf => 'Colors';
+  String get colors_ucf => 'রং';
 
   @override
-  String get attributes_ucf => 'Attributes';
+  String get attributes_ucf => 'গুণাবলী';
 
   @override
   String get seo_all_capital => 'SEO';
@@ -1660,20 +1660,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meta_title_ucf => 'Meta Title';
 
   @override
-  String get meta_image_ucf => 'Meta Image';
+  String get meta_image_ucf => 'মেটা ইমেজ';
 
   @override
-  String get shipping_configuration_ucf => 'Shipping Configuration';
+  String get shipping_configuration_ucf => 'শিপিং কনফিগারেশন';
 
   @override
   String get shipping_configuration_is_maintained_by_admin =>
       'Shipping configuration is maintained by Admin.';
 
   @override
-  String get estimate_shipping_time_ucf => 'Estimate Shipping Time';
+  String get estimate_shipping_time_ucf => 'শিপিং সময় অনুমান';
 
   @override
-  String get shipping_days_ucf => 'Shipping Days';
+  String get shipping_days_ucf => 'শিপিং দিন';
 
   @override
   String get gallery_images_600 => 'Gallery Images (600x600)';
@@ -1683,10 +1683,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'These images are visible in product details page gallery. Use 600x600 sizes images.';
 
   @override
-  String get photo_ucf => 'Photo';
+  String get photo_ucf => 'ছবি';
 
   @override
-  String get general_ucf => 'General';
+  String get general_ucf => 'সাধারণ';
 
   @override
   String get media_ucf => 'Media';
@@ -1695,22 +1695,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get price_n_stock_ucf => 'Price & Stock';
 
   @override
-  String get shipping_ucf => 'Shipping';
+  String get shipping_ucf => 'শিপিং';
 
   @override
-  String get add_new_product_ucf => 'Add New Product';
+  String get add_new_product_ucf => 'নতুন পণ্য যোগ করুন';
 
   @override
-  String get product_reviews_ucf => 'Product Reviews';
+  String get product_reviews_ucf => 'পণ্য পর্যালোচনা';
 
   @override
-  String get update_now_ucf => 'Update Now';
+  String get update_now_ucf => 'এখনই আপডেট করুন';
 
   @override
-  String get slug_ucf => 'Slug';
+  String get slug_ucf => 'স্লাগ';
 
   @override
-  String get update_product_ucf => 'Update Product';
+  String get update_product_ucf => 'পণ্য আপডেট করুন';
 
   @override
   String get shop_banner_image_is_required => 'Shop banner image is required.';
@@ -1729,16 +1729,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delivery_boy_pickup_point => 'Delivery boy pickup point';
 
   @override
-  String get longitude_ucf => 'Longitude';
+  String get longitude_ucf => 'দ্রাঘিমাংশ';
 
   @override
-  String get latitude_ucf => 'Latitude';
+  String get latitude_ucf => 'অক্ষাংশ';
 
   @override
   String get update_location => 'Update location';
 
   @override
-  String get location_ucf => 'Location';
+  String get location_ucf => 'অবস্থান';
 
   @override
   String get calculating_ucf => 'Calculating';
@@ -1780,46 +1780,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shop_address => 'Shop address';
 
   @override
-  String get shop_name_ucf => 'Shop Name';
+  String get shop_name_ucf => 'দোকানের নাম';
 
   @override
-  String get shop_logo_ucf => 'Shop logo';
+  String get shop_logo_ucf => 'দোকান লোগো';
 
   @override
-  String get shop_settings_ucf => 'Shop Settings';
+  String get shop_settings_ucf => 'দোকান সেটিংস';
 
   @override
   String get social_media_link => 'Social media link';
 
   @override
-  String get google_ucf => 'Google';
+  String get google_ucf => 'গুগল';
 
   @override
-  String get twitter_ucf => 'Twitter';
+  String get twitter_ucf => 'টুইটার';
 
   @override
   String get instagram_ucf => 'Instagram';
 
   @override
-  String get facebook_ucf => 'Facebook';
+  String get facebook_ucf => 'ফেসবুক';
 
   @override
   String get upload_file_ucf => 'Upload File';
 
   @override
-  String get commission_history_ucf => 'Commission History';
+  String get commission_history_ucf => 'কমিশনের ইতিহাস';
 
   @override
   String get chat_list => 'Chat list';
 
   @override
-  String get admin_commission_ucf => 'Admin Commission';
+  String get admin_commission_ucf => 'প্রশাসনিক কমিশন';
 
   @override
   String get create_a_ticket => 'Create a ticket';
 
   @override
-  String get subject_ucf => 'Subject';
+  String get subject_ucf => 'বিষয়';
 
   @override
   String get provide_a_detailed_description => 'Provide a detailed description';
@@ -1834,13 +1834,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get your_categories_ucf => 'Your Categories';
 
   @override
-  String get sales_stat_ucf => 'Sales Stat';
+  String get sales_stat_ucf => 'বিক্রয় পরিসংখ্যান';
 
   @override
-  String get product_upload_limit_ucf => 'Product Upload Limit: ';
+  String get product_upload_limit_ucf => 'পণ্য আপলোডের সীমা';
 
   @override
-  String get package_expires_at_ucf => 'Package Expires at: ';
+  String get package_expires_at_ucf => 'প্যাকেজের মেয়াদ শেষ হবে';
 
   @override
   String get manage_n_organize_your_shop => 'Manage & organize\nyour shop.';
@@ -1849,22 +1849,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get configure_your_payment_method => 'Configure your payment\nmethod.';
 
   @override
-  String get configure_now_ucf => 'Configure Now';
+  String get configure_now_ucf => 'এখনই কনফিগার করুন';
 
   @override
   String get go_to_settings => 'Go to settings';
 
   @override
-  String get payment_settings_ucf => 'Payment Settings';
+  String get payment_settings_ucf => 'পেমেন্ট সেটিংস';
 
   @override
-  String get rating_ucf => 'Rating';
+  String get rating_ucf => 'রেটিং';
 
   @override
-  String get total_orders_ucf => 'Total Orders';
+  String get total_orders_ucf => 'মোট অর্ডার';
 
   @override
-  String get total_sales_ucf => 'Total Sales';
+  String get total_sales_ucf => 'মোট বিক্রয়';
 
   @override
   String get hi_welcome_to_all_lower => 'hi, welcome to';
@@ -1877,22 +1877,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'In case of any difficulties, contact with admin.';
 
   @override
-  String get pending_balance_ucf => 'Pending Balance';
+  String get pending_balance_ucf => 'অবশিষ্ট ব্যালেন্স';
 
   @override
-  String get send_withdraw_request_ucf => 'Send Withdraw Request';
+  String get send_withdraw_request_ucf => 'প্রত্যাহারের অনুরোধ পাঠান';
 
   @override
   String get premium_package_for_seller_ucf => 'Premium Package for Seller';
 
   @override
-  String get select_payment_type_ucf => 'Select Payment Type';
+  String get select_payment_type_ucf => 'পেমেন্ট টাইপ নির্বাচন করুন';
 
   @override
   String get select_payment_option_ucf => 'Select Payment Option';
 
   @override
-  String get enter_phone_number_ucf => 'Enter phone number';
+  String get enter_phone_number_ucf => 'ফোন নম্বর লিখুন';
 
   @override
   String get we_will_send_you_a_OTP_code_if_the_mail_id_is_correct_ucf =>
@@ -1903,7 +1903,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'We will send you a OTP code if the phone no is correct.';
 
   @override
-  String get reset_password_ucf => 'Reset Password';
+  String get reset_password_ucf => 'পাসওয়ার্ড রিসেট করুন';
 
   @override
   String get bank_payment => 'Bank payment';
@@ -1918,31 +1918,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bank_account_name => 'Bank account name';
 
   @override
-  String get bank_name_ucf => 'Bank Name';
+  String get bank_name_ucf => 'ব্যাঙ্কের নাম';
 
   @override
-  String get bank_routing_number_ucf => 'Bank Routing Number';
+  String get bank_routing_number_ucf => 'ব্যাঙ্ক রাউটিং নম্বর';
 
   @override
   String get no_more_refund_requests_ucf => 'No More Refund Requests';
 
   @override
-  String get approved_ucf => 'Approved';
+  String get approved_ucf => 'অনুমোদিত';
 
   @override
-  String get approve_ucf => 'Approve';
+  String get approve_ucf => 'অনুমোদন করুন';
 
   @override
   String get rejected_ucf => 'Rejected';
 
   @override
-  String get reject_ucf => 'Reject';
+  String get reject_ucf => 'প্রত্যাখ্যান করুন';
 
   @override
   String get support_tickets_ucf => 'Support Tickets';
 
   @override
-  String get options_ucf => 'Options';
+  String get options_ucf => 'বিকল্পগুলি';
 
   @override
   String get amount_is_invalid => 'Amount is invalid';
@@ -1951,7 +1951,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get message_is_invalid => 'Message is invalid';
 
   @override
-  String get coupon_ucf => 'Coupon';
+  String get coupon_ucf => 'কুপন';
 
   @override
   String get withdraw_ucf => 'Withdraw';
@@ -1960,7 +1960,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conversation_ucf => 'Conversation';
 
   @override
-  String get wholesale_prices_ucf => 'Wholesale Prices';
+  String get wholesale_prices_ucf => 'পাইকারি দাম';
 
   @override
   String get min_quantity_ucf => 'Minimum Quantity';
@@ -1969,7 +1969,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get max_quantity_ucf => 'Maximum Quantity';
 
   @override
-  String get add_more_ucf => 'Add More';
+  String get add_more_ucf => 'আরো যোগ করুন';
 
   @override
   String get or => 'OR';
@@ -1981,10 +1981,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get be_a_seller => 'Be a seller';
 
   @override
-  String get personal_info_ucf => 'Personal Info';
+  String get personal_info_ucf => 'ব্যক্তিগত তথ্য';
 
   @override
-  String get basic_info_ucf => 'Basic Info';
+  String get basic_info_ucf => 'মৌলিক তথ্য';
 
   @override
   String get shop_name => 'Shop Name';
@@ -2011,16 +2011,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get re_order_ucf => 'Reorder';
 
   @override
-  String get info_ucf => 'Info';
+  String get info_ucf => 'তথ্য';
 
   @override
-  String get min_qty_ucf => 'Min Qty';
+  String get min_qty_ucf => 'সর্বনিম্ন পরিমাণ';
 
   @override
-  String get max_qty_ucf => 'Max Qty';
+  String get max_qty_ucf => 'সর্বোচ্চ পরিমাণ';
 
   @override
-  String get invoice_ucf => 'Invoice';
+  String get invoice_ucf => 'চালান';
 
   @override
   String get a => '';
@@ -2029,22 +2029,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no_file_chosen_ucf => 'No File Chosen';
 
   @override
-  String get product_file_ucf => 'Product File';
+  String get product_file_ucf => 'পণ্য ফাইল';
 
   @override
-  String get purchase_price_ucf => 'Purchase Price';
+  String get purchase_price_ucf => 'ক্রয় মূল্য';
 
   @override
-  String get refunded_ucf => 'Refunded';
+  String get refunded_ucf => 'ফেরত দেওয়া হয়েছে';
 
   @override
-  String get bid_for_product_ucf => 'Bid For Product ';
+  String get bid_for_product_ucf => 'পণ্যের জন্য বিড';
 
   @override
   String get min_bid_amount_ucf => 'Min Bid Amount';
 
   @override
-  String get place_bid_price_ucf => 'Place Bid Price ';
+  String get place_bid_price_ucf => 'স্থান বিড মূল্য';
 
   @override
   String get please_fill_out_this_form => 'Please fill out this form';
@@ -2064,7 +2064,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get view_a_ticket => 'View a Ticket';
 
   @override
-  String get visit_store_ucf => 'Visit store';
+  String get visit_store_ucf => 'দোকানে যান';
 
   @override
   String get off => 'OFF';
@@ -2085,7 +2085,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get code => 'Code';
 
   @override
-  String get in_house_products_ucf => 'In House Products';
+  String get in_house_products_ucf => 'ইন-হাউস পণ্য';
 
   @override
   String get coupon_products_ucf => 'Coupon Products';
@@ -2121,7 +2121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phone_number_required => 'Phone Number  Required';
 
   @override
-  String get select_ucf => 'Select';
+  String get select_ucf => 'নির্বাচন করুন';
 
   @override
   String get pos_manager => 'Pos Manager';
@@ -2157,7 +2157,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payment_proof => 'Payment Proof';
 
   @override
-  String get back_ucf => 'Back';
+  String get back_ucf => 'পিছনে';
 
   @override
   String get no_notification_ucf => 'No Notification Found!';
@@ -2170,19 +2170,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add_new_classified_product_ucf => 'Add New Classified Product';
 
   @override
-  String get condition_ucf => 'Condition ';
+  String get condition_ucf => 'অবস্থা';
 
   @override
   String get descriptions_ucf => 'Description ';
 
   @override
-  String get thumbnail_image_ucf => 'Thumbnail Image';
+  String get thumbnail_image_ucf => 'থাম্বনেইল ছবি';
 
   @override
   String get video_form_ucf => 'Video Form';
 
   @override
-  String get video_url_ucf => 'Video Url';
+  String get video_url_ucf => 'ভিডিও URL';
 
   @override
   String get document => 'document';
@@ -2197,13 +2197,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get custom_unit_price_and_base_price => 'Unit Price (base price)';
 
   @override
-  String get meta_tags_ucf => 'Meta Tags';
+  String get meta_tags_ucf => 'মেটা ট্যাগ';
 
   @override
   String get meta_description_ucf => 'Meta Description';
 
   @override
-  String get save_product_ucf => 'Save Product';
+  String get save_product_ucf => 'পণ্য সংরক্ষণ করুন';
 
   @override
   String get type_and_hit_submit_ucf => 'Type and hit submit';
@@ -2231,16 +2231,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your classified product upload limit has been reached. Please buy a package.';
 
   @override
-  String get status_ucf => 'Status';
+  String get status_ucf => 'স্ট্যাটাস';
 
   @override
-  String get published_ucf => 'Published';
+  String get published_ucf => 'প্রকাশিত হয়েছে';
 
   @override
-  String get unpublished_ucf => 'Unpublished';
+  String get unpublished_ucf => 'অপ্রকাশিত';
 
   @override
-  String get loading_ucf => 'Loading';
+  String get loading_ucf => 'লোড হচ্ছে..';
 
   @override
   String get enter_correct_email => 'Enter Correct Email';
@@ -2269,7 +2269,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_or_reg => 'Login/Registration';
 
   @override
-  String get make_payment_ucf => 'Make Payment';
+  String get make_payment_ucf => 'পেমেন্ট করুন';
 
   @override
   String get last_view_product_ucf => 'Last View Product';

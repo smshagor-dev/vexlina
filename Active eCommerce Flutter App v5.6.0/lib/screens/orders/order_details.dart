@@ -1205,6 +1205,17 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 
   buildOrderDetailsTopCard() {
+    final order = _orderDetails;
+    if (order == null) {
+      return const SizedBox.shrink();
+    }
+
+    final shippingAddress = order.shipping_address;
+    final billingAddress = order.billing_address;
+    final pickupPoint = order.pickupPoint;
+    final hasShippingAddress = shippingAddress != null;
+    final hasPickupPoint = pickupPoint != null;
+
     return Container(
       decoration: BoxDecorations.buildBoxDecoration_1(),
       child: Padding(
@@ -1224,7 +1235,7 @@ class _OrderDetailsState extends State<OrderDetails> {
               child: Row(
                 children: [
                   Text(
-                    _orderDetails!.code!,
+                    _displayText(order.code),
                     style: TextStyle(
                       color: MyTheme.accent_color,
                       fontSize: 14,
@@ -1232,7 +1243,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                     ),
                   ),
                   Spacer(),
-                  hedingValue(_orderDetails!.shipping_type_string!),
+                  hedingValue(_displayText(order.shipping_type_string)),
                 ],
               ),
             ),
@@ -1249,9 +1260,9 @@ class _OrderDetailsState extends State<OrderDetails> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Row(
                 children: [
-                  hedingValue(_orderDetails!.date!),
+                  hedingValue(_displayText(order.date)),
                   Spacer(),
-                  hedingValue(_orderDetails!.payment_type!),
+                  hedingValue(_displayText(order.payment_type)),
                 ],
               ),
             ),
@@ -1268,20 +1279,23 @@ class _OrderDetailsState extends State<OrderDetails> {
                     children: [
                       headingText('Seller Address'),
                       const SizedBox(height: 2),
-                      Text(_orderDetails!.seller_address!, style: addressStyle),
+                      Text(
+                        _displayText(order.seller_address),
+                        style: addressStyle,
+                      ),
                       const SizedBox(height: 5),
 
-                      if (_orderDetails!.gstin != null &&
-                          _orderDetails!.gstin!.trim().isNotEmpty &&
-                          _orderDetails!.gst_amount != null &&
-                          _orderDetails!.gst_amount!.trim().isNotEmpty &&
-                          _orderDetails!.gst_amount != convertPrice("0"))
+                      if (order.gstin != null &&
+                          order.gstin!.trim().isNotEmpty &&
+                          order.gst_amount != null &&
+                          order.gst_amount!.trim().isNotEmpty &&
+                          order.gst_amount != convertPrice("0"))
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             headingText("GSTIN"),
                             Text(
-                              _orderDetails!.gstin!,
+                              order.gstin!,
                               maxLines: 2,
                               style: addressStyle,
                             ),
@@ -1302,7 +1316,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                         AppLocalizations.of(context)!.delivery_status_ucf,
                       ),
                       const SizedBox(height: 2),
-                      hedingValue(_orderDetails!.delivery_status_string!),
+                      hedingValue(_displayText(order.delivery_status_string)),
 
                       const SizedBox(height: 8),
 
@@ -1314,10 +1328,12 @@ class _OrderDetailsState extends State<OrderDetails> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          hedingValue(_orderDetails!.payment_status_string!),
+                          hedingValue(
+                            _displayText(order.payment_status_string),
+                          ),
                           const SizedBox(width: 4),
                           buildPaymentStatusCheckContainer(
-                            _orderDetails!.payment_status,
+                            order.payment_status,
                           ),
                         ],
                       ),
@@ -1326,6 +1342,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            _buildOrderVerificationQr(order.code),
 
             // Total Amount Row
             Row(
@@ -1337,7 +1355,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                   children: [
                     headingText(AppLocalizations.of(context)!.total_amount_ucf),
                     Text(
-                      convertPrice(_orderDetails!.grand_total!),
+                      _priceText(order.grand_total),
                       style: TextStyle(
                         color: MyTheme.accent_color,
                         fontSize: 14,
@@ -1356,21 +1374,20 @@ class _OrderDetailsState extends State<OrderDetails> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_orderDetails!.shipping_address != null) ...[
-                  if (_orderDetails!.shipping_address!.name != null)
+                if (hasShippingAddress) ...[
+                  if (shippingAddress.name != null)
                     Text(
-                      "${_orderDetails!.shipping_address!.name}",
+                      "${shippingAddress.name}",
                       style: addressStyle.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  if (_orderDetails!.shipping_address!.email != null)
+                  if (shippingAddress.email != null)
                     Text(
-                      "${_orderDetails!.shipping_address!.email}",
+                      "${shippingAddress.email}",
                       style: addressStyle.copyWith(fontWeight: FontWeight.bold),
                     ),
-                ] else if (_orderDetails!.pickupPoint != null &&
-                    _orderDetails!.pickupPoint!.name != null) ...[
+                ] else if (hasPickupPoint && pickupPoint.name != null) ...[
                   Text(
-                    "${AppLocalizations.of(context)!.name_ucf}: ${_orderDetails!.pickupPoint!.name}",
+                    "${AppLocalizations.of(context)!.name_ucf}: ${pickupPoint.name}",
                     style: addressStyle.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -1384,12 +1401,12 @@ class _OrderDetailsState extends State<OrderDetails> {
                 children: [
                   //  LEFT SIDE: Shipping Info -----
                   Expanded(
-                    child: _orderDetails!.shipping_address != null
+                    child: hasShippingAddress
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               headingText(
-                                _orderDetails!.shipping_address != null
+                                hasShippingAddress
                                     ? AppLocalizations.of(
                                         context,
                                       )!.shipping_address_ucf
@@ -1398,51 +1415,56 @@ class _OrderDetailsState extends State<OrderDetails> {
                                       )!.pickup_point_ucf,
                               ),
                               Text(
-                                "${_orderDetails!.shipping_address!.address}",
+                                _displayText(shippingAddress.address),
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.city_ucf}: ${_orderDetails!.shipping_address!.city}",
+                                "${AppLocalizations.of(context)!.city_ucf}: ${_displayText(shippingAddress.city)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.country_ucf}: ${_orderDetails!.shipping_address!.country}",
+                                "${AppLocalizations.of(context)!.country_ucf}: ${_displayText(shippingAddress.country)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.state_ucf}: ${_orderDetails!.shipping_address!.state}",
+                                "${AppLocalizations.of(context)!.state_ucf}: ${_displayText(shippingAddress.state)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                _orderDetails!.shipping_address!.phone ?? '',
+                                _displayText(shippingAddress.phone),
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.postal_code}: ${_orderDetails!.shipping_address!.postal_code ?? ''}",
+                                "${AppLocalizations.of(context)!.postal_code}: ${_displayText(shippingAddress.postal_code)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                             ],
                           )
-                        : Column(
+                        : hasPickupPoint
+                        ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "${AppLocalizations.of(context)!.address_ucf}: ${_orderDetails!.pickupPoint!.address}",
+                                "${AppLocalizations.of(context)!.address_ucf}: ${_displayText(pickupPoint.address)}",
                                 maxLines: 3,
                                 style: TextStyle(color: MyTheme.grey_153),
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.phone_ucf}: ${_orderDetails!.pickupPoint!.phone}",
+                                "${AppLocalizations.of(context)!.phone_ucf}: ${_displayText(pickupPoint.phone)}",
                                 maxLines: 3,
                                 style: TextStyle(color: MyTheme.grey_153),
                               ),
                             ],
+                          )
+                        : Text(
+                            AppLocalizations.of(context)!.no_data_is_available,
+                            style: TextStyle(color: MyTheme.grey_153),
                           ),
                   ),
 
@@ -1450,39 +1472,39 @@ class _OrderDetailsState extends State<OrderDetails> {
 
                   // RIGHT SIDE: Billing Info -----
                   Expanded(
-                    child: _orderDetails!.billing_address != null
+                    child: billingAddress != null
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               headingText('Billing Address'),
                               const SizedBox(height: 4),
                               Text(
-                                " ${_orderDetails!.billing_address!.address}",
+                                " ${_displayText(billingAddress.address)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.city_ucf}: ${_orderDetails!.billing_address!.city}",
+                                "${AppLocalizations.of(context)!.city_ucf}: ${_displayText(billingAddress.city)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.country_ucf}: ${_orderDetails!.billing_address!.country}",
+                                "${AppLocalizations.of(context)!.country_ucf}: ${_displayText(billingAddress.country)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.state_ucf}: ${_orderDetails!.billing_address!.state}",
+                                "${AppLocalizations.of(context)!.state_ucf}: ${_displayText(billingAddress.state)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                _orderDetails!.billing_address!.phone ?? '',
+                                _displayText(billingAddress.phone),
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
                               Text(
-                                "${AppLocalizations.of(context)!.postal_code}: ${_orderDetails!.billing_address!.postal_code ?? ''}",
+                                "${AppLocalizations.of(context)!.postal_code}: ${_displayText(billingAddress.postal_code)}",
                                 maxLines: 3,
                                 style: addressStyle,
                               ),
@@ -1828,6 +1850,224 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   Text hedingValue(text) {
     return Text(text, style: TextStyle(color: Colors.black));
+  }
+
+  String _displayText(String? value, {String fallback = '-'}) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return fallback;
+    }
+    return normalized;
+  }
+
+  String _priceText(String? value) {
+    return convertPrice(value ?? "0");
+  }
+
+  void _showQrPreview(String? code) {
+    final qrUrl = _buildOrderQrUrl(code, size: 320);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.qr_code_2_rounded,
+                      color: MyTheme.accent_color,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Order Verification Code',
+                        style: TextStyle(
+                          color: MyTheme.dark_font_grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                      color: MyTheme.font_grey,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffFFF9F7),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: MyTheme.accent_color.withValues(alpha: .22),
+                    ),
+                  ),
+                  child: qrUrl == null
+                      ? _buildQrFallback(220)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            qrUrl,
+                            width: 220,
+                            height: 220,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _buildQrFallback(220),
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _displayText(code),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: MyTheme.dark_font_grey,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Show this QR during delivery verification',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderVerificationQr(String? code) {
+    final qrUrl = _buildOrderQrUrl(code, size: 120);
+
+    return Column(
+      children: [
+        const Divider(),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.qr_code_2, color: MyTheme.accent_color, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              'Order Verification Code',
+              style: TextStyle(
+                color: MyTheme.accent_color,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: () => _showQrPreview(code),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xffFFF9F7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: MyTheme.accent_color.withValues(alpha: .25),
+              ),
+            ),
+            child: qrUrl == null
+                ? _buildQrFallback(120)
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      qrUrl,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildQrFallback(120),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Tap QR to preview and scan',
+          style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _displayText(code),
+          style: TextStyle(
+            color: MyTheme.dark_font_grey,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  String? _buildOrderQrUrl(String? code, {int size = 120}) {
+    final normalized = code?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return null;
+    }
+
+    final encoded = Uri.encodeComponent(normalized);
+    return "https://api.qrserver.com/v1/create-qr-code/?size=${size}x$size&data=$encoded&format=png&color=000000&bgcolor=ffffff";
+  }
+
+  Widget _buildQrFallback(double size) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Icon(Icons.qr_code_2, color: MyTheme.grey_153, size: size * .6),
+    );
   }
 
   TextStyle addressStyle = TextStyle(color: Colors.black, fontSize: 12);

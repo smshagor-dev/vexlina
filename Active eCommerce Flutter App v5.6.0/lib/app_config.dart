@@ -5,6 +5,7 @@ class AppConfig {
   static String copyright_text =
       "© Vexlina $this_year"; //this shows in the splash screen
   static String app_name = "Vexlina"; //this shows in the splash screen
+  static String app_version = "v1.0.0"; //this shows in the splash screen
   static String search_bar_text =
       "Search in Vexlina..."; //this will show in app Search bar.
   static String purchase_code =

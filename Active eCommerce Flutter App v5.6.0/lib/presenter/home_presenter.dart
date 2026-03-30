@@ -2,11 +2,15 @@ import 'dart:async';
 import 'package:active_ecommerce_cms_demo_app/custom/toast_component.dart';
 import 'package:active_ecommerce_cms_demo_app/data_model/flash_deal_response.dart'
     hide Product;
+import 'package:active_ecommerce_cms_demo_app/data_model/order_mini_response.dart'
+    as order_mini;
 import 'package:active_ecommerce_cms_demo_app/data_model/product_mini_response.dart';
 import 'package:active_ecommerce_cms_demo_app/data_model/category_response.dart';
 import 'package:active_ecommerce_cms_demo_app/data_model/slider_response.dart';
+import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/category_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/flash_deal_repository.dart';
+import 'package:active_ecommerce_cms_demo_app/repositories/order_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/product_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/sliders_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/single_banner/model.dart';
@@ -49,6 +53,7 @@ class HomePresenter extends ChangeNotifier {
   List<Product> featuredProductList = [];
   List<Product> newArrivalProductList = [];
   List<Product> allProductList = [];
+  List<order_mini.Order> onTheWayOrderList = [];
 
   /// Flags
   bool isCategoryInitial = true;
@@ -82,6 +87,9 @@ class HomePresenter extends ChangeNotifier {
 
   int cartCount = 0;
 
+  order_mini.Order? get firstOnTheWayOrder =>
+      onTheWayOrderList.isNotEmpty ? onTheWayOrderList.first : null;
+
   /// ================= FETCH ALL =================
 
   fetchAll() {
@@ -91,6 +99,7 @@ class HomePresenter extends ChangeNotifier {
     fetchBannerThreeImages();
     fetchFeaturedCategories();
     fetchTodaysDealProducts();
+    fetchOnTheWayOrders();
     fetchFeaturedProducts();
     fetchNewArrivalProducts();
     fetchAllProducts();
@@ -145,6 +154,27 @@ class HomePresenter extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Today's deal product error: $e");
+    }
+  }
+
+  fetchOnTheWayOrders() async {
+    if (!(is_logged_in.$) || (access_token.$?.isEmpty ?? true)) {
+      onTheWayOrderList.clear();
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final res = await OrderRepository().getOrderList(
+        page: 1,
+        deliveryStatus: "on_the_way",
+      );
+      onTheWayOrderList = res.orders ?? [];
+      notifyListeners();
+    } catch (e) {
+      debugPrint("On the way order error: $e");
+      onTheWayOrderList.clear();
+      notifyListeners();
     }
   }
 
@@ -263,6 +293,7 @@ class HomePresenter extends ChangeNotifier {
     flashDealList.clear();
     flashDealBannerImageList.clear();
     todaysDealProductList.clear();
+    onTheWayOrderList.clear();
 
     isCarouselInitial = true;
     isBannerOneInitial = true;

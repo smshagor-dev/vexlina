@@ -218,6 +218,7 @@ Route::controller(CustomerProductController::class)->group(function () {
 
 Route::controller(ReelController::class)->group(function () {
     Route::get('/reels', 'index')->name('reels.index');
+    Route::get('/reels/studio', 'create')->middleware(['user', 'verified', 'unbanned'])->name('reels.create');
     Route::get('/reels/{id}', 'show')->name('reels.show');
 });
 

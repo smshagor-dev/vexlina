@@ -16,6 +16,7 @@ import 'package:active_ecommerce_cms_demo_app/screens/auction/auction_products.d
 import 'package:active_ecommerce_cms_demo_app/screens/blog_list_screen.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/classified_ads/classified_ads.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/classified_ads/my_classified_ads.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/checkout/cart.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/coupon/coupons.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/digital_product/digital_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/filter.dart';
@@ -1164,43 +1165,83 @@ class _ProfileState extends State<Profile> {
         buildCountersRowItem(
           _cartCounterString,
           AppLocalizations.of(context)!.in_your_cart_all_lower,
+          onTap: () {
+            if (!is_logged_in.$) {
+              showLoginWarning();
+              return;
+            }
+
+            Navigator.push(context, PageAnimation.fadeRoute(const Cart()));
+          },
         ),
         buildCountersRowItem(
           _wishlistCounterString,
           AppLocalizations.of(context)!.in_your_wishlist_all_lower,
+          onTap: () {
+            if (!is_logged_in.$) {
+              showLoginWarning();
+              return;
+            }
+
+            Navigator.push(context, PageAnimation.fadeRoute(const Wishlist()));
+          },
         ),
         buildCountersRowItem(
           _orderCounterString,
           AppLocalizations.of(context)!.your_ordered_all_lower,
+          onTap: () {
+            if (!is_logged_in.$) {
+              showLoginWarning();
+              return;
+            }
+
+            Navigator.push(context, PageAnimation.fadeRoute(const OrderList()));
+          },
         ),
       ],
     );
   }
 
-  Widget buildCountersRowItem(String counter, String title) {
-    return Container(
-      margin: EdgeInsets.only(top: 20),
-      padding: EdgeInsets.symmetric(vertical: 14),
-      width: DeviceInfo(context).width! / 3.5,
-      decoration: BoxDecoration(
+  Widget buildCountersRowItem(
+    String counter,
+    String title, {
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(6),
-        color: MyTheme.white,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            counter,
-            maxLines: 2,
-            style: TextStyle(
-              fontSize: 18,
-              color: MyTheme.dark_font_grey,
-              fontWeight: FontWeight.bold,
-            ),
+        child: Container(
+          margin: EdgeInsets.only(top: 20),
+          padding: EdgeInsets.symmetric(vertical: 14),
+          width: DeviceInfo(context).width! / 3.5,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: MyTheme.white,
           ),
-          SizedBox(height: 5),
-          Text(title, maxLines: 2, style: TextStyle(color: Color(0xff3E4447))),
-        ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                counter,
+                maxLines: 2,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: MyTheme.dark_font_grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                title,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xff3E4447)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

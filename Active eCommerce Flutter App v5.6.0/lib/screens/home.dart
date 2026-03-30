@@ -5,13 +5,25 @@ import 'package:active_ecommerce_cms_demo_app/helpers/shimmer_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/presenter/home_presenter.dart';
+import 'package:active_ecommerce_cms_demo_app/presenter/unRead_notification_counter.dart';
+import 'package:active_ecommerce_cms_demo_app/repositories/address_repository.dart';
+import 'package:active_ecommerce_cms_demo_app/repositories/clubpoint_repository.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/address.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/chat/messenger_list.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/club_point.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/filter.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/notification/notification_list.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/orders/order_details.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/orders/order_list.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/profile.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/flash_deal/flash_deal_list.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/todays_deal_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/home_section_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/product/top_selling_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/top_sellers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_countdown_timer/index.dart';
+import 'package:provider/provider.dart';
 import '../custom/home_all_products_2.dart';
 import '../custom/home_banner_one.dart';
 import '../custom/home_banner_three.dart';
@@ -44,6 +56,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   final HomePresenter homeData = HomePresenter();
   final FlashDealResponseDatum flashDealResponseDatum =
       FlashDealResponseDatum();
+  String _defaultAddressLabel = 'Add Address';
+  String _clubPointLabel = '0';
 
   @override
   void initState() {
@@ -59,8 +73,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     homeData.initPiratedAnimation(this);
   }
 
-  Future<void> _fetchData() {
-    return homeData.onRefresh();
+  Future<void> _fetchData() async {
+    await homeData.onRefresh();
+    await _fetchHeaderQuickActions();
   }
 
   @override
@@ -68,6 +83,115 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     homeData.pirated_logo_controller.dispose();
     homeData.mainScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchHeaderQuickActions() async {
+    if (!mounted) return;
+
+    if (!is_logged_in.$ || (access_token.$?.isEmpty ?? true)) {
+      setState(() {
+        _defaultAddressLabel = 'Add Address';
+        _clubPointLabel = '0';
+      });
+      return;
+    }
+
+    context.read<UnReadNotificationCounter>().getCount();
+
+    try {
+      final addressResponse = await AddressRepository().getAddressList();
+      final List<dynamic> addresses = addressResponse.addresses ?? [];
+      dynamic selectedAddress;
+
+      for (final address in addresses) {
+        if (address.setDefault == 1) {
+          selectedAddress = address;
+          break;
+        }
+      }
+
+      selectedAddress ??= addresses.isNotEmpty ? addresses.first : null;
+
+      String addressLabel = 'Add Address';
+      if (selectedAddress != null) {
+        addressLabel = _buildAddressLabel(selectedAddress);
+      }
+
+      String pointLabel = '0';
+      if (club_point_addon_installed.$) {
+        final clubPoints = <dynamic>[];
+        int currentPage = 1;
+        int lastPage = 1;
+
+        do {
+          final clubPointResponse = await ClubpointRepository()
+              .getClubPointListResponse(page: currentPage);
+          clubPoints.addAll(clubPointResponse.clubpoints ?? []);
+          lastPage = clubPointResponse.meta?.lastPage ?? currentPage;
+          currentPage++;
+        } while (currentPage <= lastPage);
+
+        final totalPoints = clubPoints.fold<double>(0, (sum, item) {
+          final isConverted = item.convertStatus == 1;
+          if (isConverted) {
+            return sum;
+          }
+
+          final rawValue = item.convertibleClubPoint ?? item.points ?? 0;
+          final numericValue = rawValue is num
+              ? rawValue.toDouble()
+              : double.tryParse(rawValue.toString()) ?? 0;
+
+          if (numericValue <= 0) {
+            return sum;
+          }
+
+          return sum + numericValue;
+        });
+
+        pointLabel = totalPoints % 1 == 0
+            ? totalPoints.toInt().toString()
+            : totalPoints.toStringAsFixed(1);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _defaultAddressLabel = addressLabel;
+        _clubPointLabel = pointLabel;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _defaultAddressLabel = 'Add Address';
+        _clubPointLabel = '0';
+      });
+    }
+  }
+
+  String _buildAddressLabel(dynamic address) {
+    final parts = <String>[
+      address.address?.toString().trim() ?? '',
+      address.cityName?.toString().trim() ?? '',
+      address.areaName?.toString().trim() ?? '',
+    ].where((part) => part.isNotEmpty).toList();
+
+    if (parts.isEmpty) {
+      return 'Add Address';
+    }
+
+    return parts.join(', ');
+  }
+
+  void _openProfileLinkedPage(Widget screen) {
+    if (!is_logged_in.$) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const Profile(showBackButton: true)),
+      );
+      return;
+    }
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
@@ -100,18 +224,25 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     elevation: 0,
                     scrolledUnderElevation: 0.0,
                     automaticallyImplyLeading: false,
-                    toolbarHeight: 50.h,
+                    toolbarHeight: 88.h,
                     title: Padding(
                       padding: EdgeInsets.zero,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const Filter(),
-                            ),
-                          );
-                        },
-                        child: HomeSearchBox(context: context),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTopQuickActions(context),
+                          SizedBox(height: 8.h),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const Filter(),
+                                ),
+                              );
+                            },
+                            child: HomeSearchBox(context: context),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -145,6 +276,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   ListenableBuilder(
                     listenable: homeData,
                     builder: (context, child) =>
+                        _buildOnTheWayQrSection(context, homeData),
+                  ),
+                  ListenableBuilder(
+                    listenable: homeData,
+                    builder: (context, child) =>
                         _buildTodaysDealSection(context, homeData),
                   ),
                   //Second banner
@@ -153,10 +289,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       SizedBox(height: 5.h),
                       ListenableBuilder(
                         listenable: homeData,
-                        builder: (context, child) => HomeBannerOne(
-                          context: context,
-                          homeData: homeData,
-                        ),
+                        builder: (context, child) =>
+                            HomeBannerOne(context: context, homeData: homeData),
                       ),
                     ]),
                   ),
@@ -198,9 +332,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   ),
                   //Single Banner
                   const SliverList(
-                    delegate: SliverChildListDelegate.fixed([
-                      PhotoWidget(),
-                    ]),
+                    delegate: SliverChildListDelegate.fixed([PhotoWidget()]),
                   ),
                   //All Products
                   ListenableBuilder(
@@ -262,7 +394,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       child: Row(
                         children: [
                           Text(
-                            'View all',
+                            AppLocalizations.of(context)!.see_all_ucf,
                             style: TextStyle(
                               fontSize: 10.sp,
                               fontWeight: FontWeight.w600,
@@ -290,21 +422,450 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildTopQuickActions(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18.r),
+            onTap: () => _openProfileLinkedPage(const Address()),
+            child: Container(
+              height: 30.h,
+              padding: EdgeInsets.symmetric(horizontal: 10.w),
+              decoration: BoxDecoration(
+                color: const Color(0xffFFF3EC),
+                borderRadius: BorderRadius.circular(18.r),
+                border: Border.all(
+                  color: MyTheme.accent_color.withValues(alpha: .12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    color: MyTheme.accent_color,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      _defaultAddressLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: MyTheme.dark_font_grey,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        _buildTopStatAction(
+          icon: Icons.stars_rounded,
+          label: _clubPointLabel,
+          onTap: () => _openProfileLinkedPage(const Clubpoint()),
+        ),
+        SizedBox(width: 6.w),
+        _buildTopIconAction(
+          icon: Icons.chat_bubble_outline_rounded,
+          onTap: () => _openProfileLinkedPage(const MessengerList()),
+        ),
+        SizedBox(width: 6.w),
+        Consumer<UnReadNotificationCounter>(
+          builder: (context, notification, child) {
+            return _buildTopIconAction(
+              icon: Icons.notifications_none_rounded,
+              onTap: () => _openProfileLinkedPage(const NotificationList()),
+              badgeCount: notification.unReadNotificationCounter,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopStatAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18.r),
+      onTap: onTap,
+      child: Container(
+        height: 30.h,
+        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        decoration: BoxDecoration(
+          color: const Color(0xffFFF3EC),
+          borderRadius: BorderRadius.circular(18.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: MyTheme.accent_color, size: 15.sp),
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: TextStyle(
+                color: MyTheme.dark_font_grey,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopIconAction({
+    required IconData icon,
+    required VoidCallback onTap,
+    int badgeCount = 0,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18.r),
+      onTap: onTap,
+      child: Container(
+        width: 30.h,
+        height: 30.h,
+        decoration: BoxDecoration(
+          color: const Color(0xffF7F7FA),
+          borderRadius: BorderRadius.circular(18.r),
+          border: Border.all(color: const Color(0xffE8E9EE)),
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Icon(icon, color: MyTheme.dark_font_grey, size: 16.sp),
+            ),
+            if (badgeCount > 0)
+              Positioned(
+                top: -3,
+                right: -1,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: MyTheme.accent_color,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    badgeCount > 9 ? '9+' : '$badgeCount',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   SliverList _buildTodaysDealSection(
     BuildContext context,
     HomePresenter homeData,
   ) {
     return _buildProductShowcaseSection(
       context,
-      title: AppLocalizations.of(context)!.todays_deal_ucf,
+      title: "Today's Sale",
+      leadingIcon: Icons.local_offer_outlined,
       products: homeData.todaysDealProductList,
       isLoading: homeData.isTodaysDealProductInitial,
+      trailing: _buildTodaysDealCountdown(),
       onViewAll: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const TodaysDealProducts()),
         );
       },
+    );
+  }
+
+  SliverToBoxAdapter _buildOnTheWayQrSection(
+    BuildContext context,
+    HomePresenter homeData,
+  ) {
+    final activeOrder = homeData.firstOnTheWayOrder;
+    if (activeOrder == null) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final qrUrl = _buildOrderQrUrl(activeOrder.code, size: 180);
+    const darkCard = Color(0xff283246);
+    const darkCardAlt = Color(0xff313C52);
+    const textMuted = Color(0xffB7C0CC);
+    const textSoft = Color(0xffF7F8FA);
+    const qrBorder = Color(0xffE7DDD3);
+    final surface = MyTheme.mainColor;
+
+    return SliverToBoxAdapter(
+      child: Container(
+        color: surface,
+        padding: EdgeInsets.fromLTRB(0, 4.h, 16.w, 12.h),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxWidth = constraints.maxWidth;
+            final gap = (maxWidth * .022).clamp(6.0, 10.0);
+            final cardHeight = (maxWidth * .20).clamp(72.0, 84.0);
+            final qrCardWidth = (cardHeight * .92).clamp(62.0, 74.0);
+            final qrVisibleWidth = qrCardWidth * .52;
+            final actionCardWidth = (maxWidth * .22).clamp(82.0, 100.0);
+            final leftSpacing = (qrVisibleWidth + gap).clamp(34.0, 48.0);
+            final innerTileSize = (cardHeight * .48).clamp(36.0, 42.0);
+            final titleSize = (cardHeight * .22).clamp(13.5, 17.0);
+            final metaSize = (cardHeight * .145).clamp(10.0, 12.0);
+            final codeSize = (cardHeight * .16).clamp(11.0, 13.0);
+            final qrIconSize = (qrCardWidth * .34).clamp(24.0, 28.0);
+
+            return SizedBox(
+              height: cardHeight,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: leftSpacing),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      OrderDetails(id: activeOrder.id),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: cardHeight,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [darkCardAlt, darkCard],
+                                ),
+                                borderRadius: BorderRadius.circular(22.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xff283246,
+                                    ).withValues(alpha: .12),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: innerTileSize,
+                                    height: innerTileSize,
+                                    decoration: BoxDecoration(
+                                      color: MyTheme.accent_color.withValues(
+                                        alpha: .16,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.local_shipping_outlined,
+                                      color: MyTheme.accent_color,
+                                      size: (cardHeight * .25).clamp(
+                                        18.0,
+                                        22.0,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'On The Way',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: MyTheme.accent_color,
+                                            fontSize: titleSize,
+                                            fontWeight: FontWeight.w800,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          _displayText(activeOrder.date),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: textMuted,
+                                            fontSize: metaSize,
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          _displayText(activeOrder.code),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: textSoft,
+                                            fontSize: codeSize,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: gap),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const OrderList(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: actionCardWidth,
+                            height: cardHeight,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 10.h,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [darkCardAlt, darkCard],
+                              ),
+                              borderRadius: BorderRadius.circular(22.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xff283246,
+                                  ).withValues(alpha: .10),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: textSoft,
+                                  size: (cardHeight * .28).clamp(20.0, 26.0),
+                                ),
+                                SizedBox(height: 6.h),
+                                Text(
+                                  'All Orders',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: textSoft,
+                                    fontSize: metaSize,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: -qrCardWidth * .48,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                OrderDetails(id: activeOrder.id),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: qrCardWidth,
+                        height: cardHeight,
+                        padding: EdgeInsets.all(
+                          (qrCardWidth * .15).clamp(8.0, 10.0),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22.r),
+                          border: Border.all(color: qrBorder),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: .05),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: qrUrl == null
+                            ? Center(
+                                child: Icon(
+                                  Icons.qr_code_scanner_rounded,
+                                  size: qrIconSize,
+                                  color: const Color(0xff212226),
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(14.r),
+                                child: Image.network(
+                                  qrUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Center(
+                                    child: Icon(
+                                      Icons.qr_code_scanner_rounded,
+                                      size: qrIconSize,
+                                      color: const Color(0xff212226),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -315,6 +876,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     return _buildProductShowcaseSection(
       context,
       title: AppLocalizations.of(context)!.featured_products_ucf,
+      leadingIcon: Icons.workspace_premium_outlined,
       products: homeData.featuredProductList,
       isLoading: homeData.isFeaturedProductInitial,
       onViewAll: () {
@@ -352,6 +914,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     return _buildProductShowcaseSection(
       context,
       title: AppLocalizations.of(context)!.new_arrival_ucf,
+      leadingIcon: Icons.auto_awesome_outlined,
       products: homeData.newArrivalProductList,
       isLoading: homeData.isNewArrivalInitial,
       onViewAll: () {
@@ -371,9 +934,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   SliverList _buildProductShowcaseSection(
     BuildContext context, {
     required String title,
+    required IconData leadingIcon,
     required List<Product> products,
     required bool isLoading,
     required VoidCallback onViewAll,
+    Widget? trailing,
   }) {
     return SliverList(
       delegate: SliverChildListDelegate([
@@ -386,14 +951,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(title, style: MyTheme.homeText_heding()),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _buildSectionTitle(title: title, icon: leadingIcon),
+                          if (trailing != null) ...[
+                            SizedBox(width: 10.w),
+                            trailing,
+                          ],
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
                     GestureDetector(
                       onTap: onViewAll,
                       child: Row(
                         children: [
                           Text(
-                            'View All',
+                            AppLocalizations.of(context)!.see_all_ucf,
                             style: TextStyle(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
@@ -423,20 +1000,117 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildProductStrip(List<Product> products, bool isLoading) {
-    if (isLoading) {
-      return Row(
-        children: List.generate(
-          3,
-          (index) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: index == 2 ? 16.w : 12.w),
-              child: ShimmerHelper().buildBasicShimmer(
-                height: 250.h,
-                width: 152.w,
+  Widget _buildTodaysDealCountdown() {
+    final now = DateTime.now();
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final endTime = endOfDay.millisecondsSinceEpoch;
+
+    return CountdownTimer(
+      endTime: endTime,
+      widgetBuilder: (_, CurrentRemainingTime? time) {
+        if (time == null) {
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: const Color(0xffFFE2E0),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              AppLocalizations.of(context)!.ended_ucf,
+              style: TextStyle(
+                color: const Color(0xffC43228),
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w700,
               ),
             ),
+          );
+        }
+
+        final days = time.days ?? 0;
+        final hours = time.hours ?? 0;
+        final minutes = time.min ?? 0;
+        final seconds = time.sec ?? 0;
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xffFF6A3D), Color(0xffFF8C42)],
+            ),
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xffFF6A3D).withValues(alpha: 0.22),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.timer_outlined, size: 14.sp, color: Colors.white),
+              SizedBox(width: 6.w),
+              Text(
+                '${_formatCountdownUnit(days)}:${_formatCountdownUnit(hours)}:${_formatCountdownUnit(minutes)}:${_formatCountdownUnit(seconds)}',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatCountdownUnit(int value) {
+    return value.toString().padLeft(2, '0');
+  }
+
+  String _displayText(String? value, {String fallback = '-'}) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return fallback;
+    }
+    return normalized;
+  }
+
+  String? _buildOrderQrUrl(String? code, {int size = 180}) {
+    final normalized = code?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return null;
+    }
+
+    final encoded = Uri.encodeComponent(normalized);
+    return "https://api.qrserver.com/v1/create-qr-code/?size=${size}x$size&data=$encoded&format=png&color=000000&bgcolor=ffffff";
+  }
+
+  Widget _buildProductStrip(List<Product> products, bool isLoading) {
+    final cardWidth = ((MediaQuery.of(context).size.width - 44.w) / 2).clamp(
+      140.w,
+      190.w,
+    );
+
+    if (isLoading) {
+      return SizedBox(
+        height: 286.h,
+        child: ListView.separated(
+          padding: EdgeInsets.only(right: 16.w),
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          itemCount: 4,
+          separatorBuilder: (context, index) => SizedBox(width: 12.w),
+          itemBuilder: (context, index) {
+            return ShimmerHelper().buildBasicShimmer(
+              height: 286.h,
+              width: cardWidth,
+            );
+          },
         ),
       );
     }
@@ -468,6 +1142,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           return HomeProductCard(
             id: product.id,
             slug: product.slug ?? product.id.toString(),
+            width: cardWidth,
             image: product.thumbnailImage,
             name: product.name,
             mainPrice: product.mainPrice,
@@ -496,9 +1171,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             children: [
               Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 5.0, 16.w, 0.0),
-                child: Text(
-                  AppLocalizations.of(context)!.all_products_ucf,
-                  style: MyTheme.homeText_heding(),
+                child: _buildSectionTitle(
+                  title: AppLocalizations.of(context)!.all_products_ucf,
+                  icon: Icons.grid_view_rounded,
                 ),
               ),
               HomeAllProducts2(homeData: homeData),
@@ -507,6 +1182,25 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ),
         SizedBox(height: 80.h),
       ]),
+    );
+  }
+
+  Widget _buildSectionTitle({required String title, required IconData icon}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28.w,
+          height: 28.w,
+          decoration: BoxDecoration(
+            color: MyTheme.accent_color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Icon(icon, size: 16.sp, color: MyTheme.accent_color),
+        ),
+        SizedBox(width: 8.w),
+        Flexible(child: Text(title, style: MyTheme.homeText_heding())),
+      ],
     );
   }
 
@@ -680,7 +1374,7 @@ class _HomeMenu extends StatelessWidget {
     return [
       if (homeData.isTodayDeal)
         {
-          "title": AppLocalizations.of(context)!.todays_deal_ucf,
+          "title": "Today's Sale",
           "image": "assets/todays_deal.png",
           "icon": Icons.calendar_today_outlined,
           "onTap": () => Navigator.push(

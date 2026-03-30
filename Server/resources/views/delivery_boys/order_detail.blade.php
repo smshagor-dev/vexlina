@@ -72,6 +72,16 @@
                                 <td>{{ $order->tracking_code }}</td>
                             </tr>
                         @endif
+                        <tr>
+                            <td class="w-50 fw-600">{{ translate('Delivery verification')}}:</td>
+                            <td>
+                                @if ($order->delivery_verification_status)
+                                    <span class="badge badge-inline badge-success">{{ translate('Verified') }}</span>
+                                @else
+                                    <span class="badge badge-inline badge-warning">{{ translate('Pending') }}</span>
+                                @endif
+                            </td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -180,6 +190,23 @@
             @if ($order->manual_payment && $order->manual_payment_data == null)
                 <button onclick="show_make_payment_modal({{ $order->id }})" class="btn btn-block btn-primary rounded-0">{{ translate('Make Payment')}}</button>
             @endif
+
+            @if ($order->delivery_status == 'on_the_way' && !$order->delivery_verification_status)
+                <div class="card mt-4 shadow-none rounded-0 border">
+                    <div class="card-header border-bottom-0">
+                        <b class="fs-16 fw-700 text-dark">{{ translate('Delivery Verification') }}</b>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted fs-13 mb-3">{{ translate('Enter the code shown in the customer QR to verify before marking delivered.') }}</p>
+                        <div class="form-group mb-2">
+                            <input type="text" class="form-control" id="delivery_verification_code" placeholder="{{ translate('Order verification code') }}">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block rounded-0" onclick="verify_delivery_code({{ $order->id }})">
+                            {{ translate('Verify Delivery Code') }}
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 @endsection
@@ -204,6 +231,31 @@
                 $('#payment_modal_body').html(data);
                 $('#payment_modal').modal('show');
                 $('input[name=order_id]').val(order_id);
+            });
+        }
+
+        function verify_delivery_code(order_id) {
+            const verificationCode = ($('#delivery_verification_code').val() || '').trim();
+
+            if (!verificationCode) {
+                AIZ.plugins.notify('warning', '{{ translate('Verification code is required') }}');
+                return;
+            }
+
+            $.post('{{ route('delivery-boy.orders.verify_delivery') }}', {
+                _token: '{{ csrf_token() }}',
+                order_id: order_id,
+                verification_code: verificationCode
+            }, function (data) {
+                if (data.success === false) {
+                    AIZ.plugins.notify('danger', data.message || '{{ translate('Delivery verification failed') }}');
+                    return;
+                }
+
+                AIZ.plugins.notify('success', data.message || '{{ translate('Order delivery verified successfully.') }}');
+                location.reload();
+            }).fail(function (xhr) {
+                AIZ.plugins.notify('danger', xhr.responseJSON?.message || '{{ translate('Delivery verification failed') }}');
             });
         }
     </script>

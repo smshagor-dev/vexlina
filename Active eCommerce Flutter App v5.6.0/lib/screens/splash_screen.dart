@@ -2,7 +2,6 @@ import 'package:active_ecommerce_cms_demo_app/app_config.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/device_info.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,24 +11,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  PackageInfo _packageInfo = PackageInfo(
-    appName: AppConfig.app_name,
-    packageName: 'Unknown',
-    version: 'Unknown',
-    buildNumber: 'Unknown',
-  );
-
-  Future<void> _initPackageInfo() async {
-    final PackageInfo info = await PackageInfo.fromPlatform();
-    setState(() {
-      _packageInfo = info;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    _initPackageInfo();
   }
 
   @override
@@ -56,23 +40,30 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             Positioned.fill(
-              top: DeviceInfo(context).height! / 2 - 72,
+              top: DeviceInfo(context).height! / 2 - 92,
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
+                    padding: const EdgeInsets.only(bottom: 14.0),
                     child: Hero(
                       tag: "splashscreenImage",
                       child: Container(
-                        height: 72,
-                        width: 72,
+                        height: 96,
+                        width: 96,
                         padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                          horizontal: 14,
+                          vertical: 14,
                         ),
                         decoration: BoxDecoration(
                           color: MyTheme.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Image.asset(
                           "assets/splash_screen_logo.png",
@@ -87,16 +78,17 @@ class _SplashScreenState extends State<SplashScreen> {
                       AppConfig.app_name,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14.0,
+                        fontSize: 18.0,
                         color: Colors.white,
                       ),
                     ),
                   ),
                   Text(
-                    "V ${_packageInfo.version}",
+                    AppConfig.app_version,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.0,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.0,
+                      letterSpacing: 0.6,
                       color: Colors.white,
                     ),
                   ),

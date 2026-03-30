@@ -15,11 +15,17 @@ class Order extends Model
         'steadfast_invoice',
         'steadfast_synced',
         'steadfast_synced_at',
+        'delivery_verification_status',
+        'delivery_verified_at',
+        'delivery_verified_by',
+        'delivery_verification_source',
     ];
 
     protected $casts = [
         'steadfast_synced'    => 'boolean',
         'steadfast_synced_at' => 'datetime',
+        'delivery_verification_status' => 'boolean',
+        'delivery_verified_at' => 'datetime',
     ];
     
     public function orderDetails()

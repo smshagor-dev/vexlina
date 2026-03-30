@@ -247,10 +247,6 @@ class CartController extends Controller
         $tax = CartUtility::tax_calculation($product, $price);
         CartUtility::save_cart_data($cart, $product, $price, $tax, $quantity);
 
-        if (NagadUtility::create_balance_reference($request->cost_matrix) == false) {
-            return response()->json(['result' => false, 'message' => 'Cost matrix error']);
-        }
-
         return response()->json([
             'result' => true,
             'temp_user_id' => $temp_user_id,

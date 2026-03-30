@@ -14,11 +14,18 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\User;
 use App\Models\SmsTemplate;
+use App\Services\OrderDeliveryVerificationService;
 use App\Utility\SmsUtility;
 
 
 class DeliveryBoyController extends Controller
 {
+    protected OrderDeliveryVerificationService $orderDeliveryVerificationService;
+
+    public function __construct()
+    {
+        $this->orderDeliveryVerificationService = new OrderDeliveryVerificationService();
+    }
 
     /**
      * Show the list of assigned delivery by the admin.
@@ -288,6 +295,22 @@ class DeliveryBoyController extends Controller
      */
     public function change_delivery_status(Request $request) {
         $order = Order::find($request->order_id);
+        if ($request->status === 'delivered') {
+            $verification = $this->orderDeliveryVerificationService->ensureVerifiedForDelivery(
+                $order,
+                auth()->user(),
+                $request->delivery_verification_code,
+                'app'
+            );
+
+            if (!($verification['success'] ?? false)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => $verification['message'] ?? translate('Delivery verification failed.'),
+                ], $verification['status'] ?? 422);
+            }
+        }
+
         $order->delivery_viewed = '0';
         $order->delivery_status = $request->status;
         $order->save();
@@ -357,6 +380,31 @@ class DeliveryBoyController extends Controller
             'result' => true,
             'message' => translate('Delivery status changed to ').ucwords(str_replace('_',' ',$request->status))
         ]);
+    }
+
+    public function verify_delivery(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer',
+            'verification_code' => 'required|string',
+        ]);
+
+        $order = Order::where('id', $request->order_id)
+            ->where('assign_delivery_boy', auth()->user()->id)
+            ->firstOrFail();
+
+        $result = $this->orderDeliveryVerificationService->verify(
+            $order,
+            $request->verification_code,
+            auth()->user(),
+            'app'
+        );
+
+        return response()->json([
+            'result' => $result['success'] ?? false,
+            'message' => $result['message'] ?? translate('Delivery verification failed.'),
+            'data' => $result['data'] ?? null,
+        ], $result['status'] ?? 200);
     }
 
     public function cancel_request($id)

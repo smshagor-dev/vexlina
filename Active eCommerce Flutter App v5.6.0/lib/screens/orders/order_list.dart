@@ -468,6 +468,8 @@ class _OrderListState extends State<OrderList> {
   }
 
   buildOrderListItemCard(int index) {
+    final order = _orderList[index];
+
     return Container(
       decoration: BoxDecorations.buildBoxDecoration_1(),
       child: Padding(
@@ -475,31 +477,108 @@ class _OrderListState extends State<OrderList> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                _orderList[index].code,
-                style: TextStyle(
-                  color: MyTheme.accent_color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          _displayText(order.code),
+                          style: TextStyle(
+                            color: MyTheme.accent_color,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _displayText(order.date),
+                                style: TextStyle(
+                                  color: MyTheme.dark_font_grey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Row(
+                          children: [
+                            Text(
+                              "${AppLocalizations.of(context)!.payment_status_ucf} - ",
+                              style: TextStyle(
+                                color: MyTheme.dark_font_grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                _displayText(order.paymentStatusString),
+                                style: TextStyle(
+                                  color: order.paymentStatus == "paid"
+                                      ? Colors.green
+                                      : Colors.red,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            "${AppLocalizations.of(context)!.delivery_status_ucf} -",
+                            style: TextStyle(
+                              color: MyTheme.dark_font_grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              _displayText(order.deliveryStatusString),
+                              style: TextStyle(
+                                color: MyTheme.dark_font_grey,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 14),
+                _buildOrderQrCard(order.code, size: 80),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: Row(
+            const SizedBox(height: 12),
+            Center(
+              child: Column(
                 children: [
                   Text(
-                    _orderList[index].date,
+                    AppLocalizations.of(context)!.total_amount_ucf,
                     style: TextStyle(
-                      color: MyTheme.dark_font_grey,
+                      color: MyTheme.font_grey,
                       fontSize: 12,
                     ),
                   ),
-                  Spacer(),
+                  const SizedBox(height: 4),
                   Text(
-                    convertPrice(_orderList[index].grandTotal),
+                    convertPrice(order.grandTotal ?? "0"),
                     style: TextStyle(
                       color: MyTheme.accent_color,
                       fontSize: 16,
@@ -509,50 +588,167 @@ class _OrderListState extends State<OrderList> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: Row(
-                children: [
-                  Text(
-                    "${AppLocalizations.of(context)!.payment_status_ucf} - ",
-                    style: TextStyle(
-                      color: MyTheme.dark_font_grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    _orderList[index].paymentStatusString,
-                    style: TextStyle(
-                      color: _orderList[index].paymentStatus == "paid"
-                          ? Colors.green
-                          : Colors.red,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                Text(
-                  "${AppLocalizations.of(context)!.delivery_status_ucf} -",
-                  style: TextStyle(color: MyTheme.dark_font_grey, fontSize: 12),
-                ),
-                Text(
-                  _orderList[index].deliveryStatusString,
-                  style: TextStyle(
-                    color: MyTheme.dark_font_grey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildOrderQrCard(String? code, {double size = 80}) {
+    final qrUrl = _buildOrderQrUrl(code, size: size.toInt());
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: qrUrl == null ? null : () => _showQrPreview(code, qrUrl),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: MyTheme.accent_color.withValues(alpha: .25),
+          ),
+        ),
+        child: qrUrl == null
+            ? _buildQrFallback(size)
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.network(
+                  qrUrl,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _buildQrFallback(size),
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return SizedBox(
+                      width: size,
+                      height: size,
+                      child: const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+      ),
+    );
+  }
+
+  Future<void> _showQrPreview(String? code, String qrUrl) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .65),
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Order QR Code",
+                  style: TextStyle(
+                    color: MyTheme.dark_font_grey,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _displayText(code),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: MyTheme.accent_color,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    qrUrl,
+                    width: 240,
+                    height: 240,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _buildQrFallback(240),
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return SizedBox(
+                        width: 240,
+                        height: 240,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 26,
+                            height: 26,
+                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: MyTheme.accent_color,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(AppLocalizations.of(context)!.close_all_capital),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQrFallback(double size) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Icon(Icons.qr_code_2, color: MyTheme.grey_153, size: size * .6),
+    );
+  }
+
+  String? _buildOrderQrUrl(String? code, {int size = 80}) {
+    final normalized = code?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return null;
+    }
+
+    final encoded = Uri.encodeComponent(normalized);
+    return "https://api.qrserver.com/v1/create-qr-code/?size=${size}x$size&data=$encoded&format=png&color=000000&bgcolor=ffffff";
+  }
+
+  String _displayText(String? value, {String fallback = '-'}) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return fallback;
+    }
+    return normalized;
   }
 
   Container buildPaymentStatusCheckContainer(String paymentStatus) {

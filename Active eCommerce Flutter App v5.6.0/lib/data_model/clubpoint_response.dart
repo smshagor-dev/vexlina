@@ -15,6 +15,8 @@ class ClubpointResponse {
     this.meta,
     this.success,
     this.status,
+    this.exchangeRate,
+    this.exchangeWalletAmount,
   });
 
   List<ClubPoint>? clubpoints;
@@ -22,6 +24,8 @@ class ClubpointResponse {
   Meta? meta;
   bool? success;
   int? status;
+  double? exchangeRate;
+  double? exchangeWalletAmount;
 
   factory ClubpointResponse.fromJson(Map<String, dynamic> json) =>
       ClubpointResponse(
@@ -32,6 +36,9 @@ class ClubpointResponse {
         meta: Meta.fromJson(json["meta"]),
         success: json["success"],
         status: json["status"],
+        exchangeRate: (json["exchange_rate"] as num?)?.toDouble(),
+        exchangeWalletAmount: (json["exchange_wallet_amount"] as num?)
+            ?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +47,8 @@ class ClubpointResponse {
     "meta": meta!.toJson(),
     "success": success,
     "status": status,
+    "exchange_rate": exchangeRate,
+    "exchange_wallet_amount": exchangeWalletAmount,
   };
 }
 

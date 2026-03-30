@@ -21,7 +21,6 @@ class AuthRepository {
     var postBody = jsonEncode({
       "email": "$email",
       "password": password,
-      "identity_matrix": AppConfig.purchase_code,
       "login_by": loginBy,
       "temp_user_id": temp_user_id.$,
       "g-recaptcha-response": capchaKey,

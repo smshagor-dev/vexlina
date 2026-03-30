@@ -26,6 +26,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderNotification;
 use App\Utility\EmailUtility;
+use App\Services\OrderDeliveryVerificationService;
 use App\Services\SteadfastService;
 use Illuminate\Support\Facades\Log;
 
@@ -486,6 +487,22 @@ class OrderController extends Controller
     public function update_delivery_status(Request $request)
     {
         $order = Order::findOrFail($request->order_id);
+
+        if ($request->status === 'delivered') {
+            $verification = (new OrderDeliveryVerificationService())->ensureVerifiedForDelivery(
+                $order,
+                Auth::user(),
+                $request->delivery_verification_code,
+                'web'
+            );
+
+            if (!($verification['success'] ?? false)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => $verification['message'] ?? translate('Delivery verification failed.'),
+                ], $verification['status'] ?? 422);
+            }
+        }
         
         $order->delivery_viewed = '0';
         $order->delivery_status = $request->status;

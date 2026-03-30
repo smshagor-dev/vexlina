@@ -1,6 +1,8 @@
 <?php
 namespace App\Services;
 
+use App\Http\Controllers\AffiliateController;
+use App\Http\Controllers\DeliveryBoyController;
 use Illuminate\Http\Request;
 
 use App\Models\Order;
@@ -16,6 +18,22 @@ class OrderService{
     public function handle_delivery_status(Request $request)
     {
         $order = Order::findOrFail($request->order_id);
+        if ($request->status === 'delivered') {
+            $verification = (new OrderDeliveryVerificationService())->ensureVerifiedForDelivery(
+                $order,
+                auth()->user(),
+                $request->delivery_verification_code,
+                'app'
+            );
+
+            if (!($verification['success'] ?? false)) {
+                abort(response()->json([
+                    'result' => false,
+                    'message' => $verification['message'] ?? translate('Delivery verification failed.'),
+                ], $verification['status'] ?? 422));
+            }
+        }
+
         $order->delivery_viewed = '0';
         $order->delivery_status = $request->status;
         $order->save();

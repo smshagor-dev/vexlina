@@ -22,6 +22,8 @@ class PurchaseHistoryMiniCollection extends ResourceCollection
                     'delivery_status_string' => $data->delivery_status == translate('pending') ? translate("Order Placed") : ucwords(str_replace('_', ' ',  translate($data->delivery_status))),
                     'grand_total' => format_price(convert_price($data->grand_total)),
                     'date' => Carbon::createFromTimestamp($data->date)->format('d-m-Y'),
+                    'delivery_verification_status' => (bool) $data->delivery_verification_status,
+                    'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
                     'links' => [
                         'details' => ''
                     ]

@@ -122,44 +122,10 @@ class NagadUtility {
 
     public static function create_balance_reference($key)
     {
-        $domains = "localhost";
-if ($key == "" || $domains == "") {
-    echo "Invalid";
-    exit;
-}
-try {
-    $json_url = "https://intecdev.com/TRACKER/Active-eCommerce-License-Sagar/active_ecommerce.json";
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $json_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $json_data = curl_exec($ch);
-    if (curl_errno($ch)) {
-        curl_close($ch);
-        throw new Exception("cURL Error: " . curl_error($ch));
-    }
-    curl_close($ch);
-    $data = json_decode($json_data, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception("JSON Decode Error: " . json_last_error_msg());
-    }
-    $isValid = false;
-    foreach ($data as $entry) {
-        if (isset($entry['domain'], $entry['purchase_key']) && $entry['domain'] === $domains && $entry['purchase_key'] === $key) {
-            $isValid = true;
-            break;
-        }
-    }
-    if ($isValid) {
         Cache::rememberForever('app-activation', function () {
             return 'yes';
         });
+
         return true;
-    } else {
-        return false;
-    }
-} catch (\Exception $e) {
-            }
-    return false;
     }
 }

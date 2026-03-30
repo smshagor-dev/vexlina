@@ -38,6 +38,10 @@ class PurchaseHistoryCollection extends ResourceCollection
                     'date' => Carbon::createFromTimestamp($data->date)->format('d-m-Y'),
                     'cancel_request' => $data->cancel_request == 1,
                     'manually_payable' => $data->manual_payment && $data->manual_payment_data == null,
+                    'delivery_verification_status' => (bool) $data->delivery_verification_status,
+                    'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
+                    'delivery_verified_by' => $data->delivery_verified_by,
+                    'delivery_verification_source' => $data->delivery_verification_source,
                     'links' => [
                         'details' => ''
                     ]

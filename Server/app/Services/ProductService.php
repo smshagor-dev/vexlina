@@ -166,13 +166,23 @@ class ProductService
     {
         $collection = collect($data);
 
-        $slug = Str::slug($collection['name']);
-        $slug = Str::slug($collection['slug'] ?? $collection['name']);
+        $slugSource = $collection['slug'] ?? $collection['name'] ?? $product->slug;
+        $slug = Str::slug($slugSource);
+        if ($slug === '') {
+            $slug = $product->slug;
+        }
         $collection['discount']= $collection['discount'] ?? 0.00;
         $collection['weight']= $collection['weight'] ?? 0.00;
-        $same_slug_count = Product::where('slug', 'LIKE', $slug . '%')->count();
-        $slug_suffix = $same_slug_count > 1 ? '-' . $same_slug_count + 1 : '';
-        $slug .= $slug_suffix;
+        $slugExists = Product::where('id', '!=', $product->id)
+            ->where('slug', $slug)
+            ->exists();
+
+        if ($slugExists) {
+            $same_slug_count = Product::where('id', '!=', $product->id)
+                ->where('slug', 'LIKE', $slug . '%')
+                ->count();
+            $slug .= '-' . ($same_slug_count + 1);
+        }
         $collection['draft'] = 0;
 
         if(addon_is_activated('refund_request') && !isset($collection['refundable'])){

@@ -11,6 +11,7 @@ use App\Utility\SmsUtility;
 use Illuminate\Http\Request;
 use App\Models\OrdersExport;
 use App\Utility\EmailUtility;
+use App\Services\OrderDeliveryVerificationService;
 use Maatwebsite\Excel\Facades\Excel;
 use Auth;
 use DB;
@@ -75,6 +76,23 @@ class OrderController extends Controller
     {   
         $authUser = Auth::user();
         $order = Order::findOrFail($request->order_id);
+
+        if ($request->status === 'delivered') {
+            $verification = (new OrderDeliveryVerificationService())->ensureVerifiedForDelivery(
+                $order,
+                $authUser,
+                $request->delivery_verification_code,
+                'web'
+            );
+
+            if (!($verification['success'] ?? false)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => $verification['message'] ?? translate('Delivery verification failed.'),
+                ], $verification['status'] ?? 422);
+            }
+        }
+
         $order->delivery_viewed = '0';
         $order->delivery_status = $request->status;
         $order->save();
