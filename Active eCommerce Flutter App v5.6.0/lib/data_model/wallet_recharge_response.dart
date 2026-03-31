@@ -27,13 +27,26 @@ class WalletRechargeResponse {
 
   factory WalletRechargeResponse.fromJson(Map<String, dynamic> json) =>
       WalletRechargeResponse(
-        recharges: List<Recharge>.from(
-          json["data"].map((x) => Recharge.fromJson(x)),
-        ),
-        links: Links.fromJson(json["links"]),
-        meta: Meta.fromJson(json["meta"]),
-        result: json["result"],
-        status: json["status"],
+        recharges: json["data"] == null
+            ? <Recharge>[]
+            : List<Recharge>.from(
+                json["data"].map((x) => Recharge.fromJson(x)),
+              ),
+        links: json["links"] == null
+            ? null
+            : Links.fromJson(Map<String, dynamic>.from(json["links"])),
+        meta: json["meta"] == null
+            ? Meta(
+                currentPage: 1,
+                from: 0,
+                lastPage: 1,
+                perPage: 0,
+                to: 0,
+                total: 0,
+              )
+            : Meta.fromJson(Map<String, dynamic>.from(json["meta"])),
+        result: json["result"] ?? false,
+        status: json["status"] ?? 200,
       );
 
   Map<String, dynamic> toJson() => {
@@ -46,21 +59,30 @@ class WalletRechargeResponse {
 }
 
 class Recharge {
-  Recharge({this.amount, this.paymentMethod, this.approvalString, this.date});
+  Recharge({
+    this.transactionNumber,
+    this.amount,
+    this.paymentMethod,
+    this.approvalString,
+    this.date,
+  });
 
+  String? transactionNumber;
   String? amount;
   String? paymentMethod;
   String? approvalString;
   String? date;
 
   factory Recharge.fromJson(Map<String, dynamic> json) => Recharge(
-    amount: json["amount"],
-    paymentMethod: json["payment_method"],
-    approvalString: json["approval_string"],
-    date: json["date"],
+    transactionNumber: json["transaction_number"]?.toString(),
+    amount: json["amount"]?.toString(),
+    paymentMethod: json["payment_method"]?.toString(),
+    approvalString: json["approval_string"]?.toString(),
+    date: json["date"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
+    "transaction_number": transactionNumber,
     "amount": amount,
     "payment_method": paymentMethod,
     "approval_string": approvalString,
@@ -111,13 +133,13 @@ class Meta {
   int? total;
 
   factory Meta.fromJson(Map<String, dynamic> json) => Meta(
-    currentPage: json["current_page"],
-    from: json["from"],
-    lastPage: json["last_page"],
-    path: json["path"],
-    perPage: json["per_page"],
-    to: json["to"],
-    total: json["total"],
+    currentPage: json["current_page"] ?? 1,
+    from: json["from"] ?? 0,
+    lastPage: json["last_page"] ?? 1,
+    path: json["path"]?.toString(),
+    perPage: json["per_page"] ?? 0,
+    to: json["to"] ?? 0,
+    total: json["total"] ?? 0,
   );
 
   Map<String, dynamic> toJson() => {

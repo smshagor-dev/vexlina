@@ -58,6 +58,10 @@ class User {
     this.avatar,
     this.avatar_original,
     this.phone,
+    this.wallet_card_number,
+    this.wallet_card_expiry_month,
+    this.wallet_card_expiry_year,
+    this.wallet_card_cvv,
     this.emailVerified,
   });
 
@@ -68,6 +72,10 @@ class User {
   String? avatar;
   String? avatar_original;
   String? phone;
+  String? wallet_card_number;
+  String? wallet_card_expiry_month;
+  String? wallet_card_expiry_year;
+  String? wallet_card_cvv;
   bool? emailVerified;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -78,6 +86,10 @@ class User {
     avatar: json["avatar"],
     avatar_original: json["avatar_original"],
     phone: json["phone"],
+    wallet_card_number: json["wallet_card_number"],
+    wallet_card_expiry_month: json["wallet_card_expiry_month"],
+    wallet_card_expiry_year: json["wallet_card_expiry_year"],
+    wallet_card_cvv: json["wallet_card_cvv"],
     emailVerified: json["email_verified"],
   );
 
@@ -89,6 +101,10 @@ class User {
     "avatar": avatar,
     "avatar_original": avatar_original,
     "phone": phone,
+    "wallet_card_number": wallet_card_number,
+    "wallet_card_expiry_month": wallet_card_expiry_month,
+    "wallet_card_expiry_year": wallet_card_expiry_year,
+    "wallet_card_cvv": wallet_card_cvv,
     "email_verified": emailVerified,
   };
 }

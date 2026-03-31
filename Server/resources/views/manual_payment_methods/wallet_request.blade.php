@@ -38,6 +38,7 @@
                         <th>{{ translate('Name') }}</th>
                         <th>{{ translate('Amount') }}</th>
                         <th>{{ translate('Method') }}</th>
+                        <th>{{ translate('Transaction Number') }}</th>
                         <th>{{ translate('TXN ID') }}</th>
                         <th>{{ translate('Photo') }}</th>
                         <th>{{ translate('Approval') }}</th>
@@ -52,6 +53,7 @@
                                 <td>{{ $wallet->user->name }}</td>
                                 <td>{{ $wallet->amount }}</td>
                                 <td>{{ $wallet->payment_method }}</td>
+                                <td>{{ $wallet->ensureTransactionNumber() }}</td>
                                 <td>{{ $wallet->payment_details }}</td>
                                 <td>
                                     @if ($wallet->reciept != null)

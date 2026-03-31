@@ -15,6 +15,12 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable, HasApiTokens, HasRoles;
 
+    protected static function booted()
+    {
+        static::created(function (self $user) {
+            $user->ensureWalletCardDetails();
+        });
+    }
 
     public function sendEmailVerificationNotification()
     {
@@ -27,7 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'verification_status'
+        'name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'verification_status', 'wallet_card_number', 'wallet_card_expiry_month', 'wallet_card_expiry_year', 'wallet_card_cvv'
     ];
 
     /**
@@ -182,6 +188,78 @@ class User extends Authenticatable implements MustVerifyEmail
             ($this->country ?? '') . ' - ' .
             ($this->postal_code ?? '')
         );
+    }
+
+    public function ensureWalletCardNumber()
+    {
+        return $this->ensureWalletCardDetails()['number'];
+    }
+
+    public function ensureWalletCardDetails()
+    {
+        $cardNumber = preg_replace('/\D/', '', (string) $this->wallet_card_number);
+        $expiryMonth = trim((string) $this->wallet_card_expiry_month);
+        $expiryYear = trim((string) $this->wallet_card_expiry_year);
+        $cvv = trim((string) $this->wallet_card_cvv);
+        $shouldSave = false;
+
+        if ($cardNumber === '') {
+            $cardNumber = static::generateWalletCardNumber($this->id);
+            $this->wallet_card_number = $cardNumber;
+            $shouldSave = true;
+        }
+
+        if ($expiryMonth === '') {
+            $expiryMonth = static::generateWalletCardExpiryMonth($this->id);
+            $this->wallet_card_expiry_month = $expiryMonth;
+            $shouldSave = true;
+        }
+
+        if ($expiryYear === '') {
+            $expiryYear = static::generateWalletCardExpiryYear();
+            $this->wallet_card_expiry_year = $expiryYear;
+            $shouldSave = true;
+        }
+
+        if ($cvv === '') {
+            $cvv = static::generateWalletCardCvv($this->id);
+            $this->wallet_card_cvv = $cvv;
+            $shouldSave = true;
+        }
+
+        if ($shouldSave) {
+            $this->saveQuietly();
+        }
+
+        return [
+            'number' => $cardNumber,
+            'expiry_month' => $expiryMonth,
+            'expiry_year' => $expiryYear,
+            'cvv' => $cvv,
+        ];
+    }
+
+    public static function generateWalletCardNumber($userId)
+    {
+        $middle = substr(str_pad((string) abs(crc32('wallet-card-' . $userId)), 8, '0', STR_PAD_LEFT), 0, 8);
+        $suffix = str_pad((string) $userId, 4, '0', STR_PAD_LEFT);
+
+        return '5217' . $middle . $suffix;
+    }
+
+    public static function generateWalletCardExpiryMonth($userId)
+    {
+        return str_pad(((abs(crc32('wallet-month-' . $userId)) % 12) + 1), 2, '0', STR_PAD_LEFT);
+    }
+
+    public static function generateWalletCardExpiryYear()
+    {
+        return date('y', strtotime('+10 years'));
+    }
+
+    public static function generateWalletCardCvv($userId)
+    {
+        return str_pad((string) ((abs(crc32('wallet-cvv-' . $userId)) % 900) + 100), 3, '0', STR_PAD_LEFT);
     }
 
 }

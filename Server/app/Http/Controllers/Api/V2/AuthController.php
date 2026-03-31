@@ -400,6 +400,7 @@ class AuthController extends Controller
 
     public function loginSuccess($user, $token = null, $tempUserId = null)
     {
+        $walletCardDetails = $user->ensureWalletCardDetails();
 
         if (!$token) {
             $token = $user->createToken('API Token')->plainTextToken;
@@ -435,6 +436,10 @@ class AuthController extends Controller
                 'avatar' => $user->avatar,
                 'avatar_original' => uploaded_asset($user->avatar_original),
                 'phone' => $user->phone,
+                'wallet_card_number' => $walletCardDetails['number'],
+                'wallet_card_expiry_month' => $walletCardDetails['expiry_month'],
+                'wallet_card_expiry_year' => $walletCardDetails['expiry_year'],
+                'wallet_card_cvv' => $walletCardDetails['cvv'],
                 'email_verified' => $user->email_verified_at != null
             ]
         ]);

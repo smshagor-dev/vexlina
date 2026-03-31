@@ -12,6 +12,7 @@ class WalletCollection extends ResourceCollection
         return [
             'data' => $this->collection->map(function ($data) {
                 return [
+                    'transaction_number' => $data->ensureTransactionNumber(),
                     'amount' => single_price(($data->amount)),
                     'payment_method' => ucwords(str_replace('_', ' ', $data->payment_method)),
                     'approval_string' => $data->offline_payment ? ($data->approval == 1 ? "Approved" : "Pending") : "N/A",

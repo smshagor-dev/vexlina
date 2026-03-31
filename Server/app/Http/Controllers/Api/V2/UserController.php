@@ -37,7 +37,11 @@ class UserController extends Controller
             'email' => "",
             'avatar' => "",
             'avatar_original' => "",
-            'phone' => ""
+            'phone' => "",
+            'wallet_card_number' => "",
+            'wallet_card_expiry_month' => "",
+            'wallet_card_expiry_year' => "",
+            'wallet_card_cvv' => "",
         ];
 
 
@@ -55,6 +59,8 @@ class UserController extends Controller
             return response()->json($false_response);
         }
 
+        $walletCardDetails = $user->ensureWalletCardDetails();
+
         return response()->json([
             'result' => true,
             'id' => $user->id,
@@ -62,7 +68,11 @@ class UserController extends Controller
             'email' => $user->email,
             'avatar' => $user->avatar,
             'avatar_original' => uploaded_asset($user->avatar_original),
-            'phone' => $user->phone
+            'phone' => $user->phone,
+            'wallet_card_number' => $walletCardDetails['number'],
+            'wallet_card_expiry_month' => $walletCardDetails['expiry_month'],
+            'wallet_card_expiry_year' => $walletCardDetails['expiry_year'],
+            'wallet_card_cvv' => $walletCardDetails['cvv'],
         ]);
     }
 }

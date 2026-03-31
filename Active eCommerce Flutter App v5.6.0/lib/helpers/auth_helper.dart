@@ -20,6 +20,16 @@ class AuthHelper {
       user_email.save();
       user_phone.$ = loginResponse.user?.phone ?? "";
       user_phone.save();
+      wallet_card_number.$ = loginResponse.user?.wallet_card_number ?? "";
+      wallet_card_number.save();
+      wallet_card_expiry_month.$ =
+          loginResponse.user?.wallet_card_expiry_month ?? "";
+      wallet_card_expiry_month.save();
+      wallet_card_expiry_year.$ =
+          loginResponse.user?.wallet_card_expiry_year ?? "";
+      wallet_card_expiry_year.save();
+      wallet_card_cvv.$ = loginResponse.user?.wallet_card_cvv ?? "";
+      wallet_card_cvv.save();
       avatar_original.$ = loginResponse.user?.avatar_original;
       avatar_original.save();
     }
@@ -39,6 +49,14 @@ class AuthHelper {
     user_email.save();
     user_phone.$ = "";
     user_phone.save();
+    wallet_card_number.$ = "";
+    wallet_card_number.save();
+    wallet_card_expiry_month.$ = "";
+    wallet_card_expiry_month.save();
+    wallet_card_expiry_year.$ = "";
+    wallet_card_expiry_year.save();
+    wallet_card_cvv.$ = "";
+    wallet_card_cvv.save();
     avatar_original.$ = "";
     avatar_original.save();
 

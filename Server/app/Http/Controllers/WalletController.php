@@ -18,6 +18,7 @@ class WalletController extends Controller
 
     public function index()
     {
+        Auth::user()->ensureWalletCardDetails();
         $wallets = Wallet::where('user_id', Auth::user()->id)->latest()->paginate(10);
         return view('frontend.user.wallet.index', compact('wallets'));
     }
@@ -101,6 +102,7 @@ class WalletController extends Controller
         $wallet->amount = $request->amount;
         $wallet->payment_method = $request->payment_option;
         $wallet->payment_details = $request->trx_id;
+        $wallet->transaction_number = $request->trx_id;
         $wallet->approval = 0;
         $wallet->offline_payment = 1;
         $wallet->reciept = $request->photo;

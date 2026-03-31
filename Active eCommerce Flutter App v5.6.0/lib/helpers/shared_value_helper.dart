@@ -43,6 +43,27 @@ final SharedValue<String> user_phone = SharedValue(
   value: "", // initial value
   key: "user_phone", // disk storage key for shared_preferences
 );
+
+final SharedValue<String> wallet_card_number = SharedValue(
+  value: "",
+  key: "wallet_card_number",
+);
+
+final SharedValue<String> wallet_card_expiry_month = SharedValue(
+  value: "",
+  key: "wallet_card_expiry_month",
+);
+
+final SharedValue<String> wallet_card_expiry_year = SharedValue(
+  value: "",
+  key: "wallet_card_expiry_year",
+);
+
+final SharedValue<String> wallet_card_cvv = SharedValue(
+  value: "",
+  key: "wallet_card_cvv",
+);
+
 final SharedValue<String?> app_language = SharedValue(
   value: AppConfig.default_language, // initial value
   key: "app_language", // disk storage key for shared_preferences
@@ -134,6 +155,16 @@ final SharedValue<bool> google_recaptcha = SharedValue(
 final SharedValue<bool> wallet_system_status = SharedValue(
   value: false, // initial value
   key: "wallet_system_status", // disk storage key for shared_preferences
+);
+
+final SharedValue<bool> wallet_payment_discount_status = SharedValue(
+  value: false,
+  key: "wallet_payment_discount_status",
+);
+
+final SharedValue<double> wallet_payment_discount_percent = SharedValue(
+  value: 0.0,
+  key: "wallet_payment_discount_percent",
 );
 
 final SharedValue<bool> mail_verification_status = SharedValue(
