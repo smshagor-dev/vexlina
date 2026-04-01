@@ -22,6 +22,8 @@ class CartProvider extends ChangeNotifier {
   bool _isInitial = true;
   double _cartTotal = 0.00;
   String _cartTotalString = ". . .";
+  String _walletPayableString = ". . .";
+  bool _walletPayableAvailable = false;
 
   GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
   ScrollController get mainScrollController => _mainScrollController;
@@ -30,6 +32,26 @@ class CartProvider extends ChangeNotifier {
   bool get isInitial => _isInitial;
   double get cartTotal => _cartTotal;
   String get cartTotalString => _cartTotalString;
+  String get walletPayableString => _walletPayableString;
+  bool get walletPayableAvailable => _walletPayableAvailable;
+
+  double _extractAmount(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return 0.0;
+    }
+
+    final sanitized = raw.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (sanitized.isEmpty) {
+      return 0.0;
+    }
+
+    return double.tryParse(sanitized) ?? 0.0;
+  }
+
+  String _formatCurrency(double amount) {
+    final symbol = SystemConfig.systemCurrency?.symbol ?? '';
+    return '$symbol${amount.toStringAsFixed(2)}';
+  }
 
   void initState(BuildContext context) {
     fetchData(context);
@@ -61,7 +83,7 @@ class CartProvider extends ChangeNotifier {
     if (cartResponseList.data != null && cartResponseList.data!.isNotEmpty) {
       _shopList = cartResponseList.data!;
       _shopResponse = cartResponseList;
-      getSetCartTotal();
+      await getSetCartTotal();
     }
     _isInitial = false;
 
@@ -72,11 +94,25 @@ class CartProvider extends ChangeNotifier {
     Provider.of<CartCounter>(context, listen: false).getCount();
   }
 
-  void getSetCartTotal() {
+  Future<void> getSetCartTotal() async {
     _cartTotalString = _shopResponse!.grandTotal!.replaceAll(
       SystemConfig.systemCurrency!.code!,
       SystemConfig.systemCurrency!.symbol!,
     );
+    _cartTotal = _extractAmount(_cartTotalString);
+
+    _walletPayableString = _cartTotalString;
+    _walletPayableAvailable = false;
+
+    if (wallet_system_status.$ && wallet_payment_discount_status.$) {
+      final discountPercent = wallet_payment_discount_percent.$;
+      if (_cartTotal > 0 && discountPercent > 0) {
+        final walletAmount =
+            _cartTotal - ((_cartTotal * discountPercent) / 100);
+        _walletPayableString = _formatCurrency(walletAmount);
+        _walletPayableAvailable = walletAmount < _cartTotal;
+      }
+    }
 
     notifyListeners();
   }
@@ -234,6 +270,8 @@ class CartProvider extends ChangeNotifier {
     _isInitial = true;
     _cartTotal = 0.00;
     _cartTotalString = ". . .";
+    _walletPayableString = ". . .";
+    _walletPayableAvailable = false;
     notifyListeners();
   }
 

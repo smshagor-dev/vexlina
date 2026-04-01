@@ -333,7 +333,7 @@
             </div>
         </div>
         <div>
-            <div class="wallet-action-card c-pointer p-4 text-center" onclick="show_wallet_action_info('{{ translate('Send Money') }}', '{{ translate('Internal wallet transfer screen will be connected here.') }}')">
+            <div class="wallet-action-card c-pointer p-4 text-center" onclick="showSendMoneyModal()">
                 <span class="wallet-action-icon mb-3"><i class="las la-exchange-alt"></i></span>
                 <div class="fs-15 fw-700 text-dark">{{ translate('Send Money') }}</div>
                 <div class="fs-12 text-secondary mt-1">{{ translate('Transfer money to another user') }}</div>
@@ -415,17 +415,20 @@
                             <td class="pl-0">{{ sprintf('%02d', ($key+1)) }}</td>
                             <td>{{ date('d-m-Y', strtotime($wallet->created_at)) }}</td>
                             <td>{{ $wallet->ensureTransactionNumber() }}</td>
-                            <td class="fw-700">{{ single_price($wallet->amount) }}</td>
-                            <td>{{ ucfirst(str_replace('_', ' ', $wallet->payment_method)) }}</td>
+                            <td class="fw-700 {{ $wallet->amount < 0 ? 'text-danger' : 'text-success' }}">
+                                {{ $wallet->amount < 0 ? '-' : '+' }}{{ single_price(abs($wallet->amount)) }}
+                            </td>
+                            <td>
+                                <div>{{ $wallet->displayPaymentMethod() }}</div>
+                                @if ($wallet->counterpartyLabel())
+                                    <div class="fs-12 text-secondary mt-1">{{ $wallet->counterpartyLabel() }}</div>
+                                @endif
+                            </td>
                             <td class="text-right pr-0">
-                                @if ($wallet->offline_payment)
-                                    @if ($wallet->approval)
-                                        <span class="badge badge-inline badge-success p-3 fs-12 wallet-transaction-badge">{{ translate('Approved') }}</span>
-                                    @else
-                                        <span class="badge badge-inline badge-info p-3 fs-12 wallet-transaction-badge">{{ translate('Pending') }}</span>
-                                    @endif
+                                @if ($wallet->displayStatus() === translate('Pending'))
+                                    <span class="badge badge-inline badge-info p-3 fs-12 wallet-transaction-badge">{{ $wallet->displayStatus() }}</span>
                                 @else
-                                    N/A
+                                    <span class="badge badge-inline badge-success p-3 fs-12 wallet-transaction-badge">{{ $wallet->displayStatus() }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -469,6 +472,43 @@
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-primary rounded-0" data-dismiss="modal">{{ translate('Close') }}</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="wallet_send_money_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 rounded-3 overflow-hidden">
+                <form action="{{ route('wallet.send_money') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-700 text-dark">{{ translate('Send Money') }}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-3">
+                        <div class="alert alert-soft-warning mb-3">
+                            {{ translate('Transfer from your wallet card to another wallet card number.') }}
+                        </div>
+                        <div class="form-group">
+                            <label class="fs-13 fw-600 text-dark">{{ translate('Receiver Card Number') }}</label>
+                            <input type="text" name="receiver_card_number" class="form-control" placeholder="5217 0000 0000 0000" value="{{ old('receiver_card_number') }}" required>
+                            @error('receiver_card_number')
+                                <small class="text-danger d-block mt-1">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="fs-13 fw-600 text-dark">{{ translate('Amount') }}</label>
+                            <input type="number" step="0.01" min="0.01" name="amount" class="form-control" placeholder="0.00" value="{{ old('amount') }}" required>
+                            @error('amount')
+                                <small class="text-danger d-block mt-1">{{ $message }}</small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-0" data-dismiss="modal">{{ translate('Close') }}</button>
+                        <button type="submit" class="btn btn-primary rounded-0">{{ translate('Send Money') }}</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -575,6 +615,10 @@
             $('#wallet_action_info_modal').modal('show');
         }
 
+        function showSendMoneyModal() {
+            $('#wallet_send_money_modal').modal('show');
+        }
+
         function openWalletQrScanner() {
             $('#wallet_qr_modal').modal('show');
             setTimeout(function () {
@@ -618,6 +662,10 @@
                     card.classList.toggle('is-flipped');
                 });
             }
+
+            @if ($errors->has('receiver_card_number') || $errors->has('amount'))
+                showSendMoneyModal();
+            @endif
         });
     </script>
 @endsection

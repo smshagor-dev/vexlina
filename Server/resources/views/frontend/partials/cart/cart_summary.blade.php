@@ -2,6 +2,9 @@
     <div class="card rounded-0 border">
 
         @php
+            $walletPaymentDiscountService = app(\App\Services\WalletPaymentDiscountService::class);
+            $showProceedToCheckout = isset($proceed) ? (int) $proceed === 1 : request()->routeIs('cart');
+            $proceedValue = $showProceedToCheckout ? 1 : 0;
             $subtotal_for_min_order_amount = 0;
             $subtotal = 0;
             $tax = 0;
@@ -83,7 +86,7 @@
                         <td class="text-right pr-0 fs-14 pt-0 pb-2 text-dark border-top-0">{{ single_price($tax) }}</td>
                     </tr>
                     @endif
-                    @if ($proceed != 1)
+                    @if (!$showProceedToCheckout)
                     <!-- Total Shipping -->
                     <tr class="cart-shipping">
                         <th class="pl-0 fs-14 fw-400 pt-0 pb-2 text-dark border-top-0">{{ translate('Total Shipping') }}</th>
@@ -121,12 +124,35 @@
                         if ($coupon_discount > 0) {
                             $total -= $coupon_discount;
                         }
+                        $wallet_payment_discount = $walletPaymentDiscountService->calculateDiscountOnSubtotal($subtotal, $coupon_discount, 'wallet');
+                        $wallet_total = $walletPaymentDiscountService->applyDiscountToTotalUsingSubtotal($total, $subtotal, $coupon_discount, 'wallet');
                     @endphp
+                    @if ($wallet_payment_discount > 0)
+                        <tr class="cart-wallet-discount">
+                            <th class="pl-0 fs-14 fw-400 pt-0 pb-2 text-success border-top-0">
+                                {{ translate('Wallet Discount') }}
+                                ({{ $walletPaymentDiscountService->getPercentage() }}%)
+                            </th>
+                            <td class="text-right pr-0 fs-14 pt-0 pb-2 text-success border-top-0">
+                                -{{ single_price($wallet_payment_discount) }}
+                            </td>
+                        </tr>
+                    @endif
                     <!-- Total -->
                     <tr class="cart-total">
                         <th class="pl-0 fs-14 text-dark fw-700 border-top-0 pt-3 text-uppercase">{{ translate('Total') }}</th>
                         <td class="text-right pr-0 fs-16 fw-700 text-primary border-top-0 pt-3">{{ single_price($total) }}</td>
                     </tr>
+                    @if ($wallet_payment_discount > 0)
+                        <tr class="cart-wallet-total">
+                            <th class="pl-0 fs-14 text-dark fw-700 border-top-0 pt-2">
+                                {{ translate('Wallet Payable') }}
+                            </th>
+                            <td class="text-right pr-0 fs-16 fw-700 text-success border-top-0 pt-2">
+                                {{ single_price($wallet_total) }}
+                            </td>
+                        </tr>
+                    @endif
                 </tfoot>
             </table>
 
@@ -136,7 +162,7 @@
                     <div class="mt-3">
                         <form class="" id="remove-coupon-form" enctype="multipart/form-data">
                             @csrf
-                            <input type="hidden" name="proceed" value="{{ $proceed }}">
+                            <input type="hidden" name="proceed" value="{{ $proceedValue }}">
                             <div class="input-group">
                                 <div class="form-control">{{ $coupon_code }}</div>
                                 <div class="input-group-append">
@@ -150,7 +176,7 @@
                     <div class="mt-3">
                         <form class="" id="apply-coupon-form" enctype="multipart/form-data">
                             @csrf
-                            <input type="hidden" name="proceed" value="{{ $proceed }}">
+                            <input type="hidden" name="proceed" value="{{ $proceedValue }}">
                             <div class="input-group">
                                 <input type="text" class="form-control rounded-0" name="code"
                                     onkeydown="return event.key != 'Enter';"
@@ -169,7 +195,7 @@
                 @endif
             @endif
 
-            @if ($proceed == 1)
+            @if ($showProceedToCheckout)
             <!-- Continue to Shipping -->
             <div class="mt-4">
                 <a href="{{ route('checkout') }}" class="btn btn-primary btn-block fs-14 fw-700 rounded-0 px-4">

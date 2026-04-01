@@ -7,6 +7,7 @@ import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shimmer_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/main_helpers.dart';
+import 'package:active_ecommerce_cms_demo_app/helpers/system_config.dart';
 import '../../providers/checkout_provider.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/address.dart'
     as address_ui;
@@ -18,6 +19,20 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  double _extractAmount(String raw) {
+    final sanitized = raw.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (sanitized.isEmpty) {
+      return 0.0;
+    }
+
+    return double.tryParse(sanitized) ?? 0.0;
+  }
+
+  String _formatCurrency(double amount) {
+    final symbol = SystemConfig.systemCurrency?.symbol ?? '';
+    return '$symbol${amount.toStringAsFixed(2)}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,6 +124,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget buildOrderSummary(CheckoutProvider provider) {
     double discountValue = 0.0;
+    double walletDiscountValue = 0.0;
     try {
       String cleanDiscount = provider.discount.toString().replaceAll(
         RegExp(r'[^0-9.]'),
@@ -118,8 +134,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
     } catch (e) {
       discountValue = 0.0;
     }
+    try {
+      String cleanWalletDiscount = provider.walletPaymentDiscount
+          .toString()
+          .replaceAll(RegExp(r'[^0-9.]'), '');
+      walletDiscountValue = double.tryParse(cleanWalletDiscount) ?? 0.0;
+    } catch (e) {
+      walletDiscountValue = 0.0;
+    }
 
     bool isClubPointActive = club_point_addon_installed.$ == true;
+    final bool walletSelected = provider.selectedPaymentMethodKey == "wallet";
+    final double subTotalValue = _extractAmount(provider.subTotal);
+    final String subTotalDisplay =
+        walletSelected && provider.walletPaymentDiscountApplied
+        ? _formatCurrency(
+            (subTotalValue - walletDiscountValue).clamp(0.0, double.infinity),
+          )
+        : convertPrice(provider.subTotal);
+    final String finalLabel =
+        walletSelected && provider.walletPaymentDiscountApplied
+        ? "WALLET PAYABLE"
+        : "TOTAL";
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -197,7 +233,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 summaryRow(
                   "Subtotal (${provider.totalItemCount.toString().padLeft(2, '0')} Products)",
-                  convertPrice(provider.subTotal),
+                  subTotalDisplay,
                 ),
                 summaryRow(
                   "Total Shipping",
@@ -215,9 +251,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      "TOTAL",
-                      style: TextStyle(
+                    Text(
+                      finalLabel,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),

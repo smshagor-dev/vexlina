@@ -1,5 +1,6 @@
 import 'package:active_ecommerce_cms_demo_app/app_config.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/flash%20deals%20banner/flash_deal_banner.dart';
+import 'package:active_ecommerce_cms_demo_app/helpers/business_setting_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shimmer_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
@@ -74,6 +75,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchData() async {
+    await BusinessSettingHelper().setBusinessSettingData();
+    if (mounted) {
+      setState(() {});
+    }
     await homeData.onRefresh();
     await _fetchHeaderQuickActions();
   }
@@ -467,7 +472,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         SizedBox(width: 8.w),
         _buildTopStatAction(
           icon: Icons.stars_rounded,
-          label: _clubPointLabel,
+          label: 'Pts $_clubPointLabel',
           onTap: () => _openProfileLinkedPage(const Clubpoint()),
         ),
         SizedBox(width: 6.w),

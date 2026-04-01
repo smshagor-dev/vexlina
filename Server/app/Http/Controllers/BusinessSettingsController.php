@@ -430,7 +430,12 @@ class BusinessSettingsController extends Controller
         $types = $request->types ?? [];
         $resetRefundData = in_array('refund_type', $types);
 
-        foreach ($request->types as $key => $type) {
+        if (empty($types)) {
+            flash(translate("No settings were submitted"))->warning();
+            return back();
+        }
+
+        foreach ($types as $key => $type) {
             if ($type == 'site_name') {
                 $this->overWriteEnvFile('APP_NAME', $request[$type]);
             }

@@ -41,8 +41,47 @@ class ProductCard extends StatefulWidget {
 }
 
 class _ProductCardState extends State<ProductCard> {
+  String _displayPrice(String? price) {
+    if (SystemConfig.systemCurrency != null) {
+      return price?.replaceAll(
+            SystemConfig.systemCurrency!.code!,
+            SystemConfig.systemCurrency!.symbol!,
+          ) ??
+          '';
+    }
+
+    return price ?? '';
+  }
+
+  double? _extractAmount(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    final sanitized = raw.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (sanitized.isEmpty) return null;
+
+    return double.tryParse(sanitized);
+  }
+
+  String? _walletPrice() {
+    if (!(wallet_system_status.$ && wallet_payment_discount_status.$)) {
+      return null;
+    }
+
+    final amount = _extractAmount(widget.mainPrice);
+    final discountPercent = wallet_payment_discount_percent.$;
+    if (amount == null || amount <= 0 || discountPercent <= 0) {
+      return null;
+    }
+
+    final symbol = SystemConfig.systemCurrency?.symbol ?? '';
+    final discountedAmount = amount - ((amount * discountPercent) / 100);
+    return '$symbol${discountedAmount.toStringAsFixed(2)}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final walletPrice = _walletPrice();
+    final displayMainPrice = _displayPrice(widget.mainPrice);
 
     return InkWell(
       onTap: () {
@@ -166,19 +205,28 @@ class _ProductCardState extends State<ProductCard> {
                     Padding(
                       padding: EdgeInsets.fromLTRB(16, 0, 16, 2),
                       child: Text(
-                        SystemConfig.systemCurrency != null
-                            ? widget.mainPrice?.replaceAll(
-                                    SystemConfig.systemCurrency!.code!,
-                                    SystemConfig.systemCurrency!.symbol!,
-                                  ) ??
-                                  ''
-                            : widget.mainPrice ?? '',
+                        displayMainPrice,
                         textAlign: TextAlign.left,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: MyTheme.priceText(color: MyTheme.price_color),
                       ),
                     ),
+                    if (walletPrice != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        child: Text(
+                          'Wallet Pay $walletPrice',
+                          textAlign: TextAlign.left,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            color: const Color(0xff16A34A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
 
                     if (widget.rating != null && widget.rating! > 0)
                       Padding(

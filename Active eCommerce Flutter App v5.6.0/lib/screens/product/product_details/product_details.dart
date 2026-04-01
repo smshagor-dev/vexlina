@@ -116,6 +116,35 @@ class _ProductDetailsState extends State<ProductDetails>
     return price;
   }
 
+  bool get _showWalletPricing =>
+      wallet_system_status.$ && wallet_payment_discount_status.$;
+
+  double? _extractAmount(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    final sanitized = raw.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (sanitized.isEmpty) return null;
+
+    return double.tryParse(sanitized);
+  }
+
+  String _formatAmountWithCurrency(double amount) {
+    final symbol = SystemConfig.systemCurrency?.symbol ?? '';
+    return '$symbol${amount.toStringAsFixed(2)}';
+  }
+
+  String? _walletPriceFrom(String? rawPrice) {
+    if (!_showWalletPricing) return null;
+
+    final amount = _extractAmount(rawPrice);
+    final discountPercent = wallet_payment_discount_percent.$;
+    if (amount == null || amount <= 0 || discountPercent <= 0) {
+      return null;
+    }
+
+    final discountedAmount = amount - ((amount * discountPercent) / 100);
+    return _formatAmountWithCurrency(discountedAmount);
+  }
 
   @override
   void initState() {
@@ -467,7 +496,6 @@ class _ProductDetailsState extends State<ProductDetails>
         return StatefulBuilder(
           builder: (context, StateSetter setState) {
             return AlertDialog(
-
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.r),
               ),
@@ -506,7 +534,7 @@ class _ProductDetailsState extends State<ProductDetails>
                                 color: const Color.fromRGBO(253, 253, 253, 1),
                                 borderRadius: BorderRadius.circular(8.0.r),
                                 border: Border.all(
-                                  color:  MyTheme.light_grey,
+                                  color: MyTheme.light_grey,
                                   width: 1.0,
                                 ),
                               ),
@@ -514,52 +542,60 @@ class _ProductDetailsState extends State<ProductDetails>
                                 child: AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 200),
                                   transitionBuilder: (child, animation) =>
-                                      FadeTransition(opacity: animation, child: child),
+                                      FadeTransition(
+                                        opacity: animation,
+                                        child: child,
+                                      ),
 
                                   child: _showCopied
                                       ? Row(
-                                    key: const ValueKey('copied'),
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.check,
-                                        color: Colors.green,
-                                        size: 18.sp,
-                                      ),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        AppLocalizations.of(context)!.copied_ucf,
-                                        style: TextStyle(
-                                          color: MyTheme.medium_grey,
-                                          fontSize: 12.sp,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  )
+                                          key: const ValueKey('copied'),
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.check,
+                                              color: Colors.green,
+                                              size: 18.sp,
+                                            ),
+                                            SizedBox(width: 6.w),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.copied_ucf,
+                                              style: TextStyle(
+                                                color: MyTheme.medium_grey,
+                                                fontSize: 12.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        )
                                       : Row(
-                                    key: const ValueKey('copy'),
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.copy,
-                                        color: MyTheme.medium_grey,
-                                        size: 18.sp,
-                                      ),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        AppLocalizations.of(context)!.copy_product_link_ucf,
-                                        style: TextStyle(
-                                          color: MyTheme.medium_grey,
+                                          key: const ValueKey('copy'),
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.copy,
+                                              color: MyTheme.medium_grey,
+                                              size: 18.sp,
+                                            ),
+                                            SizedBox(width: 6.w),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.copy_product_link_ucf,
+                                              style: TextStyle(
+                                                color: MyTheme.medium_grey,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             ),
                           ),
-
                         ),
 
                         Padding(
@@ -575,7 +611,6 @@ class _ProductDetailsState extends State<ProductDetails>
                               decoration: BoxDecoration(
                                 color: MyTheme.accent_color,
                                 borderRadius: .circular(8.0.r),
-
                               ),
                               padding: .fromLTRB(10.w, 0, 5.w, 0),
                               child: Row(
@@ -617,7 +652,7 @@ class _ProductDetailsState extends State<ProductDetails>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0.r),
                           side: BorderSide(
-                            color:  MyTheme.light_grey,
+                            color: MyTheme.light_grey,
                             width: 1.0,
                           ),
                         ),
@@ -1009,7 +1044,7 @@ class _ProductDetailsState extends State<ProductDetails>
                           onPurchase: () {
                             onPressBuyNow(context);
                           },
-                          price:  formatPrice(_singlePriceString),
+                          price: formatPrice(_singlePriceString),
 
                           mediaList: _mediaList,
                           carouselController: _carouselController,
@@ -1608,41 +1643,63 @@ class _ProductDetailsState extends State<ProductDetails>
   }
 
   Widget buildTotalPriceRow() {
+    final formattedTotalPrice = SystemConfig.systemCurrency != null
+        ? _totalPrice.toString().replaceAll(
+            SystemConfig.systemCurrency!.code!,
+            SystemConfig.systemCurrency!.symbol!,
+          )
+        : SystemConfig.systemCurrency!.symbol! + _totalPrice.toString();
+    final walletTotalPrice = _walletPriceFrom(_totalPrice?.toString());
+
     return Container(
-      height: 35.h,
+      height: walletTotalPrice != null ? 50.h : 35.h,
       color: Color(0xffFEF0D7),
       padding: EdgeInsets.symmetric(horizontal: 10.w),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: app_language_rtl.$!
-                ? EdgeInsets.only(left: 8.0.w)
-                : EdgeInsets.only(right: 8.0.w),
-            child: SizedBox(
-              width: 75.w,
-              child: Text(
-                AppLocalizations.of(context)!.total_price_ucf,
-                style: TextStyle(color: Color(0xff6B7377), fontSize: 10.sp),
+          Row(
+            children: [
+              Padding(
+                padding: app_language_rtl.$!
+                    ? EdgeInsets.only(left: 8.0.w)
+                    : EdgeInsets.only(right: 8.0.w),
+                child: SizedBox(
+                  width: 75.w,
+                  child: Text(
+                    AppLocalizations.of(context)!.total_price_ucf,
+                    style: TextStyle(color: Color(0xff6B7377), fontSize: 10.sp),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5.0.w),
+                child: Text(
+                  formattedTotalPrice,
+                  style: TextStyle(
+                    color: MyTheme.accent_color,
+                    fontSize: 16.0.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (walletTotalPrice != null)
+            Padding(
+              padding: EdgeInsets.only(top: 2.h, left: 88.w),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Wallet Pay $walletTotalPrice',
+                  style: TextStyle(
+                    color: const Color(0xff16A34A),
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 5.0.w),
-            child: Text(
-              SystemConfig.systemCurrency != null
-                  ? _totalPrice.toString().replaceAll(
-                      SystemConfig.systemCurrency!.code!,
-                      SystemConfig.systemCurrency!.symbol!,
-                    )
-                  : SystemConfig.systemCurrency!.symbol! +
-                        _totalPrice.toString(),
-              style: TextStyle(
-                color: MyTheme.accent_color,
-                fontSize: 16.0.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -2097,57 +2154,76 @@ class _ProductDetailsState extends State<ProductDetails>
     );
   }
 
-  Row buildMainPriceRow() {
-    return Row(
+  Widget buildMainPriceRow() {
+    final walletUnitPrice = _walletPriceFrom(_singlePriceString);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          formatPrice(_singlePriceString),
-          style: TextStyle(
-            color: MyTheme.price_color,
-            fontFamily: 'Public Sans',
-            fontSize: 16.0.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Visibility(
-          visible: _productDetails!.hasDiscount!,
-          child: Padding(
-            padding: EdgeInsets.only(left: 8.0.w),
-            child: Text(
-              formatPrice(_productDetails!.strokedPrice),
+        Row(
+          children: [
+            Text(
+              formatPrice(_singlePriceString),
               style: TextStyle(
-                decoration: TextDecoration.lineThrough,
-                color: Color(0xffA8AFB3),
+                color: MyTheme.price_color,
                 fontFamily: 'Public Sans',
-                fontSize: 12.0.sp,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-        Visibility(
-          visible: _productDetails!.hasDiscount!,
-          child: Padding(
-            padding: EdgeInsets.only(left: 8.0.w),
-            child: Text(
-              "${_productDetails!.discount}",
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: MyTheme.accent_color,
+                fontSize: 16.0.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
+            Visibility(
+              visible: _productDetails!.hasDiscount!,
+              child: Padding(
+                padding: EdgeInsets.only(left: 8.0.w),
+                child: Text(
+                  formatPrice(_productDetails!.strokedPrice),
+                  style: TextStyle(
+                    decoration: TextDecoration.lineThrough,
+                    color: Color(0xffA8AFB3),
+                    fontFamily: 'Public Sans',
+                    fontSize: 12.0.sp,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: _productDetails!.hasDiscount!,
+              child: Padding(
+                padding: EdgeInsets.only(left: 8.0.w),
+                child: Text(
+                  "${_productDetails!.discount}",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: MyTheme.accent_color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              "/${_productDetails!.unit}",
+              style: TextStyle(
+                color: MyTheme.accent_color,
+                fontSize: 16.0.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-        Text(
-          "/${_productDetails!.unit}",
-          // _singlePriceString,
-          style: TextStyle(
-            color: MyTheme.accent_color,
-            fontSize: 16.0.sp,
-            fontWeight: FontWeight.w600,
+        if (walletUnitPrice != null)
+          Padding(
+            padding: EdgeInsets.only(top: 6.h),
+            child: Text(
+              'Wallet Pay $walletUnitPrice/${_productDetails!.unit}',
+              style: TextStyle(
+                color: const Color(0xff16A34A),
+                fontFamily: 'Public Sans',
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -2682,4 +2758,3 @@ class _ProductDetailsState extends State<ProductDetails>
 """;
   }
 }
-

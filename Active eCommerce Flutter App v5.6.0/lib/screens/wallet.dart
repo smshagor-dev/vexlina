@@ -32,6 +32,10 @@ class _WalletState extends State<Wallet> {
   );
   final ScrollController _mainScrollController = ScrollController();
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _sendMoneyAmountController =
+      TextEditingController();
+  final TextEditingController _sendMoneyCardController =
+      TextEditingController();
 
   GlobalKey appBarKey = GlobalKey();
 
@@ -65,6 +69,9 @@ class _WalletState extends State<Wallet> {
   @override
   void dispose() {
     _mainScrollController.dispose();
+    _amountController.dispose();
+    _sendMoneyAmountController.dispose();
+    _sendMoneyCardController.dispose();
     super.dispose();
   }
 
@@ -109,6 +116,287 @@ class _WalletState extends State<Wallet> {
   Future<void> _onPageRefresh() async {
     reset();
     fetchAll();
+  }
+
+  double _extractRechargeRawAmount(dynamic recharge) {
+    return recharge.rawAmount ?? 0.0;
+  }
+
+  bool _isRechargeDebit(dynamic recharge) {
+    final direction = (recharge.direction ?? "").toString().toLowerCase();
+    if (direction == "sent" || direction == "debit") {
+      return true;
+    }
+
+    return _extractRechargeRawAmount(recharge) < 0;
+  }
+
+  IconData _rechargeIcon(dynamic recharge) {
+    final direction = (recharge.direction ?? "").toString().toLowerCase();
+
+    if (direction == "sent") {
+      return Icons.north_east_rounded;
+    }
+
+    if (direction == "received") {
+      return Icons.south_west_rounded;
+    }
+
+    return Icons.account_balance_wallet_rounded;
+  }
+
+  Color _rechargeAccentColor(dynamic recharge) {
+    return _isRechargeDebit(recharge)
+        ? const Color(0xFFD64545)
+        : const Color(0xFF1B9C5A);
+  }
+
+  String _rechargeAmountText(dynamic recharge) {
+    final amount = _extractRechargeRawAmount(recharge).abs().toStringAsFixed(2);
+    final prefix = _isRechargeDebit(recharge) ? "-" : "+";
+    return "$prefix${convertPrice(amount)}";
+  }
+
+  Future<void> _submitSendMoney(BuildContext dialogContext) async {
+    final amountText = _sendMoneyAmountController.text.trim();
+    final receiverCardNumber = _sendMoneyCardController.text.trim();
+
+    if (receiverCardNumber.isEmpty) {
+      ToastComponent.showDialog("Receiver card number cannot be empty");
+      return;
+    }
+
+    if (amountText.isEmpty) {
+      ToastComponent.showDialog(
+        AppLocalizations.of(context)!.amount_cannot_be_empty,
+      );
+      return;
+    }
+
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ToastComponent.showDialog("Enter a valid amount");
+      return;
+    }
+
+    if (Navigator.of(dialogContext, rootNavigator: true).canPop()) {
+      Navigator.of(dialogContext, rootNavigator: true).pop();
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    final response = await WalletRepository().sendMoney(
+      receiverCardNumber: receiverCardNumber,
+      amount: amount.toStringAsFixed(2),
+    );
+
+    if (!mounted) return;
+
+    ToastComponent.showDialog(response.message);
+
+    if (response.result) {
+      _sendMoneyAmountController.clear();
+      _sendMoneyCardController.clear();
+      reset();
+      fetchAll();
+    }
+  }
+
+  Future<void> buildShowSendMoneyDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: app_language_rtl.$!
+            ? TextDirection.rtl
+            : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Send money card to card",
+                    style: TextStyle(
+                      color: MyTheme.dark_font_grey,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Transfer directly from your wallet card to another wallet card number.",
+                    style: TextStyle(
+                      color: MyTheme.dark_grey,
+                      fontSize: 12,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    "Receiver card number",
+                    style: TextStyle(
+                      color: MyTheme.dark_font_grey,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 46,
+                    child: TextField(
+                      controller: _sendMoneyCardController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        fillColor: MyTheme.light_grey,
+                        filled: true,
+                        hintText: "5217 0000 0000 0000",
+                        hintStyle: TextStyle(
+                          fontSize: 12.0,
+                          color: MyTheme.textfield_grey,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyTheme.noColor,
+                            width: 0.0,
+                          ),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10.0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyTheme.noColor,
+                            width: 0.0,
+                          ),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10.0),
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    AppLocalizations.of(dialogContext)!.amount_ucf,
+                    style: TextStyle(
+                      color: MyTheme.dark_font_grey,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 46,
+                    child: TextField(
+                      controller: _sendMoneyAmountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [_amountValidator],
+                      decoration: InputDecoration(
+                        fillColor: MyTheme.light_grey,
+                        filled: true,
+                        hintText: AppLocalizations.of(
+                          dialogContext,
+                        )!.enter_amount_ucf,
+                        hintStyle: TextStyle(
+                          fontSize: 12.0,
+                          color: MyTheme.textfield_grey,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyTheme.noColor,
+                            width: 0.0,
+                          ),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10.0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: MyTheme.noColor,
+                            width: 0.0,
+                          ),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10.0),
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            Btn.minWidthFixHeight(
+              minWidth: 80,
+              height: 34,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                side: BorderSide(color: MyTheme.accent_color, width: 1.0),
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.close_ucf,
+                style: TextStyle(fontSize: 11, color: MyTheme.accent_color),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext, rootNavigator: true).pop();
+              },
+            ),
+            Btn.minWidthFixHeight(
+              minWidth: 104,
+              height: 34,
+              color: MyTheme.accent_color,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: const Text(
+                "Send Money",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              onPressed: () => _submitSendMoney(dialogContext),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _closeWallet() async {
+    if (!mounted) return;
+
+    if (widget.fromRecharge) {
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Main()),
+        (route) => false,
+      );
+      return;
+    }
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      await navigator.maybePop();
+    }
   }
 
   String get _displayName {
@@ -425,16 +713,13 @@ class _WalletState extends State<Wallet> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: !widget.fromRecharge,
       onPopInvokedWithResult: (didPop, result) {
-        if (widget.fromRecharge) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => Main()),
-            (route) => false,
-          );
-        } else {
-          Navigator.of(context).pop();
+        if (didPop || !widget.fromRecharge) {
+          return;
         }
+
+        _closeWallet();
       },
       child: Directionality(
         textDirection: app_language_rtl.$!
@@ -484,30 +769,22 @@ class _WalletState extends State<Wallet> {
   }
 
   AppBar buildAppBar(BuildContext context) {
+    final canGoBack = widget.fromRecharge || Navigator.of(context).canPop();
+
     return AppBar(
       scrolledUnderElevation: 0.0,
       key: appBarKey,
       backgroundColor: const Color(0xFFF5F6FA),
       centerTitle: false,
-      leading: Builder(
-        builder: (context) => IconButton(
-          icon: UsefulElements.backButton(context),
-          onPressed: () {
-            if (widget.fromRecharge) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return Main();
-                  },
-                ),
-              );
-            } else {
-              return Navigator.of(context).pop();
-            }
-          },
-        ),
-      ),
+      automaticallyImplyLeading: false,
+      leading: canGoBack
+          ? Builder(
+              builder: (context) => IconButton(
+                icon: UsefulElements.backButton(context),
+                onPressed: _closeWallet,
+              ),
+            )
+          : null,
       title: Text(
         AppLocalizations.of(context)!.my_wallet_ucf,
         style: TextStyle(
@@ -642,7 +919,9 @@ class _WalletState extends State<Wallet> {
           const SizedBox(height: 14),
           buildCardDetailItem(
             label: "Card Number",
-            value: _walletSecretsVisible ? _formattedCardNumber : _maskedCardNumber,
+            value: _walletSecretsVisible
+                ? _formattedCardNumber
+                : _maskedCardNumber,
             onCopy: _copyCardNumber,
           ),
           const SizedBox(height: 12),
@@ -768,6 +1047,9 @@ class _WalletState extends State<Wallet> {
 
   //main Container
   Widget buildRechargeListItemCard(int index) {
+    final recharge = _rechargeList[index];
+    final accentColor = _rechargeAccentColor(recharge);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -789,13 +1071,10 @@ class _WalletState extends State<Wallet> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: MyTheme.accent_color.withValues(alpha: .10),
+                color: accentColor.withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                Icons.account_balance_wallet_rounded,
-                color: MyTheme.accent_color,
-              ),
+              child: Icon(_rechargeIcon(recharge), color: accentColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -803,21 +1082,32 @@ class _WalletState extends State<Wallet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _rechargeList[index].paymentMethod ?? "Wallet transaction",
+                    recharge.paymentMethod ?? "Wallet transaction",
                     style: TextStyle(
                       color: MyTheme.dark_font_grey,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if ((recharge.counterparty ?? "").toString().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      recharge.counterparty!,
+                      style: TextStyle(
+                        color: MyTheme.dark_grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
-                    _rechargeList[index].date ?? "-",
+                    recharge.date ?? "-",
                     style: TextStyle(color: MyTheme.dark_grey, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _rechargeList[index].transactionNumber ?? "-",
+                    recharge.transactionNumber ?? "-",
                     style: TextStyle(color: MyTheme.dark_grey, fontSize: 12),
                   ),
                   const SizedBox(height: 8),
@@ -831,7 +1121,7 @@ class _WalletState extends State<Wallet> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      _rechargeList[index].approvalString ?? "-",
+                      recharge.approvalString ?? "-",
                       style: TextStyle(
                         color: MyTheme.dark_grey,
                         fontSize: 11,
@@ -847,9 +1137,9 @@ class _WalletState extends State<Wallet> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  convertPrice(_rechargeList[index].amount ?? "0"),
+                  _rechargeAmountText(recharge),
                   style: TextStyle(
-                    color: MyTheme.accent_color,
+                    color: accentColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -934,10 +1224,7 @@ class _WalletState extends State<Wallet> {
               child: buildActionButton(
                 icon: Icons.swap_horiz_rounded,
                 label: "Send Money",
-                onTap: () => _showActionInfo(
-                  "Send Money",
-                  "Internal wallet transfer screen will be connected here.",
-                ),
+                onTap: () => buildShowSendMoneyDialog(context),
               ),
             ),
           ],

@@ -28,6 +28,7 @@ use App\Notifications\OrderNotification;
 use App\Utility\EmailUtility;
 use App\Services\OrderDeliveryVerificationService;
 use App\Services\SteadfastService;
+use App\Services\WalletPaymentDiscountService;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
@@ -251,6 +252,8 @@ class OrderController extends Controller
         $combined_order->shipping_address = json_encode($shippingAddress);
 
         $combined_order->save();
+        $walletPaymentDiscountService = new WalletPaymentDiscountService;
+        $createdOrderIds = [];
 
         $seller_products = array();
         foreach ($carts as $cartItem) {
@@ -389,8 +392,47 @@ class OrderController extends Controller
             }
 
             $combined_order->grand_total += $order->grand_total;
+            $createdOrderIds[] = $order->id;
+            $createdOrderSubtotals[$order->id] = max(round($subtotal - $coupon_discount, 2), 0.00);
 
             $order->save();
+        }
+
+        $combinedGrandTotalBeforeWalletDiscount = round((float) $combined_order->grand_total, 2);
+        $combinedDiscountableSubtotal = round(array_sum($createdOrderSubtotals ?? []), 2);
+
+        if ($walletPaymentDiscountService->shouldApply($request->payment_option) && $combinedDiscountableSubtotal > 0) {
+            $totalWalletDiscount = $walletPaymentDiscountService->calculateDiscount(
+                $combinedDiscountableSubtotal,
+                $request->payment_option
+            );
+            $remainingWalletDiscount = $totalWalletDiscount;
+
+            foreach ($createdOrderIds as $index => $createdOrderId) {
+                $savedOrder = Order::find($createdOrderId);
+                if (!$savedOrder) {
+                    continue;
+                }
+
+                if ($index === count($createdOrderIds) - 1) {
+                    $orderWalletDiscount = $remainingWalletDiscount;
+                } else {
+                    $orderDiscountableSubtotal = (float) ($createdOrderSubtotals[$createdOrderId] ?? 0);
+                    $ratio = $combinedDiscountableSubtotal > 0
+                        ? ($orderDiscountableSubtotal / $combinedDiscountableSubtotal)
+                        : 0;
+                    $orderWalletDiscount = round($totalWalletDiscount * $ratio, 2);
+                    $remainingWalletDiscount = round($remainingWalletDiscount - $orderWalletDiscount, 2);
+                }
+
+                $savedOrder->grand_total = max(round($savedOrder->grand_total - $orderWalletDiscount, 2), 0.00);
+                $savedOrder->save();
+            }
+
+            $combined_order->grand_total = max(
+                round($combinedGrandTotalBeforeWalletDiscount - $totalWalletDiscount, 2),
+                0.00
+            );
         }
 
         $combined_order->save();

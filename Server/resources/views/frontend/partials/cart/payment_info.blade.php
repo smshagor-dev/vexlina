@@ -5,6 +5,25 @@
     <textarea name="additional_info" rows="5" class="form-control rounded-0"
         placeholder="{{ translate('Type your text...') }}"></textarea>
 </div>
+
+@php
+    $subtotal = $subtotal ?? 0;
+    $coupon_discount = $coupon_discount ?? 0;
+    $total = $total ?? 0;
+
+    if ($subtotal <= 0 && isset($carts)) {
+        foreach ($carts as $cartItem) {
+            $product = get_single_product($cartItem['product_id']);
+            if ($product == null) {
+                continue;
+            }
+
+            $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
+            $coupon_discount += $cartItem->discount ?? 0;
+        }
+    }
+@endphp
+
 <div>
     <h3 class="fs-16 fw-700 text-dark">
         {{ translate('Select a payment option') }}
@@ -141,12 +160,26 @@
 
     <!-- Wallet Payment -->
     @if (Auth::check() && get_setting('wallet_system') == 1)
+        @php
+            $walletPaymentDiscountService = app(\App\Services\WalletPaymentDiscountService::class);
+            $walletPaymentDiscount = $walletPaymentDiscountService->calculateDiscountOnSubtotal($subtotal, $coupon_discount ?? 0, 'wallet');
+            $walletPayableTotal = $walletPaymentDiscountService->applyDiscountToTotalUsingSubtotal($total, $subtotal, $coupon_discount ?? 0, 'wallet');
+        @endphp
         <div class="py-4 px-4 text-center bg-soft-secondary-base mt-4">
             <div class="fs-14 mb-3">
                 <span class="opacity-80">{{ translate('Or, Your wallet balance :') }}</span>
                 <span class="fw-700">{{ single_price(Auth::user()->balance) }}</span>
             </div>
-            @if (Auth::user()->balance < $total)
+            @if ($walletPaymentDiscount > 0)
+                <div class="fs-13 mb-3 text-success">
+                    {{ translate('Wallet discount') }}:
+                    {{ $walletPaymentDiscountService->getPercentage() }}%
+                    ({{ single_price($walletPaymentDiscount) }})
+                    <br>
+                    <span class="fw-700">{{ translate('Wallet payable') }}: {{ single_price($walletPayableTotal) }}</span>
+                </div>
+            @endif
+            @if (Auth::user()->balance < $walletPayableTotal)
                 <button type="button" class="btn btn-secondary" disabled>
                     {{ translate('Insufficient balance') }}
                 </button>

@@ -8,8 +8,10 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\CardToCardTransferService;
 use App\Services\WalletPaymentDiscountService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
 {
@@ -55,7 +57,12 @@ class WalletController extends Controller
         $shippingCost = $cartItems->sum('shipping_cost');
         $couponDiscount = $cartItems->sum('discount');
         $walletPayableAmount = round(($subtotal + $tax + $shippingCost + $gst) - $couponDiscount, 2);
-        $walletPayableAmount = $walletPaymentDiscountService->applyDiscount($walletPayableAmount, 'wallet');
+        $walletPayableAmount = $walletPaymentDiscountService->applyDiscountToTotalUsingSubtotal(
+            $walletPayableAmount,
+            $subtotal,
+            $couponDiscount,
+            'wallet'
+        );
 
         if ($user->balance >= $walletPayableAmount) {
             
@@ -103,6 +110,42 @@ class WalletController extends Controller
         return response()->json([
             'result' => true,
             'message' => translate('Offline Recharge has been done. Please wait for response.')
+        ]);
+    }
+
+    public function sendMoney(Request $request, CardToCardTransferService $transferService)
+    {
+        $request->validate([
+            'receiver_card_number' => ['required', 'string', 'max:32'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        try {
+            $transfer = $transferService->transfer(
+                auth()->user(),
+                (string) $request->receiver_card_number,
+                (float) $request->amount
+            );
+        } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first() ?? translate('Validation failed.');
+
+            return response()->json([
+                'result' => false,
+                'message' => $message,
+            ], 422);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unable to complete card to card transfer right now.'),
+            ], 500);
+        }
+
+        return response()->json([
+            'result' => true,
+            'message' => translate('Money sent successfully to') . ' ' . ($transfer['receiver']->name ?? translate('receiver')),
+            'balance' => single_price($transfer['sender']->balance),
         ]);
     }
 

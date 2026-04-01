@@ -18,6 +18,16 @@ class WishlistController extends Controller
     public function add($slug)
     {
         $product = Product::where('slug', $slug)->first();
+        if ($product == null) {
+            return response()->json([
+                'message' => translate('Product not found'),
+                'is_in_wishlist' => false,
+                'product_id' => null,
+                'product_slug' => $slug,
+                'wishlist_id' => null
+            ], 404);
+        }
+
         $wishlist = Wishlist::where('product_id', $product->id)->where('user_id', auth()->user()->id)->first();
         if ($wishlist != null) {
             return response()->json([
@@ -45,13 +55,24 @@ class WishlistController extends Controller
     public function remove($slug)
     {
         $product = Product::where('slug', $slug)->first();
+        if ($product == null) {
+            return response()->json([
+                'message' => translate('Product not found'),
+                'is_in_wishlist' => false,
+                'product_id' => null,
+                'product_slug' => $slug,
+                'wishlist_id' => null
+            ], 404);
+        }
+
         $wishlist = Wishlist::where('product_id', $product->id)->where('user_id',  auth()->user()->id)->first();
         if ($wishlist == null) {
             return response()->json([
                 'message' => translate('Product in not in wishlist'),
                 'is_in_wishlist' => false,
                 'product_id' => (integer)$product->id,
-                'product_slug' => $product->slug
+                'product_slug' => $product->slug,
+                'wishlist_id' => null
             ], 200);
         } else {
             Wishlist::where('product_id' , $product->id)->where( 'user_id' , auth()->user()->id)->delete();
@@ -67,6 +88,15 @@ class WishlistController extends Controller
     public function isProductInWishlist($slug)
     {
         $product = Product::where('slug', $slug)->first();
+        if ($product == null) {
+            return response()->json([
+                'message' => translate('Product not found'),
+                'is_in_wishlist' => false,
+                'product_id' => null,
+                'product_slug' => $slug,
+                'wishlist_id' => null
+            ], 404);
+        }
 
         $wishlist = Wishlist::where('product_id', $product->id)->where('user_id',  auth()->user()->id)->first();
 
@@ -82,7 +112,8 @@ class WishlistController extends Controller
                 'message' => translate('Product is not present in wishlist'),
                 'is_in_wishlist' => false,
                 'product_id' => (integer)$product->id,
-                'wishlist_id' => $wishlist->id
+                'product_slug' => $product->slug,
+                'wishlist_id' => null
             ], 200);
         }
        

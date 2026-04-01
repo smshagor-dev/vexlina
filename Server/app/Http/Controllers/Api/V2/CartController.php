@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
+use App\Services\WalletPaymentDiscountService;
 use App\Utility\CartUtility;
 use App\Utility\NagadUtility;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ class CartController extends Controller
 {
     public function summary(Request $request)
     {
+        $walletPaymentDiscountService = new WalletPaymentDiscountService;
+        $paymentType = $request->payment_type;
         // $user  = auth()->user();
         $user  = $request->user_id != null ? User::where('id', $request->user_id)->first() : null;
         $items = ($user != null) ?
@@ -24,8 +27,13 @@ class CartController extends Controller
             return response()->json([
                 'sub_total' => format_price(0.00),
                 'tax' => format_price(0.00),
+                'gst' => format_price(0.00),
                 'shipping_cost' => format_price(0.00),
                 'discount' => format_price(0.00),
+                'wallet_payment_discount' => format_price(0.00),
+                'wallet_payment_discount_value' => 0.00,
+                'wallet_payment_discount_percent' => 0.00,
+                'wallet_payment_discount_applied' => false,
                 'grand_total' => format_price(0.00),
                 'grand_total_value' => 0.00,
                 'coupon_code' => "",
@@ -36,23 +44,38 @@ class CartController extends Controller
         $sum = 0.00;
         $subtotal = 0.00;
         $tax = 0.00;
+        $gst = 0.00;
         foreach ($items as $cartItem) {
             $product = Product::find($cartItem['product_id']);
             $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
             $tax += cart_product_tax($cartItem, $product, false) * $cartItem['quantity'];
+            $gst += cart_product_gst($cartItem, $product, false);
         }
 
         $shipping_cost = $items->sum('shipping_cost');
         $discount = $items->sum('discount');
-        $sum = ($subtotal + $tax + $shipping_cost) - $discount;
+        $sum = ($subtotal + $tax + $shipping_cost + $gst) - $discount;
+        $wallet_payment_discount = $walletPaymentDiscountService->calculateDiscountOnSubtotal(
+            $subtotal,
+            $discount,
+            $paymentType
+        );
+        $sum_after_wallet_discount = max(round($sum - $wallet_payment_discount, 2), 0.00);
 
         return response()->json([
             'sub_total' => single_price($subtotal),
             'tax' => single_price($tax),
+            'gst' => single_price($gst),
             'shipping_cost' => single_price($shipping_cost),
             'discount' => single_price($discount),
-            'grand_total' => single_price($sum),
-            'grand_total_value' => convert_price($sum),
+            'wallet_payment_discount' => single_price($wallet_payment_discount),
+            'wallet_payment_discount_value' => convert_price($wallet_payment_discount),
+            'wallet_payment_discount_percent' => $walletPaymentDiscountService->shouldApply($paymentType)
+                ? $walletPaymentDiscountService->getPercentage()
+                : 0.00,
+            'wallet_payment_discount_applied' => $wallet_payment_discount > 0,
+            'grand_total' => single_price($sum_after_wallet_discount),
+            'grand_total_value' => convert_price($sum_after_wallet_discount),
             'coupon_code' => $items[0]->coupon_code,
             'coupon_applied' => $items[0]->coupon_applied == 1,
         ]);

@@ -82,11 +82,19 @@ class _CheckoutState extends State<Checkout> {
   String? _gstString = ". . .";
   String _shippingCostString = ". . .";
   String? _discountString = ". . .";
+  String? _walletDiscountString = ". . .";
+  double _walletDiscountPercent = 0.0;
+  bool _walletDiscountApplied = false;
   String _usedCouponCode = "";
   bool? _couponApplied = false;
   late BuildContext loadingcontext;
   String paymentType = "cart_payment";
   String? _title;
+
+  bool get _isWalletPaymentSelected =>
+      widget.paymentFor == PaymentFor.order &&
+      (_selectedPaymentMethod == "wallet_system" ||
+          _selectedPaymentMethodKey == "wallet");
 
   @override
   void initState() {
@@ -187,7 +195,9 @@ class _CheckoutState extends State<Checkout> {
   }
 
   fetchSummary() async {
-    var cartSummaryResponse = await CartRepository().getCartSummaryResponse();
+    var cartSummaryResponse = await CartRepository().getCartSummaryResponse(
+      paymentType: _isWalletPaymentSelected ? "wallet" : null,
+    );
 
     if (cartSummaryResponse != null) {
       setState(() {
@@ -195,6 +205,11 @@ class _CheckoutState extends State<Checkout> {
         _taxString = cartSummaryResponse.tax;
         _shippingCostString = cartSummaryResponse.shippingCost;
         _discountString = cartSummaryResponse.discount;
+        _walletDiscountString = cartSummaryResponse.walletPaymentDiscount;
+        _walletDiscountPercent =
+            cartSummaryResponse.walletPaymentDiscountPercent ?? 0.0;
+        _walletDiscountApplied =
+            cartSummaryResponse.walletPaymentDiscountApplied ?? false;
         _totalString = cartSummaryResponse.grandTotal;
         _grandTotalValue = cartSummaryResponse.grandTotalValue;
         _usedCouponCode = cartSummaryResponse.couponCode ?? _usedCouponCode;
@@ -223,6 +238,9 @@ class _CheckoutState extends State<Checkout> {
     _taxString = ". . .";
     _shippingCostString = ". . .";
     _discountString = ". . .";
+    _walletDiscountString = ". . .";
+    _walletDiscountPercent = 0.0;
+    _walletDiscountApplied = false;
     _usedCouponCode = "";
     _couponController.text = _usedCouponCode;
     _couponApplied = false;
@@ -731,6 +749,7 @@ class _CheckoutState extends State<Checkout> {
         _selectedPaymentMethod = _paymentTypeList[index].paymentType;
         _selectedPaymentMethodKey = _paymentTypeList[index].paymentTypeKey;
       });
+      fetchSummary();
     }
   }
 
@@ -859,6 +878,40 @@ class _CheckoutState extends State<Checkout> {
                   ],
                 ),
               ),
+              if (_walletDiscountApplied)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          "Wallet Discount",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: MyTheme.font_grey,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Spacer(),
+                      Text(
+                        SystemConfig.systemCurrency != null
+                            ? _walletDiscountString!.replaceAll(
+                                SystemConfig.systemCurrency!.code!,
+                                SystemConfig.systemCurrency!.symbol!,
+                              )
+                            : _walletDiscountString!,
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Divider(),
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -1302,7 +1355,7 @@ class _CheckoutState extends State<Checkout> {
 
   Widget grandTotalSection() {
     return Container(
-      height: 40,
+      height: _walletDiscountApplied ? 58 : 40,
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
@@ -1310,50 +1363,99 @@ class _CheckoutState extends State<Checkout> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 16.0),
-              child: Text(
-                AppLocalizations.of(context)!.total_amount_ucf,
-                style: TextStyle(color: MyTheme.font_grey, fontSize: 14),
-              ),
-            ),
-            Visibility(
-              visible: widget.paymentFor != PaymentFor.manualPayment,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: InkWell(
-                  onTap: () {
-                    onPressDetails();
-                  },
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
                   child: Text(
-                    AppLocalizations.of(context)!.see_details_all_lower,
-                    style: TextStyle(
-                      color: MyTheme.font_grey,
-                      fontSize: 12,
-                      decoration: TextDecoration.underline,
+                    AppLocalizations.of(context)!.total_amount_ucf,
+                    style: TextStyle(color: MyTheme.font_grey, fontSize: 14),
+                  ),
+                ),
+                Visibility(
+                  visible: widget.paymentFor != PaymentFor.manualPayment,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: InkWell(
+                      onTap: () {
+                        onPressDetails();
+                      },
+                      child: Text(
+                        AppLocalizations.of(context)!.see_details_all_lower,
+                        style: TextStyle(
+                          color: MyTheme.font_grey,
+                          fontSize: 12,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Text(
+                    balance(),
+                    style: TextStyle(
+                      color: MyTheme.accent_color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Text(
-                balance(),
-                style: TextStyle(
-                  color: MyTheme.accent_color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+            if (_walletDiscountApplied)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 2),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 14,
+                      color: Colors.green,
+                    ),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        "Wallet payment saves ${_formatWalletDiscountPercent()}%",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      SystemConfig.systemCurrency != null
+                          ? _walletDiscountString!.replaceAll(
+                              SystemConfig.systemCurrency!.code!,
+                              SystemConfig.systemCurrency!.symbol!,
+                            )
+                          : _walletDiscountString!,
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatWalletDiscountPercent() {
+    if (_walletDiscountPercent == _walletDiscountPercent.truncateToDouble()) {
+      return _walletDiscountPercent.toStringAsFixed(0);
+    }
+    return _walletDiscountPercent.toStringAsFixed(2);
   }
 
   loading() {

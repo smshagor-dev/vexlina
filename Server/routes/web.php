@@ -361,6 +361,7 @@ Route::group(['middleware' => ['customer', 'verified', 'unbanned']], function ()
     Route::controller(WalletController::class)->group(function () {
         Route::get('/wallet', 'index')->name('wallet.index');
         Route::post('/recharge', 'recharge')->name('wallet.recharge');
+        Route::post('/wallet/send-money', 'sendMoney')->name('wallet.send_money');
         Route::get('/wallet_payment_email_test', 'wallet_payment_email_test')->name('wallet.wallet_payment_email_test');
     });
 

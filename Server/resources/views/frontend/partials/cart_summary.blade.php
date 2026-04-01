@@ -11,6 +11,7 @@
 
             <!-- Minimum Order Amount -->
             @php
+                $walletPaymentDiscountService = app(\App\Services\WalletPaymentDiscountService::class);
                 $coupon_discount = 0;
             @endphp
             @if (get_setting('coupon_system') == 1)
@@ -175,7 +176,20 @@
                     if ($coupon_discount > 0) {
                         $total -= $coupon_discount;
                     }
+                    $wallet_payment_discount = $walletPaymentDiscountService->calculateDiscountOnSubtotal($subtotal, $coupon_discount, 'wallet');
+                    $wallet_total = $walletPaymentDiscountService->applyDiscountToTotalUsingSubtotal($total, $subtotal, $coupon_discount, 'wallet');
                 @endphp
+                @if ($wallet_payment_discount > 0)
+                    <tr class="cart-wallet-discount">
+                        <th class="pl-0 fs-14 pt-0 pb-2 text-success fw-600 border-top-0">
+                            {{ translate('Wallet Discount') }}
+                            ({{ $walletPaymentDiscountService->getPercentage() }}%)
+                        </th>
+                        <td class="text-right pr-0 fs-14 pt-0 pb-2 fw-600 text-success border-top-0">
+                            <span class="fw-600">-{{ single_price($wallet_payment_discount) }}</span>
+                        </td>
+                    </tr>
+                @endif
                 <!-- Total -->
                 <tr class="cart-total">
                     <th class="pl-0 fs-14 text-dark fw-600"><span class="strong-600">{{ translate('Total') }}</span></th>
@@ -183,6 +197,14 @@
                         <strong><span>{{ single_price($total) }}</span></strong>
                     </td>
                 </tr>
+                @if ($wallet_payment_discount > 0)
+                    <tr class="cart-wallet-total">
+                        <th class="pl-0 fs-14 text-dark fw-600">{{ translate('Wallet Payable') }}</th>
+                        <td class="text-right pr-0 fs-14 fw-600 text-success">
+                            <strong><span>{{ single_price($wallet_total) }}</span></strong>
+                        </td>
+                    </tr>
+                @endif
             </tfoot>
         </table>
 

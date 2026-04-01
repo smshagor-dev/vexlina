@@ -1,0 +1,49 @@
+"ar": 97 untranslated message(s).
+To see a detailed report, use the untranslated-messages-file 
+option in the l10n.yaml file:
+untranslated-messages-file: desiredFileName.txt
+<other option>: <other selection> 
+
+
+This will generate a JSON format file containing all messages that 
+need to be translated.
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                          
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if "Windows_NT" == "Windows_NT" setlocal
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set DEFAULT_JVM_OPTS= 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set DIRNAME=D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android\ 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if "D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android\" == "" set DIRNAME=. 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set APP_BASE_NAME=gradlew 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set APP_HOME=D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android\ 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set JAVA_HOME=C:\Program Files\Java\jdk-19 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set JAVA_EXE=C:\Program Files\Java\jdk-19/bin/java.exe 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if exist "C:\Program Files\Java\jdk-19/bin/java.exe" goto init 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if not "Windows_NT" == "Windows_NT" goto win9xME_args 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if "@eval[2+2]" == "4" goto 4NT_args 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set CMD_LINE_ARGS= 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set _SKIP=2 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>if "x-q" == "x" goto execute 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set CMD_LINE_ARGS=-q -Ptarget-platform=android-x64 "-Ptarget=D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\lib\main.dart" -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguNw==,RkxVVFRFUl9DSEFOTkVMPVt1c2VyLWJyYW5jaF0=,RkxVVFRFUl9HSVRfVVJMPXVua25vd24gc291cmNl,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049M2I2MmVmYzJhMw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049NzhmYzMwMTJlNA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC43 -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>goto execute 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>set CLASSPATH=D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android\\gradle\wrapper\gradle-wrapper.jar 
+
+D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android>"C:\Program Files\Java\jdk-19/bin/java.exe"    "-Dorg.gradle.appname=gradlew" -classpath "D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\android\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -q -Ptarget-platform=android-x64 "-Ptarget=D:\project\Vexlina\Active eCommerce Flutter App v5.6.0\lib\main.dart" -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguNw==,RkxVVFRFUl9DSEFOTkVMPVt1c2VyLWJyYW5jaF0=,RkxVVFRFUl9HSVRfVVJMPXVua25vd24gc291cmNl,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049M2I2MmVmYzJhMw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049NzhmYzMwMTJlNA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC43 -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 

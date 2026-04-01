@@ -232,6 +232,7 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
 
         Route::get('wallet/balance', [WalletController::class, 'balance'])->middleware('auth:sanctum');
         Route::post('wallet/offline-recharge', [WalletController::class, 'offline_recharge'])->middleware('auth:sanctum');
+        Route::post('wallet/send-money', [WalletController::class, 'sendMoney'])->middleware('auth:sanctum');
 
 
 

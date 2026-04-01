@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
-import 'package:active_ecommerce_cms_demo_app/main.dart';
-import 'package:active_ecommerce_cms_demo_app/presenter/bottom_appbar_index.dart';
 import 'package:active_ecommerce_cms_demo_app/presenter/cart_counter.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/auth/login.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/category_list_n_product/category_list.dart';
@@ -10,6 +8,7 @@ import 'package:active_ecommerce_cms_demo_app/screens/checkout/cart.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/home.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/profile.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/reals.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/wallet.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +27,6 @@ class _MainState extends State<Main> {
   int _currentIndex = 0;
   late final List<Widget> _children;
   final CartCounter counter = CartCounter();
-  final BottomAppbarIndex bottomAppbarIndex = BottomAppbarIndex();
 
   bool _dialogShowing = false;
 
@@ -39,6 +37,7 @@ class _MainState extends State<Main> {
     _children = [
       const Home(),
       const RealsScreen(),
+      const Wallet(),
       Cart(hasBottomnav: true, fromNavigation: true, counter: counter),
       CategoryList(slug: "", isBaseCategory: true),
       const Profile(),
@@ -58,15 +57,10 @@ class _MainState extends State<Main> {
 
   void _onTapped(int index) {
     _fetchAll();
-    if (!guest_checkout_status.$ && index == 2 && !is_logged_in.$) {
+    if (!is_logged_in.$ && (index == 2 || index == 3 || index == 5)) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const Login()));
       return;
     }
-    if (index == 4) {
-      routes.push("/dashboard");
-      return;
-    }
-
     setState(() {
       _currentIndex = index;
     });
@@ -124,7 +118,7 @@ class _MainState extends State<Main> {
   }
 
   Color _itemColor(int index) {
-    return index == 2
+    return _currentIndex == index
         ? const Color(0xFFFA3E00)
         : const Color(0xFF8E8E93);
   }
@@ -145,23 +139,36 @@ class _MainState extends State<Main> {
   }) {
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(18.r),
+        borderRadius: BorderRadius.circular(14.r),
         onTap: () => _onTapped(index),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Container(
+          padding: EdgeInsets.only(top: 10.h, bottom: 6.h),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: _currentIndex == index
+                    ? const Color(0xFFFA3E00)
+                    : Colors.transparent,
+                width: 2.5,
+              ),
+            ),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _navIcon(assetPath, index, size: iconSize),
-              SizedBox(height: 6.h),
+              SizedBox(height: 5.h),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 10.sp,
+                  fontWeight: _currentIndex == index
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                   color: _itemColor(index),
                   height: 1.0,
                 ),
@@ -173,119 +180,124 @@ class _MainState extends State<Main> {
     );
   }
 
-  Widget _cartButton(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(32.r),
-      onTap: () => _onTapped(2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          badges.Badge(
-            position: badges.BadgePosition.topEnd(top: -4.h, end: -2.w),
-            badgeStyle: badges.BadgeStyle(
-              shape: badges.BadgeShape.circle,
-              badgeColor: const Color(0xFFFA3E00),
-              padding: EdgeInsets.all(4.r),
+  Widget _cartNavButton(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: () => _onTapped(3),
+        child: Container(
+          padding: EdgeInsets.only(top: 10.h, bottom: 6.h),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: _currentIndex == 3
+                    ? const Color(0xFFFA3E00)
+                    : Colors.transparent,
+                width: 2.5,
+              ),
             ),
-            badgeAnimation: const badges.BadgeAnimation.slide(toAnimate: false),
-            badgeContent: Consumer<CartCounter>(
-              builder: (context, cart, child) {
-                return Text(
-                  "${cart.cartCounter}",
-                  style: TextStyle(
-                    fontSize: 8.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                );
-              },
-            ),
-            child: Container(
-              width: 64.w,
-              height: 64.w,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFA3E00),
-                    Color(0xFFFF6A2A),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              badges.Badge(
+                position: badges.BadgePosition.topEnd(top: -5.h, end: -8.w),
+                badgeStyle: badges.BadgeStyle(
+                  shape: badges.BadgeShape.circle,
+                  badgeColor: const Color(0xFFFA3E00),
+                  padding: EdgeInsets.all(4.r),
                 ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFA3E00).withValues(alpha: 0.30),
-                    blurRadius: 25.r,
-                    offset: Offset(0, 10.h),
-                  ),
-                ],
+                badgeAnimation: const badges.BadgeAnimation.slide(
+                  toAnimate: false,
+                ),
+                badgeContent: Consumer<CartCounter>(
+                  builder: (context, cart, child) {
+                    return Text(
+                      "${cart.cartCounter}",
+                      style: TextStyle(
+                        fontSize: 8.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+                child: _navIcon("assets/cart.png", 3, size: 22.h),
               ),
-              child: Image.asset(
-                "assets/cart.png",
-                height: 28.h,
-                color: Colors.white,
+              SizedBox(height: 5.h),
+              Text(
+                AppLocalizations.of(context)!.cart_ucf,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10.sp,
+                  fontWeight: _currentIndex == 3
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                  color: _itemColor(3),
+                  height: 1.0,
+                ),
               ),
-            ),
+            ],
           ),
-          SizedBox(height: 6.h),
-          Text(
-            AppLocalizations.of(context)!.cart_ucf,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFFFA3E00),
-              height: 1.0,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _bottomNavigation(BuildContext context) {
     return Container(
-      height: 70.h,
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(25.r),
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: const Color(0xFFE9E4DD), width: 1),
+        ),
         boxShadow: [
           BoxShadow(
-            blurRadius: 20.r,
-            offset: Offset(0, 8.h),
-            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 16.r,
+            offset: Offset(0, -4.h),
+            color: Colors.black.withValues(alpha: 0.04),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _navButton(
-            assetPath: "assets/home.png",
-            index: 0,
-            label: AppLocalizations.of(context)!.home_ucf,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 66.h,
+          child: Row(
+            children: [
+              _navButton(
+                assetPath: "assets/home.png",
+                index: 0,
+                label: AppLocalizations.of(context)!.home_ucf,
+              ),
+              _navButton(
+                assetPath: "assets/shorts_logo.png",
+                index: 1,
+                iconSize: 22.h,
+                label: "Reels",
+              ),
+              _navButton(
+                assetPath: "assets/wallet.png",
+                index: 2,
+                label: "Wallet",
+              ),
+              _cartNavButton(context),
+              _navButton(
+                assetPath: "assets/categories.png",
+                index: 4,
+                label: AppLocalizations.of(context)!.categories_ucf,
+              ),
+              _navButton(
+                assetPath: "assets/profile.png",
+                index: 5,
+                label: AppLocalizations.of(context)!.profile_ucf,
+              ),
+            ],
           ),
-          _navButton(
-            assetPath: "assets/shorts_logo.png",
-            index: 1,
-            iconSize: 22.h,
-            label: "Reels",
-          ),
-          SizedBox(width: 64.w),
-          _navButton(
-            assetPath: "assets/categories.png",
-            index: 3,
-            label: AppLocalizations.of(context)!.categories_ucf,
-          ),
-          _navButton(
-            assetPath: "assets/profile.png",
-            index: 4,
-            label: AppLocalizations.of(context)!.profile_ucf,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -302,29 +314,11 @@ class _MainState extends State<Main> {
         child: Scaffold(
           backgroundColor: const Color(0xFFF5F2EE),
           resizeToAvoidBottomInset: false,
-          body: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: SafeArea(
-                  bottom: false,
-                  child: SizedBox.expand(child: _children[_currentIndex]),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 20.h,
-                child: _bottomNavigation(context),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 42.h,
-                child: Center(child: _cartButton(context)),
-              ),
-            ],
+          body: SafeArea(
+            bottom: false,
+            child: IndexedStack(index: _currentIndex, children: _children),
           ),
+          bottomNavigationBar: _bottomNavigation(context),
         ),
       ),
     );

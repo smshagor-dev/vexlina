@@ -62,30 +62,42 @@ class Recharge {
   Recharge({
     this.transactionNumber,
     this.amount,
+    this.rawAmount,
     this.paymentMethod,
     this.approvalString,
+    this.direction,
+    this.counterparty,
     this.date,
   });
 
   String? transactionNumber;
   String? amount;
+  double? rawAmount;
   String? paymentMethod;
   String? approvalString;
+  String? direction;
+  String? counterparty;
   String? date;
 
   factory Recharge.fromJson(Map<String, dynamic> json) => Recharge(
     transactionNumber: json["transaction_number"]?.toString(),
     amount: json["amount"]?.toString(),
+    rawAmount: double.tryParse(json["raw_amount"].toString()),
     paymentMethod: json["payment_method"]?.toString(),
     approvalString: json["approval_string"]?.toString(),
+    direction: json["direction"]?.toString(),
+    counterparty: json["counterparty"]?.toString(),
     date: json["date"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
     "transaction_number": transactionNumber,
     "amount": amount,
+    "raw_amount": rawAmount,
     "payment_method": paymentMethod,
     "approval_string": approvalString,
+    "direction": direction,
+    "counterparty": counterparty,
     "date": date,
   };
 }

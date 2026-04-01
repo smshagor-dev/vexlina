@@ -93,6 +93,9 @@ class CheckoutProvider extends ChangeNotifier {
   String _gst = '...';
   String _grandTotal = "...";
   String _discount = '...';
+  String _walletPaymentDiscount = '...';
+  double _walletPaymentDiscountPercent = 0.0;
+  bool _walletPaymentDiscountApplied = false;
 
   // --- COUNTERS  ---
   int _totalItemCount = 0;
@@ -151,6 +154,9 @@ class CheckoutProvider extends ChangeNotifier {
   String get gst => _gst;
   String get grandTotal => _grandTotal;
   String get discount => _discount;
+  String get walletPaymentDiscount => _walletPaymentDiscount;
+  double get walletPaymentDiscountPercent => _walletPaymentDiscountPercent;
+  bool get walletPaymentDiscountApplied => _walletPaymentDiscountApplied;
   int get totalItemCount => _totalItemCount;
   int get totalClubPoint => _totalClubPoint;
 
@@ -186,6 +192,9 @@ class CheckoutProvider extends ChangeNotifier {
     _tax = "...";
     _grandTotal = "...";
     _discount = "...";
+    _walletPaymentDiscount = "...";
+    _walletPaymentDiscountPercent = 0.0;
+    _walletPaymentDiscountApplied = false;
 
     // Reset Coupon & Counts
     couponController.clear();
@@ -514,6 +523,7 @@ class CheckoutProvider extends ChangeNotifier {
 
   void setSelectedPaymentMethod(String? key) {
     _selectedPaymentMethodKey = key;
+    fetchSummary();
     notifyListeners();
   }
 
@@ -681,14 +691,24 @@ class CheckoutProvider extends ChangeNotifier {
     );
     _paymentTypeList = response;
     if (_paymentTypeList.isNotEmpty) {
-      _selectedPaymentMethodKey = _paymentTypeList[0].paymentTypeKey;
+      final walletMethod = _paymentTypeList.cast<dynamic>().where((method) {
+        return method.paymentTypeKey == "wallet";
+      }).toList();
+
+      _selectedPaymentMethodKey = walletMethod.isNotEmpty
+          ? walletMethod.first.paymentTypeKey
+          : _paymentTypeList[0].paymentTypeKey;
+
+      await fetchSummary();
     }
     _isPaymentLoading = false;
     notifyListeners();
   }
 
   Future<void> fetchSummary() async {
-    var response = await CartRepository().getCartSummaryResponse();
+    var response = await CartRepository().getCartSummaryResponse(
+      paymentType: _selectedPaymentMethodKey == "wallet" ? "wallet" : null,
+    );
     if (response != null) {
       _subTotal = response.subTotal ?? "0.00";
       _tax = response.tax ?? "0.00";
@@ -696,6 +716,11 @@ class CheckoutProvider extends ChangeNotifier {
       _shippingCost = response.shippingCost ?? "0.00";
       _grandTotal = response.grandTotal.toString();
       _discount = response.discount ?? "0.00";
+      _walletPaymentDiscount = response.walletPaymentDiscount ?? "0.00";
+      _walletPaymentDiscountPercent =
+          response.walletPaymentDiscountPercent ?? 0.0;
+      _walletPaymentDiscountApplied =
+          response.walletPaymentDiscountApplied ?? false;
       _couponApplied = response.couponApplied ?? false;
       _appliedCouponCode = response.couponCode ?? "";
 

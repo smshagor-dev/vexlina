@@ -588,39 +588,44 @@
 @php
     $count = Auth::check() && auth()->user()->user_type == 'customer' ? count(get_user_cart()) : 0;
     $isReelsActive = request()->routeIs('reels.index') || request()->routeIs('reels.show') || request()->routeIs('reels.dashboard');
+    $isHomeActive = request()->routeIs('home');
+    $isWalletActive = request()->routeIs('wallet.*') || request()->routeIs('wallet.index');
+    $isCartActive = request()->routeIs('cart') || request()->routeIs('checkout.shipping_info') || request()->routeIs('checkout.store_shipping_infostore');
+    $isCategoriesActive = request()->routeIs('categories.all');
+    $isProfileActive = request()->routeIs('dashboard') || request()->routeIs('customer.*') || request()->routeIs('admin.dashboard');
     $profileRoute = route('user.login');
+    $walletRoute = route('user.login');
 
     if (Auth::check()) {
         if (isAdmin()) {
             $profileRoute = route('admin.dashboard');
+            $walletRoute = route('admin.dashboard');
         } elseif (isSeller()) {
             $profileRoute = route('dashboard');
+            $walletRoute = route('dashboard');
         } elseif (auth()->user()->user_type == 'customer') {
             $profileRoute = 'javascript:void(0)';
+            $walletRoute = get_setting('wallet_system') == 1 ? route('wallet.index') : route('dashboard');
         }
     }
 @endphp
 <style>
     .aiz-mobile-bottom-nav {
-        max-width: 560px;
-        padding: 0 16px 18px;
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
+        max-width: 100%;
+        padding: 0;
+        background: #fff !important;
+        border-top: 1px solid #e9e4dd !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, .04) !important;
     }
 
     .aiz-mobile-bottom-nav__panel {
-        position: relative;
         display: flex;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-between;
-        gap: 6px;
-        min-height: 72px;
-        padding: 10px 18px;
-        border-radius: 28px;
-        background: rgba(255, 255, 255, .92);
-        box-shadow: 0 14px 36px rgba(15, 23, 42, .16);
-        backdrop-filter: blur(14px);
+        gap: 0;
+        min-height: 66px;
+        padding: 0;
+        background: #fff;
     }
 
     .aiz-mobile-bottom-nav__item {
@@ -628,23 +633,21 @@
         min-width: 0;
     }
 
-    .aiz-mobile-bottom-nav__item--cart-space {
-        max-width: 76px;
-        flex-basis: 76px;
-    }
-
     .aiz-mobile-bottom-nav__link {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 5px;
         color: #8e8e93;
         text-align: center;
-        padding: 8px 4px;
+        padding: 10px 4px 6px;
+        border-top: 2.5px solid transparent;
+        text-decoration: none !important;
     }
 
-    .aiz-mobile-bottom-nav__link svg {
+    .aiz-mobile-bottom-nav__link svg,
+    .aiz-mobile-bottom-nav__link img {
         width: 20px;
         height: 20px;
         color: currentColor;
@@ -652,68 +655,47 @@
 
     .aiz-mobile-bottom-nav__link.is-active {
         color: #fa3e00;
+        border-top-color: #fa3e00;
     }
 
     .aiz-mobile-bottom-nav__label {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 500;
         line-height: 1;
         color: inherit;
         white-space: nowrap;
     }
 
-    .aiz-mobile-bottom-nav__cart {
-        position: absolute;
-        left: 50%;
-        bottom: 18px;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
+    .aiz-mobile-bottom-nav__cart-icon {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
         align-items: center;
-        gap: 6px;
-        color: #fa3e00;
-        text-decoration: none;
+        justify-content: center;
     }
 
     .aiz-mobile-bottom-nav__cart-badge {
         position: absolute;
-        top: -2px;
-        right: -1px;
-        min-width: 18px;
-        height: 18px;
+        top: -5px;
+        right: -9px;
+        min-width: 17px;
+        height: 17px;
         padding: 0 4px;
         border-radius: 999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #fff;
-        color: #fa3e00;
-        font-size: 10px;
-        font-weight: 700;
-        box-shadow: 0 6px 16px rgba(15, 23, 42, .18);
-    }
-
-    .aiz-mobile-bottom-nav__cart-icon {
-        position: relative;
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #fa3e00, #ff6a2a);
-        box-shadow: 0 16px 30px rgba(250, 62, 0, .32);
-    }
-
-    .aiz-mobile-bottom-nav__cart-icon svg {
-        width: 28px;
-        height: 28px;
+        background: #fa3e00;
         color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
     }
 
     .aiz-mobile-bottom-nav__avatar {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
         object-fit: cover;
     }
@@ -721,7 +703,7 @@
 <div class="aiz-mobile-bottom-nav d-xl-none fixed-bottom mx-auto">
     <div class="aiz-mobile-bottom-nav__panel">
         <div class="aiz-mobile-bottom-nav__item">
-            <a href="{{ route('home') }}" class="aiz-mobile-bottom-nav__link {{ request()->routeIs('home') ? 'is-active' : '' }}">
+            <a href="{{ route('home') }}" class="aiz-mobile-bottom-nav__link {{ $isHomeActive ? 'is-active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M15.3,5.4,9.561.481A2,2,0,0,0,8.26,0H7.74a2,2,0,0,0-1.3.481L.7,5.4A2,2,0,0,0,0,6.92V14a2,2,0,0,0,2,2H14a2,2,0,0,0,2-2V6.92A2,2,0,0,0,15.3,5.4M10,15H6V9A1,1,0,0,1,7,8H9a1,1,0,0,1,1,1Zm5-1a1,1,0,0,1-1,1H11V9A2,2,0,0,0,9,7H7A2,2,0,0,0,5,9v6H2a1,1,0,0,1-1-1V6.92a1,1,0,0,1,.349-.76l5.74-4.92A1,1,0,0,1,7.74,1h.52a1,1,0,0,1,.651.24l5.74,4.92A1,1,0,0,1,15,6.92Z"/>
                 </svg>
@@ -738,10 +720,34 @@
             </a>
         </div>
 
-        <div class="aiz-mobile-bottom-nav__item aiz-mobile-bottom-nav__item--cart-space"></div>
+        <div class="aiz-mobile-bottom-nav__item">
+            <a href="{{ $walletRoute }}" class="aiz-mobile-bottom-nav__link {{ $isWalletActive ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M14 4H2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm1 8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V8h14Zm0-5H1V6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1Z"/>
+                    <path d="M11 10.5a1.5 1.5 0 1 0 1.5-1.5A1.5 1.5 0 0 0 11 10.5Z"/>
+                </svg>
+                <span class="aiz-mobile-bottom-nav__label">{{ translate('Wallet') }}</span>
+            </a>
+        </div>
 
         <div class="aiz-mobile-bottom-nav__item">
-            <a href="{{ route('categories.all') }}" class="aiz-mobile-bottom-nav__link {{ request()->routeIs('categories.all') ? 'is-active' : '' }}">
+            <a href="{{ route('cart') }}" class="aiz-mobile-bottom-nav__link {{ $isCartActive ? 'is-active' : '' }}">
+                <span class="aiz-mobile-bottom-nav__cart-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8,24a2,2,0,1,0,2,2,2,2,0,0,0-2-2m0,3a1,1,0,1,1,1-1,1,1,0,0,1-1,1" transform="translate(-3 -11.999)"/>
+                        <path d="M24,24a2,2,0,1,0,2,2,2,2,0,0,0-2-2m0,3a1,1,0,1,1,1-1,1,1,0,0,1-1,1" transform="translate(-10.999 -11.999)"/>
+                        <path d="M15.923,3.975A1.5,1.5,0,0,0,14.5,2h-9a.5.5,0,1,0,0,1h9a.507.507,0,0,1,.129.017.5.5,0,0,1,.355.612l-1.581,6a.5.5,0,0,1-.483.372H5.456a.5.5,0,0,1-.489-.392L3.1,1.176A1.5,1.5,0,0,0,1.632,0H.5a.5.5,0,1,0,0,1H1.544a.5.5,0,0,1,.489.392L3.9,9.826A1.5,1.5,0,0,0,5.368,11h7.551a1.5,1.5,0,0,0,1.423-1.026Z" transform="translate(0 -0.001)"/>
+                    </svg>
+                    @if($count > 0)
+                        <span class="aiz-mobile-bottom-nav__cart-badge cart-count">{{ $count }}</span>
+                    @endif
+                </span>
+                <span class="aiz-mobile-bottom-nav__label">{{ translate('Cart') }}</span>
+            </a>
+        </div>
+
+        <div class="aiz-mobile-bottom-nav__item">
+            <a href="{{ route('categories.all') }}" class="aiz-mobile-bottom-nav__link {{ $isCategoriesActive ? 'is-active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M5 0H2a2 2 0 0 0-2 2v3h5a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2ZM1 4V2a1 1 0 0 1 1-1h4v2a1 1 0 0 1-1 1H1Z"/>
                     <path d="M10 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm0 1a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>
@@ -755,7 +761,7 @@
         <div class="aiz-mobile-bottom-nav__item">
             @if (Auth::check())
                 @if (auth()->user()->user_type == 'customer')
-                    <a href="{{ $profileRoute }}" class="aiz-mobile-bottom-nav__link {{ request()->routeIs('dashboard') || request()->routeIs('customer.*') ? 'is-active' : '' }} mobile-side-nav-thumb" data-toggle="class-toggle" data-backdrop="static" data-target=".aiz-mobile-side-nav">
+                    <a href="{{ $profileRoute }}" class="aiz-mobile-bottom-nav__link {{ $isProfileActive ? 'is-active' : '' }} mobile-side-nav-thumb" data-toggle="class-toggle" data-backdrop="static" data-target=".aiz-mobile-side-nav">
                         @if($user->avatar_original != null)
                             <img src="{{ $user_avatar }}" alt="{{ translate('avatar') }}" class="aiz-mobile-bottom-nav__avatar">
                         @else
@@ -764,7 +770,7 @@
                         <span class="aiz-mobile-bottom-nav__label">{{ translate('Profile') }}</span>
                     </a>
                 @else
-                    <a href="{{ $profileRoute }}" class="aiz-mobile-bottom-nav__link {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') ? 'is-active' : '' }}">
+                    <a href="{{ $profileRoute }}" class="aiz-mobile-bottom-nav__link {{ $isProfileActive ? 'is-active' : '' }}">
                         @if($user->avatar_original != null)
                             <img src="{{ $user_avatar }}" alt="{{ translate('avatar') }}" class="aiz-mobile-bottom-nav__avatar">
                         @else
@@ -779,24 +785,10 @@
                         <path d="M8 0a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 7a3 3 0 1 1 3-3 3 3 0 0 1-3 3Z"/>
                         <path d="M10 10H6a6 6 0 0 0-6 6h16a6 6 0 0 0-6-6Zm-8.829 5A5 5 0 0 1 6 11h4a5 5 0 0 1 4.829 4Z"/>
                     </svg>
-                    <span class="aiz-mobile-bottom-nav__label">{{ translate('Account') }}</span>
+                    <span class="aiz-mobile-bottom-nav__label">{{ translate('Profile') }}</span>
                 </a>
             @endif
         </div>
-
-        <a href="{{ route('cart') }}" class="aiz-mobile-bottom-nav__cart">
-            <span class="aiz-mobile-bottom-nav__cart-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8,24a2,2,0,1,0,2,2,2,2,0,0,0-2-2m0,3a1,1,0,1,1,1-1,1,1,0,0,1-1,1" transform="translate(-3 -11.999)"/>
-                    <path d="M24,24a2,2,0,1,0,2,2,2,2,0,0,0-2-2m0,3a1,1,0,1,1,1-1,1,1,0,0,1-1,1" transform="translate(-10.999 -11.999)"/>
-                    <path d="M15.923,3.975A1.5,1.5,0,0,0,14.5,2h-9a.5.5,0,1,0,0,1h9a.507.507,0,0,1,.129.017.5.5,0,0,1,.355.612l-1.581,6a.5.5,0,0,1-.483.372H5.456a.5.5,0,0,1-.489-.392L3.1,1.176A1.5,1.5,0,0,0,1.632,0H.5a.5.5,0,1,0,0,1H1.544a.5.5,0,0,1,.489.392L3.9,9.826A1.5,1.5,0,0,0,5.368,11h7.551a1.5,1.5,0,0,0,1.423-1.026Z" transform="translate(0 -0.001)"/>
-                </svg>
-                @if($count > 0)
-                    <span class="aiz-mobile-bottom-nav__cart-badge cart-count">{{ $count }}</span>
-                @endif
-            </span>
-            <span class="aiz-mobile-bottom-nav__label">{{ translate('Cart') }}</span>
-        </a>
     </div>
 </div>
 

@@ -6,6 +6,8 @@ class BusinessSettingHelper {
   setBusinessSettingData() async {
     BusinessSettingListResponse businessLists =
         await BusinessSettingRepository().getBusinessSettingList();
+    bool walletDiscountStatus = false;
+    double walletDiscountPercent = 0.0;
 
     for (var element in businessLists.data!) {
       switch (element.type) {
@@ -61,6 +63,18 @@ class BusinessSettingHelper {
             } else {
               wallet_system_status.$ = false;
             }
+            wallet_system_status.save();
+          }
+          break;
+        case 'wallet_payment_discount_status':
+          {
+            walletDiscountStatus = element.value.toString() == "1";
+          }
+          break;
+        case 'wallet_payment_discount_percent':
+          {
+            walletDiscountPercent =
+                double.tryParse(element.value.toString()) ?? 0.0;
           }
           break;
         case 'email_verification':
@@ -181,5 +195,10 @@ class BusinessSettingHelper {
           break;
       }
     }
+
+    wallet_payment_discount_status.$ = walletDiscountStatus;
+    wallet_payment_discount_percent.$ = walletDiscountPercent;
+    wallet_payment_discount_status.save();
+    wallet_payment_discount_percent.save();
   }
 }

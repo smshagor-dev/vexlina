@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:active_ecommerce_cms_demo_app/app_config.dart';
+import 'package:active_ecommerce_cms_demo_app/data_model/common_response.dart';
 import 'package:active_ecommerce_cms_demo_app/data_model/wallet_balance_response.dart';
 import 'package:active_ecommerce_cms_demo_app/data_model/wallet_recharge_response.dart';
 import 'package:active_ecommerce_cms_demo_app/middlewares/banned_user.dart';
@@ -16,7 +19,10 @@ class WalletRepository {
     header.addAll(currencyHeader);
 
     final response = await ApiRequest.get(
-        url: url, headers: header, middleware: BannedUser());
+      url: url,
+      headers: header,
+      middleware: BannedUser(),
+    );
     return walletBalanceResponseFromJson(response.body);
   }
 
@@ -27,8 +33,34 @@ class WalletRepository {
     header.addAll(authHeader);
     header.addAll(currencyHeader);
     final response = await ApiRequest.get(
-        url: url, headers: header, middleware: BannedUser());
+      url: url,
+      headers: header,
+      middleware: BannedUser(),
+    );
 
     return walletRechargeResponseFromJson(response.body);
+  }
+
+  Future<CommonResponse> sendMoney({
+    required String receiverCardNumber,
+    required String amount,
+  }) async {
+    String url = ("${AppConfig.BASE_URL}/wallet/send-money");
+    Map<String, String> header = commonHeader;
+
+    header.addAll(authHeader);
+    header.addAll(currencyHeader);
+
+    final response = await ApiRequest.post(
+      url: url,
+      headers: header,
+      body: jsonEncode({
+        "receiver_card_number": receiverCardNumber,
+        "amount": amount,
+      }),
+      middleware: BannedUser(),
+    );
+
+    return commonResponseFromJson(response.body);
   }
 }

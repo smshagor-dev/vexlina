@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Wallet;
+use App\Services\CardToCardTransferService;
 use App\Utility\EmailUtility;
 use Auth;
 use Session;
+use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
 {
@@ -121,6 +123,33 @@ class WalletController extends Controller
         }
         $wallets = $wallets->orderBy('id','desc')->paginate(10);
         return view('manual_payment_methods.wallet_request', compact('wallets', 'type'));
+    }
+
+    public function sendMoney(Request $request, CardToCardTransferService $transferService)
+    {
+        $request->validate([
+            'receiver_card_number' => ['required', 'string', 'max:32'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        try {
+            $transfer = $transferService->transfer(
+                Auth::user(),
+                (string) $request->receiver_card_number,
+                (float) $request->amount
+            );
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+            flash(translate('Unable to complete card to card transfer right now.'))->error();
+            return redirect()->route('wallet.index');
+        }
+
+        $receiver = $transfer['receiver'];
+        flash(translate('Money sent successfully to') . ' ' . ($receiver->name ?? translate('receiver')))->success();
+
+        return redirect()->route('wallet.index');
     }
 
     public function updateApproved(Request $request)

@@ -14,8 +14,11 @@ class WalletCollection extends ResourceCollection
                 return [
                     'transaction_number' => $data->ensureTransactionNumber(),
                     'amount' => single_price(($data->amount)),
-                    'payment_method' => ucwords(str_replace('_', ' ', $data->payment_method)),
-                    'approval_string' => $data->offline_payment ? ($data->approval == 1 ? "Approved" : "Pending") : "N/A",
+                    'raw_amount' => (float) $data->amount,
+                    'payment_method' => $data->displayPaymentMethod(),
+                    'approval_string' => $data->displayStatus(),
+                    'direction' => $data->transferDirection(),
+                    'counterparty' => $data->counterpartyLabel(),
                     'date' => Carbon::createFromTimestamp(strtotime($data->created_at))->format('d-m-Y'),
                 ];
             })

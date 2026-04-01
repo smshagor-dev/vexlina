@@ -18,8 +18,8 @@ class WalletBalanceResponse {
   String? lastRecharged;
   factory WalletBalanceResponse.fromJson(Map<String, dynamic> json) =>
       WalletBalanceResponse(
-        balance: json["balance"],
-        lastRecharged: json["last_recharged"],
+        balance: json["balance"]?.toString() ?? "0",
+        lastRecharged: json["last_recharged"]?.toString() ?? "-",
       );
 
   Map<String, dynamic> toJson() => {

@@ -104,38 +104,57 @@ class _CartState extends State<Cart> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                height: 40.h,
+                height: cartProvider.walletPayableAvailable ? 56.h : 40.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6.0.r),
                   color: MyTheme.soft_accent_color,
                 ),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Text(
-                        AppLocalizations.of(context)!.total_amount_ucf,
-                        style: TextStyle(
-                          color: MyTheme.dark_font_grey,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w700,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cartProvider.walletPayableAvailable
+                                  ? "Wallet Payable"
+                                  : AppLocalizations.of(
+                                      context,
+                                    )!.total_amount_ucf,
+                              style: TextStyle(
+                                color: MyTheme.dark_font_grey,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (cartProvider.walletPayableAvailable)
+                              Text(
+                                "Regular ${cartProvider.cartTotalString}",
+                                style: TextStyle(
+                                  color: MyTheme.dark_grey,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ),
-                    const Spacer(),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Text(
-                        cartProvider.cartTotalString,
+                      Text(
+                        cartProvider.walletPayableAvailable
+                            ? cartProvider.walletPayableString
+                            : cartProvider.cartTotalString,
                         style: TextStyle(
                           color: MyTheme.accent_color,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               SizedBox(height: 10.h),

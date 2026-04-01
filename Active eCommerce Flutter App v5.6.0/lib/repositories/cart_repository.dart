@@ -142,13 +142,19 @@ class CartRepository {
     return cartAddResponseFromJson(response.body);
   }
 
-  Future<dynamic> getCartSummaryResponse() async {
+  Future<dynamic> getCartSummaryResponse({String? paymentType}) async {
     String postBody;
 
     if (guest_checkout_status.$ && !is_logged_in.$) {
-      postBody = jsonEncode({"temp_user_id": temp_user_id.$});
+      postBody = jsonEncode({
+        "temp_user_id": temp_user_id.$,
+        if (paymentType != null) "payment_type": paymentType,
+      });
     } else {
-      postBody = jsonEncode({"user_id": user_id.$});
+      postBody = jsonEncode({
+        "user_id": user_id.$,
+        if (paymentType != null) "payment_type": paymentType,
+      });
     }
 
     String url = ("${AppConfig.BASE_URL}/cart-summary");

@@ -122,6 +122,44 @@
             </form>
         </div>
     </div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0 h6">{{ translate('Wallet Payment Discount') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="mb-2 d-block">{{ translate('Enable Wallet Payment Discount') }}</label>
+                    <label class="aiz-switch aiz-switch-success mb-0">
+                        <input type="checkbox" onchange="updateWalletDiscountStatus(this)"
+                            @if (get_setting('wallet_payment_discount_status') == 1) checked @endif>
+                        <span></span>
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-soft-info mb-0">
+                        {{ translate('This discount will apply only when customers pay with wallet during checkout on web and app.') }}
+                    </div>
+                </div>
+            </div>
+
+            <form action="{{ route('business_settings.update') }}" method="POST">
+                @csrf
+                <input type="hidden" name="types[]" value="wallet_payment_discount_percent">
+                <div class="row align-items-end">
+                    <div class="col-md-6">
+                        <label>{{ translate('Discount Percentage') }}</label>
+                        <input type="number" min="0" max="100" step="0.01" class="form-control"
+                            name="wallet_payment_discount_percent" value="{{ get_setting('wallet_payment_discount_percent', 0) }}"
+                            placeholder="5">
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">{{ translate('Save Wallet Discount') }}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @section('modal')
@@ -207,6 +245,17 @@
         }
 
         $('#filePreviewModal').modal('show');
+    }
+
+    function updateWalletDiscountStatus(el) {
+        let value = el.checked ? 1 : 0;
+        $.post('{{ route('business_settings.update.activation') }}', {
+            _token: '{{ csrf_token() }}',
+            type: 'wallet_payment_discount_status',
+            value: value
+        }, function() {
+            AIZ.plugins.notify('success', '{{ translate('Wallet payment discount setting updated successfully') }}');
+        });
     }
 
     $(document).on('change', '.preview-input', function () {

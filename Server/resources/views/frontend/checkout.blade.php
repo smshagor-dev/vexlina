@@ -122,7 +122,11 @@
        var carrierCount=0;
         $(document).ready(function() {
             $(".online_payment").click(function() {
+                clearWalletPaymentOption();
                 $('#manual_payment_description').parent().addClass('d-none');
+            });
+            $(".offline_payment_option").click(function() {
+                clearWalletPaymentOption();
             });
             toggleManualPaymentData($('input[name=payment_option]:checked').data('id'));
         });
@@ -131,10 +135,19 @@
         var minimum_order_amount =
             {{ get_setting('minimum_order_amount_check') == 1 ? get_setting('minimum_order_amount') : 0 }};
 
+        function setWalletPaymentOption() {
+            clearWalletPaymentOption();
+            $('input[name="payment_option"]').prop('checked', false);
+            $('#checkout-form').append('<input type="hidden" name="payment_option" id="wallet_payment_option" value="wallet">');
+        }
+
+        function clearWalletPaymentOption() {
+            $('#wallet_payment_option').remove();
+        }
+
         function use_wallet() {
-            $('input[name=payment_option]').val('wallet');
+            setWalletPaymentOption();
             if ($('#agree_checkbox').is(":checked")) {
-                ;
                 if (minimum_order_amount_check && $('#sub_total').val() < minimum_order_amount) {
                     AIZ.plugins.notify('danger',
                         '{{ translate('You order amount is less then the minimum order amount') }}');
@@ -170,6 +183,7 @@
 
         function submitOrder(el) {
             $(el).prop('disabled', true);
+            clearWalletPaymentOption();
             if ($('#agree_checkbox').is(":checked")) {
                 if (minimum_order_amount_check && $('#sub_total').val() < minimum_order_amount) {
                     AIZ.plugins.notify('danger',

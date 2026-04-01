@@ -604,12 +604,26 @@
 
                                 <!-- Wallet Payment -->
                                 @if (Auth::check() && get_setting('wallet_system') == 1)
+                                    @php
+                                        $walletPaymentDiscountService = app(\App\Services\WalletPaymentDiscountService::class);
+                                        $walletPaymentDiscount = $walletPaymentDiscountService->calculateDiscountOnSubtotal($subtotal, $coupon_discount ?? 0, 'wallet');
+                                        $walletPayableTotal = $walletPaymentDiscountService->applyDiscountToTotalUsingSubtotal($total, $subtotal, $coupon_discount ?? 0, 'wallet');
+                                    @endphp
                                     <div class="py-4 px-4 text-center bg-soft-secondary-base mt-4">
                                         <div class="fs-14 mb-3">
                                             <span class="opacity-80">{{ translate('Or, Your wallet balance :') }}</span>
                                             <span class="fw-700">{{ single_price(Auth::user()->balance) }}</span>
                                         </div>
-                                        @if (Auth::user()->balance < $total)
+                                        @if ($walletPaymentDiscount > 0)
+                                            <div class="fs-13 mb-3 text-success">
+                                                {{ translate('Wallet discount') }}:
+                                                {{ $walletPaymentDiscountService->getPercentage() }}%
+                                                ({{ single_price($walletPaymentDiscount) }})
+                                                <br>
+                                                <span class="fw-700">{{ translate('Wallet payable') }}: {{ single_price($walletPayableTotal) }}</span>
+                                            </div>
+                                        @endif
+                                        @if (Auth::user()->balance < $walletPayableTotal)
                                             <button type="button" class="btn btn-secondary" disabled>
                                                 {{ translate('Insufficient balance') }}
                                             </button>
@@ -669,7 +683,11 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $(".online_payment").click(function() {
+                clearWalletPaymentOption();
                 $('#manual_payment_description').parent().addClass('d-none');
+            });
+            $(".offline_payment_option").click(function() {
+                clearWalletPaymentOption();
             });
             toggleManualPaymentData($('input[name=payment_option]:checked').data('id'));
         });
@@ -678,10 +696,19 @@
         var minimum_order_amount =
             {{ get_setting('minimum_order_amount_check') == 1 ? get_setting('minimum_order_amount') : 0 }};
 
+        function setWalletPaymentOption() {
+            clearWalletPaymentOption();
+            $('input[name="payment_option"]').prop('checked', false);
+            $('#checkout-form').append('<input type="hidden" name="payment_option" id="wallet_payment_option" value="wallet">');
+        }
+
+        function clearWalletPaymentOption() {
+            $('#wallet_payment_option').remove();
+        }
+
         function use_wallet() {
-            $('input[name=payment_option]').val('wallet');
+            setWalletPaymentOption();
             if ($('#agree_checkbox').is(":checked")) {
-                ;
                 if (minimum_order_amount_check && $('#sub_total').val() < minimum_order_amount) {
                     AIZ.plugins.notify('danger',
                         '{{ translate('You order amount is less then the minimum order amount') }}');
@@ -695,6 +722,7 @@
 
         function submitOrder(el) {
             $(el).prop('disabled', true);
+            clearWalletPaymentOption();
             if ($('#agree_checkbox').is(":checked")) {
                 if (minimum_order_amount_check && $('#sub_total').val() < minimum_order_amount) {
                     AIZ.plugins.notify('danger',
