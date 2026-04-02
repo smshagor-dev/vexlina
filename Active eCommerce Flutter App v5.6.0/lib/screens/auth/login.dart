@@ -8,6 +8,7 @@ import 'package:active_ecommerce_cms_demo_app/custom/input_decorations.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/intl_phone_input.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/toast_component.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/auth_helper.dart';
+import 'package:active_ecommerce_cms_demo_app/helpers/biometric_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/other_config.dart';
@@ -57,6 +58,10 @@ class _LoginState extends State<Login> {
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final BiometricHelper _biometricHelper = BiometricHelper();
+  bool _biometricAvailable = false;
+  bool _hasBiometricCredentials = false;
+  bool _isBiometricLoading = false;
 
   @override
   void initState() {
@@ -66,9 +71,20 @@ class _LoginState extends State<Login> {
       overlays: [SystemUiOverlay.bottom],
     );
     fetchCountry();
+    _loadBiometricState();
     if (recaptcha_customer_login.$) {
       _setupWebViewController();
     }
+  }
+
+  Future<void> _loadBiometricState() async {
+    final available = await _biometricHelper.isBiometricAvailable();
+    final hasCredentials = await _biometricHelper.hasSavedCredentials();
+    if (!mounted) return;
+    setState(() {
+      _biometricAvailable = available;
+      _hasBiometricCredentials = hasCredentials;
+    });
   }
 
   void _setupWebViewController() {
@@ -152,6 +168,9 @@ class _LoginState extends State<Login> {
       SystemUiMode.manual,
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
     );
+    _phoneNumberController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -196,7 +215,13 @@ class _LoginState extends State<Login> {
         }
       } else {
         ToastComponent.showDialog(loginResponse.message!);
+        await _biometricHelper.saveCredentials(
+          loginBy: _loginBy,
+          identifier: _loginBy == 'email' ? email : (_phone ?? ''),
+          password: password,
+        );
         AuthHelper().setUserData(loginResponse);
+        await _loadBiometricState();
 
         if (OtherConfig.USE_PUSH_NOTIFICATION) {
           final FirebaseMessaging fcm = FirebaseMessaging.instance;
@@ -238,6 +263,61 @@ class _LoginState extends State<Login> {
       );
     } finally {
       Loading.close();
+    }
+  }
+
+  Future<void> _loginWithBiometric() async {
+    if (_isBiometricLoading) return;
+
+    setState(() {
+      _isBiometricLoading = true;
+    });
+
+    final credentialMap = await _biometricHelper.authenticateAndGetCredentials();
+
+    if (!mounted) return;
+
+    if (credentialMap == null) {
+      setState(() {
+        _isBiometricLoading = false;
+      });
+      ToastComponent.showDialog(
+        "Biometric verification failed or no saved login found.",
+      );
+      return;
+    }
+
+    try {
+      final loginResponse = await AuthRepository().getLoginResponse(
+        credentialMap['identifier'],
+        credentialMap['password'] ?? '',
+        credentialMap['login_by'] ?? 'email',
+        '',
+      );
+
+      if (!mounted) return;
+
+      if (loginResponse.result == false) {
+        ToastComponent.showDialog(
+          loginResponse.message is List
+              ? loginResponse.message!.join("\n")
+              : (loginResponse.message ?? 'Biometric login failed'),
+        );
+      } else {
+        ToastComponent.showDialog(loginResponse.message ?? 'Login successful');
+        AuthHelper().setUserData(loginResponse);
+        context.go("/");
+      }
+    } catch (_) {
+      ToastComponent.showDialog(
+        "Biometric login request failed. Please try again.",
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBiometricLoading = false;
+        });
+      }
     }
   }
 
@@ -614,6 +694,49 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
+                    if (_biometricAvailable && _hasBiometricCredentials)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 14.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: MyTheme.accent_color.withValues(alpha: .25),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed: _isBiometricLoading
+                                ? null
+                                : _loginWithBiometric,
+                            icon: _isBiometricLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.fingerprint,
+                                    color: MyTheme.accent_color,
+                                  ),
+                            label: Text(
+                              _isBiometricLoading
+                                  ? "Checking biometrics..."
+                                  : "Login with Biometrics",
+                              style: TextStyle(
+                                color: MyTheme.accent_color,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20.0),
                       child: Row(

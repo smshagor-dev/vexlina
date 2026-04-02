@@ -8,6 +8,7 @@ use App\Models\ProductTranslation;
 use App\Models\Product;
 use App\Models\WholesalePrice;
 use App\Models\Wishlist;
+use App\Utility\SkuUtility;
 use Illuminate\Http\Request;
 
 class WholesaleService
@@ -48,7 +49,7 @@ class WholesaleService
         $product_stock->product_id  = $product->id;
         $product_stock->variant     = '';
         $product_stock->price       = $collection['unit_price'];
-        $product_stock->sku         = $collection['sku'];
+        $product_stock->sku         = SkuUtility::forStock($product, '', $collection['sku'] ?? null);
         $product_stock->qty         = $collection['current_stock'];
         $product_stock->save();
 
@@ -189,7 +190,7 @@ class WholesaleService
 
         $product_stock              = $product->stocks->first();
         $product_stock->price       = $request->unit_price;
-        $product_stock->sku         = $request->sku;
+        $product_stock->sku         = SkuUtility::forStock($product, '', $request->sku, $product_stock->id);
         $product_stock->qty         = $request->current_stock;
         $product_stock->save();
 

@@ -7,6 +7,7 @@ use App\Http\Resources\V2\ConversationCollection;
 use App\Http\Resources\V2\MessageCollection;
 use App\Mail\ConversationMailManager;
 use App\Models\Message;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -23,22 +24,30 @@ class ChatController extends Controller
 
     public function messages($id)
     {
+        $this->authorizedConversation($id);
         $messages = Message::where('conversation_id', $id)->latest('id')->paginate(10);
         return new MessageCollection($messages);
     }
 
     public function insert_message(Request $request)
     {
+        $request->validate([
+            'conversation_id' => 'required|integer',
+            'message' => 'required|string',
+        ]);
+
+        $conversation = $this->authorizedConversation($request->conversation_id);
         $message = new Message;
         $message->conversation_id = $request->conversation_id;
         $message->user_id = auth()->user()->id;
         $message->message = $request->message;
         $message->save();
-        $conversation = $message->conversation;
-        if ($conversation->sender_id == $request->user_id) {
-            $conversation->receiver_viewed = "1";
-        } elseif ($conversation->receiver_id == $request->user_id) {
-            $conversation->sender_viewed = "1";
+        if ($conversation->sender_id == auth()->user()->id) {
+            $conversation->sender_viewed = 1;
+            $conversation->receiver_viewed = 0;
+        } elseif ($conversation->receiver_id == auth()->user()->id) {
+            $conversation->sender_viewed = 0;
+            $conversation->receiver_viewed = 1;
         }
         $conversation->save();
         $messages = Message::where('id', $message->id)->paginate(1);
@@ -47,6 +56,7 @@ class ChatController extends Controller
 
     public function get_new_messages($conversation_id, $last_message_id)
     {
+        $this->authorizedConversation($conversation_id);
         $messages = Message::where('conversation_id', $conversation_id)->where('id', '>', $last_message_id)->latest('id')->paginate(10);
         return new MessageCollection($messages);
     }
@@ -100,5 +110,102 @@ class ChatController extends Controller
             //dd($e->getMessage());
         }
 
+    }
+
+    public function createDeliveryConversation(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer',
+        ]);
+
+        $order = Order::with(['delivery_boy', 'user'])
+            ->where('id', $request->order_id)
+            ->where('user_id', auth()->user()->id)
+            ->firstOrFail();
+
+        if (!$order->assign_delivery_boy || !$order->delivery_boy) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Delivery boy is not assigned yet'),
+            ], 422);
+        }
+
+        $conversation = $this->findOrCreateDeliveryConversation($order, auth()->user(), $order->delivery_boy);
+
+        return response()->json($this->deliveryConversationPayload($conversation, $order->delivery_boy, $order));
+    }
+
+    public function openDeliveryBoyConversation(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer',
+        ]);
+
+        $order = Order::with('user')
+            ->where('id', $request->order_id)
+            ->where('assign_delivery_boy', auth()->user()->id)
+            ->firstOrFail();
+
+        $conversation = $this->findOrCreateDeliveryConversation($order, auth()->user(), $order->user);
+
+        return response()->json($this->deliveryConversationPayload($conversation, $order->user, $order));
+    }
+
+    protected function authorizedConversation($conversationId): Conversation
+    {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        abort_unless(
+            in_array(auth()->user()->id, [$conversation->sender_id, $conversation->receiver_id]),
+            403,
+            translate('Unauthorized')
+        );
+
+        return $conversation;
+    }
+
+    protected function findOrCreateDeliveryConversation(Order $order, User $currentUser, User $otherUser): Conversation
+    {
+        $title = translate('Delivery Order') . ' #' . $order->code;
+
+        $conversation = Conversation::where('title', $title)
+            ->where(function ($query) use ($currentUser, $otherUser) {
+                $query->where(function ($subQuery) use ($currentUser, $otherUser) {
+                    $subQuery->where('sender_id', $currentUser->id)
+                        ->where('receiver_id', $otherUser->id);
+                })->orWhere(function ($subQuery) use ($currentUser, $otherUser) {
+                    $subQuery->where('sender_id', $otherUser->id)
+                        ->where('receiver_id', $currentUser->id);
+                });
+            })
+            ->first();
+
+        if ($conversation) {
+            return $conversation;
+        }
+
+        $conversation = new Conversation();
+        $conversation->sender_id = $currentUser->id;
+        $conversation->receiver_id = $otherUser->id;
+        $conversation->title = $title;
+        $conversation->sender_viewed = 1;
+        $conversation->receiver_viewed = 0;
+        $conversation->save();
+
+        return $conversation;
+    }
+
+    protected function deliveryConversationPayload(Conversation $conversation, User $participant, Order $order): array
+    {
+        return [
+            'result' => true,
+            'conversation_id' => $conversation->id,
+            'shop_name' => $participant->name,
+            'shop_logo' => uploaded_asset($participant->avatar_original),
+            'participant_phone' => $participant->phone,
+            'participant_type' => $participant->user_type,
+            'title' => $conversation->title ?? (translate('Delivery Order') . ' #' . $order->code),
+            'message' => translate('Conversation ready'),
+        ];
     }
 }

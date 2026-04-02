@@ -7,6 +7,155 @@
     CoreComponentRepository::initializeCache();
 @endphp
 
+<style>
+    .page-content {
+        background: linear-gradient(180deg, #f8fafc 0%, #f4f6fb 100%);
+        min-height: 100vh;
+    }
+
+    .aiz-titlebar {
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(8px);
+    }
+
+    .product-create-layout {
+        align-items: flex-start;
+    }
+
+    .product-create-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .product-create-sections #general {
+        order: 1;
+    }
+
+    .product-create-sections #price_and_stocks {
+        order: 2;
+    }
+
+    .product-create-sections #files_and_media {
+        order: 3;
+    }
+
+    .product-create-sections #seo {
+        order: 4;
+    }
+
+    .product-create-section > .bg-white {
+        border: 1px solid #e7ebf3;
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    }
+
+    .product-create-sidebar {
+        position: sticky;
+        top: 24px;
+    }
+
+    .product-create-sidebar .product-create-section > .bg-white {
+        padding: 1.25rem !important;
+    }
+
+    .product-create-sidebar .form-group.row {
+        margin-bottom: 1rem;
+    }
+
+    .product-create-sidebar .col-md-3,
+    .product-create-sidebar .col-md-2,
+    .product-create-sidebar .col-md-9,
+    .product-create-sidebar .col-md-10 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .product-create-sidebar .col-from-label {
+        margin-bottom: .5rem;
+    }
+
+    .product-create-section h5.fs-17 {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #0f172a;
+        margin-bottom: 1rem !important;
+        padding-bottom: .85rem !important;
+        border-bottom: 1px solid #e9edf5 !important;
+    }
+
+    .product-create-section .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .product-create-section .form-control,
+    .product-create-section .input-group-text,
+    .product-create-section .btn {
+        border-radius: 10px;
+    }
+
+    .product-create-section .form-control {
+        border-color: #dbe3ee;
+        min-height: 42px;
+        box-shadow: none;
+    }
+
+    .product-create-section textarea.form-control {
+        min-height: 110px;
+    }
+
+    .product-create-section .form-control:focus {
+        border-color: #80a7ff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .product-create-section .col-from-label,
+    .product-create-section .col-form-label,
+    .product-create-section label.fs-13,
+    .product-create-section label.fs-14 {
+        color: #334155;
+        font-weight: 600;
+    }
+
+    .product-create-section .text-muted {
+        color: #64748b !important;
+        font-size: 12px;
+    }
+
+    .product-create-section .card {
+        border: 1px solid #e6ebf2;
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    .product-create-section .card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e6ebf2;
+    }
+
+    .product-create-section .btn-block.border-dashed,
+    .product-create-section .btn-block.border {
+        border-style: dashed !important;
+        border-color: #cfd8e3 !important;
+        background: #fafcff;
+    }
+
+    .product-create-section .file-preview.box {
+        border-radius: 12px;
+    }
+
+    .product-create-sidebar .product-create-section {
+        margin-bottom: 1rem !important;
+    }
+
+    @media (max-width: 1199.98px) {
+        .product-create-sidebar {
+            position: static;
+        }
+    }
+</style>
+
 <div class="page-content">
     <div class="aiz-titlebar text-left mt-2 pb-2 px-3 px-md-2rem border-bottom border-gray">
         <div class="row align-items-center">
@@ -34,66 +183,7 @@
         </div>
     </div>
 
-    <div class="d-sm-flex">
-        <!-- page side nav -->
-        <div class="page-side-nav c-scrollbar-light px-3 py-2">
-            <ul class="nav nav-tabs flex-sm-column border-0" role="tablist" aria-orientation="vertical">
-                <!-- General -->
-                <li class="nav-item">
-                    <a class="nav-link" id="general-tab" href="#general"
-                        data-toggle="tab" data-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
-                        {{ translate('General') }}
-                    </a>
-                </li>
-                <!-- Files & Media -->
-                <li class="nav-item">
-                    <a class="nav-link" id="files-and-media-tab" href="#files_and_media"
-                        data-toggle="tab" data-target="#files_and_media" type="button" role="tab" aria-controls="files_and_media" aria-selected="false">
-                        {{ translate("Files & Media") }}
-                    </a>
-                </li>
-                <!-- Price & Stock -->
-                <li class="nav-item">
-                    <a class="nav-link" id="price-and-stocks-tab" href="#price_and_stocks"
-                        data-toggle="tab" data-target="#price_and_stocks" type="button" role="tab" aria-controls="price_and_stocks" aria-selected="false">
-                        {{ translate('Price & Stock') }}
-                    </a>
-                </li>
-                <!-- SEO -->
-                <li class="nav-item">
-                    <a class="nav-link" id="seo-tab" href="#seo"
-                        data-toggle="tab" data-target="#seo" type="button" role="tab" aria-controls="seo" aria-selected="false">
-                        {{ translate('SEO') }}
-                    </a>
-                </li>
-                <!-- Shipping -->
-                <li class="nav-item">
-                    <a class="nav-link" id="shipping-tab" href="#shipping"
-                        data-toggle="tab" data-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">
-                        {{ translate('Shipping') }}
-                    </a>
-                </li>
-
-                <!-- Warranty -->
-                <li class="nav-item">
-                    <a class="nav-link" id="warranty-tab" href="#warranty"
-                        data-toggle="tab" data-target="#warranty" type="button" role="tab" aria-controls="warranty" aria-selected="false">
-                        {{ translate('Warranty') }}
-                    </a>
-                </li>
-
-                <!-- Frequently Bought Product -->
-                <li class="nav-item">
-                    <a class="nav-link" id="frequenty-bought-product-tab" href="#frequenty-bought-product"
-                        data-toggle="tab" data-target="#frequenty-bought-product" type="button" role="tab" aria-controls="frequenty-bought-product" aria-selected="false">
-                        {{ translate('Frequently Bought') }}
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- tab content -->
-        <div class="flex-grow-1 p-sm-3 p-lg-2rem mb-2rem mb-md-0">
+    <div class="p-sm-3 p-lg-2rem mb-2rem mb-md-0">
             <!-- Error Meassages -->
             @if ($errors->any())
                 <div class="alert alert-danger">
@@ -110,9 +200,11 @@
 
             <form action="{{route('products.store')}}" method="POST" enctype="multipart/form-data" enctype="multipart/form-data" id="aizSubmitForm">
                 @csrf
-                <div class="tab-content">
+                <div class="row gutters-5 product-create-layout">
+                    <div class="col-xl-8">
+                        <div class="product-create-sections">
                     <!-- General -->
-                    <div class="tab-pane fade" id="general" role="tabpanel" aria-labelledby="general-tab">
+                    <div class="product-create-section mb-4" id="general">
                         <div class="bg-white p-3 p-sm-2rem">
                             <!-- Product Information -->
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Product Information')}}</h5>
@@ -162,7 +254,12 @@
                                         <!-- Barcode -->
                                         <div class="form-group mb-2">
                                             <label class="col-xxl-3 col-from-label fs-13">{{translate('Barcode')}}</label>
-                                            <input type="text" class="form-control" name="barcode" value="{{ old('barcode') }}" placeholder="{{ translate('Barcode') }}">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" name="barcode" value="{{ old('barcode') }}" placeholder="{{ translate('Barcode') }}" maxlength="19">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-soft-secondary" onclick="generateBarcode(this)">{{ translate('Generate') }}</button>
+                                                </div>
+                                            </div>
                                         </div>
                                         @endif
                                     </div>
@@ -206,157 +303,11 @@
                                 </div>
                             </div>
 
-                            <!-- Refund -->
-                            @if (addon_is_activated('refund_request'))
-                                <h5 class="mb-3 mt-5 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Refund')}}</h5>
-                                <div class="w-100">
-                                    <!-- Refundable -->
-                                    <div class="form-group row">
-                                        <label class="col-md-3 col-from-label">{{translate('Refundable')}}?</label>
-                                        <div class="col-md-9">
-                                            <label class="aiz-switch aiz-switch-success mb-0 d-block">
-                                                <input type="checkbox" name="refundable" value="1" onchange="isRefundable()"
-                                                    @if(get_setting('refund_type') != 'category_based_refund') checked
-                                                    @endif>
-                                                <span></span>
-                                            </label>
-                                            <small id="refundable-note" class="text-muted d-none"></small>
-                                        </div>
-                                    </div>
-                                    <div class="w-100 refund-block d-none">
-                                        <div class="form-group row">
-                                            <div class="col-md-12">
-                                                <label class="form-check-label fw-bold" for="flexCheckChecked">
-                                                    <b>{{translate('Note (Add from preset)')}} </b>
-                                                </label>
-                                            </div>
-                                        </div>
-        
-                                        <input type="hidden" name="refund_note_id" id="refund_note_id">
-                                        <div id="refund_note" class="">
-        
-                                        </div>
-                                        <button
-                                            type="button"
-                                            class="btn btn-block border border-dashed hov-bg-soft-secondary mt-2 fs-14 rounded-0 d-flex align-items-center justify-content-center"
-                                            onclick="noteModal('refund')">
-                                            <i class="las la-plus"></i>
-                                            <span class="ml-2">{{ translate('Select Refund Note') }}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            @endif
-
-                            <!-- Status -->
-                            <h5 class="mb-3 mt-5 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Status')}}</h5>
-                            <div class="w-100">
-                                <!-- Featured -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-from-label">{{translate('Featured')}}</label>
-                                    <div class="col-md-9">
-                                        <label class="aiz-switch aiz-switch-success mb-0 d-block">
-                                            <input type="checkbox" name="featured" value="1">
-                                            <span></span>
-                                        </label>
-                                        <small class="text-muted">{{ translate('If you enable this, this product will be granted as a featured product.') }}</small>
-                                    </div>
-                                </div>
-                                <!-- Todays Deal -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-from-label">{{translate('Todays Deal')}}</label>
-                                    <div class="col-md-9">
-                                        <label class="aiz-switch aiz-switch-success mb-0 d-block">
-                                            <input type="checkbox" name="todays_deal" value="1">
-                                            <span></span>
-                                        </label>
-                                        <small class="text-muted">{{ translate('If you enable this, this product will be granted as a todays deal product.') }}</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Flash Deal -->
-                            <h5 class="mb-3 mt-4 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">
-                                {{translate('Flash Deal')}}
-                                <small class="text-muted">({{ translate('If you want to select this product as a flash deal, you can use it') }})</small>
-                            </h5>
-                            <div class="w-100">
-                                <!-- Add To Flash -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-from-label">{{translate('Add To Flash')}}</label>
-                                    <div class="col-xxl-9">
-                                        <select class="form-control aiz-selectpicker" name="flash_deal_id" id="flash_deal">
-                                            <option value="">{{ translate('Choose Flash Title') }}</option>
-                                            @foreach(\App\Models\FlashDeal::where("status", 1)->get() as $flash_deal)
-                                                <option value="{{ $flash_deal->id}}">
-                                                    {{ $flash_deal->title }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <!-- Discount -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-from-label">{{translate('Discount')}}</label>
-                                    <div class="col-xxl-9">
-                                        <input type="number" name="flash_discount" value="0" min="0" step="0.01" class="form-control">
-                                    </div>
-                                </div>
-                                <!-- Discount Type -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-from-label">{{translate('Discount Type')}}</label>
-                                    <div class="col-xxl-9">
-                                        <select class="form-control aiz-selectpicker" name="flash_discount_type" id="flash_discount_type">
-                                            <option value="">{{ translate('Choose Discount Type') }}</option>
-                                            <option value="amount">{{translate('Flat')}}</option>
-                                            <option value="percent">{{translate('Percent')}}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- GST Rate -->
-                            @if (addon_is_activated('gst_system'))
-                            <h5 class="mb-3 mt-4 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('HSN & GST')}}</h5>
-                            <div class="w-100">
-                                <div class="form-group mb-2">
-                                    <label class="col-from-label">{{translate('HSN Code')}}</label>
-                                    <input type="text" lang="en" placeholder="{{ translate('HSN Code') }}" name="hsn_code" class="form-control">
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label class="col-from-label">{{translate('GST Rate (%)')}}</label>
-                                    <input type="number" lang="en" min="0" value="0" step="0.01" placeholder="{{ translate('GST Rate') }}" name="gst_rate" class="form-control">
-                                </div>
-                            </div>
-                            @else
-                            <!-- Vat & TAX -->
-                            <h5 class="mb-3 mt-4 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Vat & TAX')}}</h5>
-                            <div class="w-100">
-                                @foreach(\App\Models\Tax::where('tax_status', 1)->get() as $tax)
-                                    <label for="name">
-                                        {{$tax->name}}
-                                        <input type="hidden" value="{{$tax->id}}" name="tax_id[]">
-                                    </label>
-
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6">
-                                            <input type="number" lang="en" min="0" value="0" step="0.01" placeholder="{{ translate('Tax') }}" name="tax[]" class="form-control">
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <select class="form-control aiz-selectpicker" name="tax_type[]">
-                                                <option value="amount">{{translate('Flat')}}</option>
-                                                <option value="percent">{{translate('Percent')}}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            @endif
                         </div>
                     </div>
 
                    <!-- Files & Media -->
-                    <div class="tab-pane fade" id="files_and_media" role="tabpanel"
-                        aria-labelledby="files-and-media-tab">
+                    <div class="product-create-section mb-4" id="files_and_media">
                         <div class="bg-white p-3 p-sm-2rem">
                             <!-- Product Files & Media -->
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">
@@ -495,7 +446,7 @@
                     </div>
 
                     <!-- Price & Stock -->
-                    <div class="tab-pane fade" id="price_and_stocks" role="tabpanel" aria-labelledby="price-and-stocks-tab">
+                    <div class="product-create-section mb-4" id="price_and_stocks">
                         <div class="bg-white p-3 p-sm-2rem">
                             <!-- tab Title -->
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Product price & stock')}}</h5>
@@ -587,7 +538,12 @@
                                     <!-- SKU -->
                                     <div class="form-group">
                                         <label class="col-from-label">{{translate('SKU')}}</label>
-                                        <input type="text" placeholder="{{ translate('SKU') }}" name="sku" value="{{ old('sku') }}" class="form-control">
+                                        <div class="input-group">
+                                            <input type="text" placeholder="{{ translate('SKU') }}" name="sku" value="{{ old('sku') }}" class="form-control" maxlength="32">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-soft-secondary" onclick="generateSimpleSku(this)">{{ translate('Generate') }}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- External link -->
@@ -613,21 +569,102 @@
                                 </div>
                             </div>
 
-                            <!-- Low Stock Quantity -->
+                        </div>
+                    </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Shipping -->
+                    <div class="col-xl-4">
+                        <div class="product-create-sidebar">
+                    <div class="product-create-section mb-4" id="status">
+                        <div class="bg-white p-3 p-sm-2rem">
+                            <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Status')}}</h5>
+                            <div class="w-100">
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Featured')}}</label>
+                                    <div class="col-md-9">
+                                        <label class="aiz-switch aiz-switch-success mb-0 d-block">
+                                            <input type="checkbox" name="featured" value="1">
+                                            <span></span>
+                                        </label>
+                                        <small class="text-muted">{{ translate('If you enable this, this product will be granted as a featured product.') }}</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Todays Deal')}}</label>
+                                    <div class="col-md-9">
+                                        <label class="aiz-switch aiz-switch-success mb-0 d-block">
+                                            <input type="checkbox" name="todays_deal" value="1">
+                                            <span></span>
+                                        </label>
+                                        <small class="text-muted">{{ translate('If you enable this, this product will be granted as a todays deal product.') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (addon_is_activated('refund_request'))
+                    <div class="product-create-section mb-4" id="refund">
+                        <div class="bg-white p-3 p-sm-2rem">
+                            <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Refund')}}</h5>
+                            <div class="w-100">
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Refundable')}}?</label>
+                                    <div class="col-md-9">
+                                        <label class="aiz-switch aiz-switch-success mb-0 d-block">
+                                            <input type="checkbox" name="refundable" value="1" onchange="isRefundable()"
+                                                @if(get_setting('refund_type') != 'category_based_refund') checked
+                                                @endif>
+                                            <span></span>
+                                        </label>
+                                        <small id="refundable-note" class="text-muted d-none"></small>
+                                    </div>
+                                </div>
+                                <div class="w-100 refund-block d-none">
+                                    <div class="form-group row">
+                                        <div class="col-md-12">
+                                            <label class="form-check-label fw-bold" for="flexCheckChecked">
+                                                <b>{{translate('Note (Add from preset)')}} </b>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" name="refund_note_id" id="refund_note_id">
+                                    <div id="refund_note" class="">
+
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-block border border-dashed hov-bg-soft-secondary mt-2 fs-14 rounded-0 d-flex align-items-center justify-content-center"
+                                        onclick="noteModal('refund')">
+                                        <i class="las la-plus"></i>
+                                        <span class="ml-2">{{ translate('Select Refund Note') }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <div class="product-create-section mb-4" id="low_stock">
+                        <div class="bg-white p-3 p-sm-2rem">
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Low Stock Quantity Warning')}}</h5>
-                            <div class="w-100 mb-3">
+                            <div class="w-100">
                                 <div class="form-group mb-2">
-                                    <label class="col-from-label">
-                                        {{translate('Quantity')}}
-                                    </label>
+                                    <label class="col-from-label">{{translate('Quantity')}}</label>
                                     <input type="number" name="low_stock_quantity" value="1" min="0" step="1" integer-only class="form-control">
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Stock Visibility State -->
+                    <div class="product-create-section mb-4" id="stock_visibility">
+                        <div class="bg-white p-3 p-sm-2rem">
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Stock Visibility State')}}</h5>
                             <div class="w-100">
-                                <!-- Show Stock Quantity -->
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{translate('Show Stock Quantity')}}</label>
                                     <div class="col-md-9">
@@ -637,7 +674,6 @@
                                         </label>
                                     </div>
                                 </div>
-                                <!-- Show Stock With Text Only -->
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{translate('Show Stock With Text Only')}}</label>
                                     <div class="col-md-9">
@@ -647,7 +683,6 @@
                                         </label>
                                     </div>
                                 </div>
-                                <!-- Hide Stock -->
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{translate('Hide Stock')}}</label>
                                     <div class="col-md-9">
@@ -661,29 +696,101 @@
                         </div>
                     </div>
 
-                    <!-- SEO -->
-                    <div class="tab-pane fade" id="seo" role="tabpanel" aria-labelledby="seo-tab">
+                    <div class="product-create-section mb-4" id="flash_deal_section">
                         <div class="bg-white p-3 p-sm-2rem">
-                            <!-- tab Title -->
+                            <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Flash Deal')}}</h5>
+                            <small class="text-muted d-block mb-3">{{ translate('If you want to select this product as a flash deal, you can use it') }}</small>
+                            <div class="w-100">
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Add To Flash')}}</label>
+                                    <div class="col-md-9">
+                                        <select class="form-control aiz-selectpicker" name="flash_deal_id" id="flash_deal">
+                                            <option value="">{{ translate('Choose Flash Title') }}</option>
+                                            @foreach(\App\Models\FlashDeal::where("status", 1)->get() as $flash_deal)
+                                                <option value="{{ $flash_deal->id}}">
+                                                    {{ $flash_deal->title }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Discount')}}</label>
+                                    <div class="col-md-9">
+                                        <input type="number" name="flash_discount" value="0" min="0" step="0.01" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-from-label">{{translate('Discount Type')}}</label>
+                                    <div class="col-md-9">
+                                        <select class="form-control aiz-selectpicker" name="flash_discount_type" id="flash_discount_type">
+                                            <option value="">{{ translate('Choose Discount Type') }}</option>
+                                            <option value="amount">{{translate('Flat')}}</option>
+                                            <option value="percent">{{translate('Percent')}}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-create-section mb-4" id="taxes">
+                        <div class="bg-white p-3 p-sm-2rem">
+                            @if (addon_is_activated('gst_system'))
+                            <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('HSN & GST')}}</h5>
+                            <div class="w-100">
+                                <div class="form-group mb-2">
+                                    <label class="col-from-label">{{translate('HSN Code')}}</label>
+                                    <input type="text" lang="en" placeholder="{{ translate('HSN Code') }}" name="hsn_code" class="form-control">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label class="col-from-label">{{translate('GST Rate (%)')}}</label>
+                                    <input type="number" lang="en" min="0" value="0" step="0.01" placeholder="{{ translate('GST Rate') }}" name="gst_rate" class="form-control">
+                                </div>
+                            </div>
+                            @else
+                            <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Vat & TAX')}}</h5>
+                            <div class="w-100">
+                                @foreach(\App\Models\Tax::where('tax_status', 1)->get() as $tax)
+                                    <label for="name">
+                                        {{$tax->name}}
+                                        <input type="hidden" value="{{$tax->id}}" name="tax_id[]">
+                                    </label>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <input type="number" lang="en" min="0" value="0" step="0.01" placeholder="{{ translate('Tax') }}" name="tax[]" class="form-control">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <select class="form-control aiz-selectpicker" name="tax_type[]">
+                                                <option value="amount">{{translate('Flat')}}</option>
+                                                <option value="percent">{{translate('Percent')}}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="product-create-section mb-4" id="seo">
+                        <div class="bg-white p-3 p-sm-2rem">
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('SEO Meta Tags')}}</h5>
                             <div class="w-100">
-                                <!-- Meta Title -->
                                 <div class="form-group mb-2">
                                     <label class="col-from-label">{{translate('Meta Title')}}</label>
                                     <input type="text" class="form-control" name="meta_title" value="{{ old('meta_title') }}" placeholder="{{ translate('Meta Title') }}">
                                 </div>
-                                <!-- Description -->
                                 <div class="form-group mb-2">
                                     <label class="col-from-label">{{translate('Description')}}</label>
                                     <textarea name="meta_description" rows="8" class="form-control">{{ old('meta_description') }}</textarea>
                                 </div>
-                                <!--Meta Keywords -->
                                 <div class="form-group mb-2">
                                     <label class="col-from-label">{{ translate('Keywords') }}</label>
                                     <textarea class="resize-off form-control" name="meta_keywords" placeholder="{{translate('Keyword, Keyword')}}"></textarea>
-                                    <small class="text-muted">{{ translate('Separate with coma') }}</small>                                   
-                                </div> 
-                                <!--Meta Image -->
+                                    <small class="text-muted">{{ translate('Separate with coma') }}</small>
+                                </div>
                                 <div class="form-group mb-2">
                                     <label class="col-form-label" for="signinSrEmail">{{ translate('Meta Image') }}</label>
                                     <div class="input-group" data-toggle="aizuploader" data-type="image">
@@ -700,8 +807,7 @@
                         </div>
                     </div>
 
-                    <!-- Shipping -->
-                    <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+                    <div class="product-create-section mb-4" id="shipping">
                         <div class="bg-white p-3 p-sm-2rem">
                             <!-- Shipping Configuration -->
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Shipping Configuration')}}</h5>
@@ -791,7 +897,7 @@
                     </div>
 
                     <!-- Warranty -->
-                    <div class="tab-pane fade" id="warranty" role="tabpanel" aria-labelledby="warranty-tab">
+                    <div class="product-create-section mb-4" id="warranty">
                         <div class="bg-white p-3 p-sm-2rem">
                             <h5 class="mb-3 pb-3 fs-17 fw-700" style="border-bottom: 1px dashed #e4e5eb;">{{translate('Warranty')}}</h5>
                             <div class="form-group row">
@@ -837,7 +943,7 @@
                     </div>
 
                     <!-- Frequently Bought Product -->
-                    <div class="tab-pane fade" id="frequenty-bought-product" role="tabpanel" aria-labelledby="frequenty-bought-product-tab">
+                    <div class="product-create-section mb-4" id="frequenty-bought-product">
                         <div class="bg-white p-3 p-sm-2rem">
                             <!-- tab Title -->
                             <h5 class="mb-3 pb-3 fs-17 fw-700">{{translate('Frequently Bought')}}</h5>
@@ -892,12 +998,16 @@
                             </div>
                         </div>
                     </div>
+                        </div>
+                    </div>
 
                     <!-- Save Button -->
+                    <div class="col-12">
                     <div class="mt-4 text-right">
                         <button type="submit" name="button" value="unpublish" data-action="unpublish" class="mx-2 btn btn-light w-230px btn-md rounded-2 fs-14 fw-700 shadow-secondary border-soft-secondary action-btn">{{ translate('Save & Unpublish') }}</button>
                         <button type="submit" name="button" value="publish" data-action="publish" class="mx-2 btn btn-success w-230px btn-md rounded-2 fs-14 fw-700 shadow-success action-btn">{{ translate('Save & Publish') }}</button>
                         <button type="button" name="button" value="draft"  class="mx-2 btn btn-secondary w-230px btn-md rounded-2 fs-14 fw-700 shadow-secondary action-btn" id="saveDraftBtn">{{ translate('Save as Draft') }}</button>
+                    </div>
                     </div>
                 </div>
             </form>
@@ -1041,6 +1151,66 @@
 
     function delete_variant(em){
         $(em).closest('.variant').remove();
+    }
+
+    function randomAlphaSegment(length) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let segment = '';
+
+        for (let i = 0; i < length; i++) {
+            segment += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return segment;
+    }
+
+    function randomNumericSegment(length, seed) {
+        let digits = String(Math.abs(seed)).replace(/\D/g, '');
+        while (digits.length < length) {
+            digits += Math.floor(Math.random() * 10).toString();
+        }
+
+        return digits.substring(0, length);
+    }
+
+    function buildCode() {
+        const now = new Date();
+        const highRes = typeof performance !== 'undefined' ? Math.floor(performance.now() * 1000) : 0;
+        const dateSeed = parseInt(
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(now.getFullYear()).slice(-2),
+            10
+        );
+        const timeSeed = parseInt(
+            String(highRes).slice(-4) +
+            String(now.getSeconds()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getHours()).padStart(2, '0'),
+            10
+        );
+
+        return [
+            randomAlphaSegment(4),
+            randomNumericSegment(4, dateSeed),
+            randomNumericSegment(4, timeSeed),
+            randomAlphaSegment(4)
+        ].join('-');
+    }
+
+    function generateSimpleSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[name="sku"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateVariantSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[type="text"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateBarcode(button) {
+        const $barcodeInput = $(button).closest('.input-group').find('input[name="barcode"]');
+        $barcodeInput.val(buildCode());
     }
 
     function update_sku(){
@@ -1209,22 +1379,6 @@
     }
 
 </script>
-<script>
-    $(document).ready(function(){
-        var hash = document.location.hash;
-        if (hash) {
-            $('.nav-tabs a[href="'+hash+'"]').tab('show');
-        }else{
-            $('.nav-tabs a[href="#general"]').tab('show');
-        }
-
-        // Change hash for page-reload
-        $('.nav-tabs a').on('shown.bs.tab', function (e) {
-            window.location.hash = e.target.hash;
-        });
-    });
-
-</script>
 
 @include('partials.product.product_temp_data')
 
@@ -1328,27 +1482,12 @@
             });
         }
 
-        // Auto-save on tab click
-        $('a[data-toggle="tab"]').on('show.bs.tab', function() {
-            var productName = $('input[name="name"]').val();
-            if (productName && productName.trim() !== '') {
-                saveDraft();
-            } 
-        });
-
         $('#saveDraftBtn').on('click', function(e) {
             e.preventDefault();
             saveDraft();
         });
 
     });
-
-
-    
-
-
 </script>
-
-
 
 @endsection

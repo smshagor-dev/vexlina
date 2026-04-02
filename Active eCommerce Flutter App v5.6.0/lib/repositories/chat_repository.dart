@@ -106,4 +106,27 @@ class ChatRepository {
     );
     return conversationCreateResponseFromJson(response.body);
   }
+
+  Future<dynamic> getCreateDeliveryConversationResponse({
+    required int orderId,
+  }) async {
+    var postBody = jsonEncode({
+      "order_id": "$orderId",
+    });
+
+    String url = ("${AppConfig.BASE_URL}/chat/create-delivery-conversation");
+
+    final response = await ApiRequest.post(
+      url: url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${access_token.$}",
+        "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
+      },
+      body: postBody,
+      middleware: BannedUser(),
+    );
+    return conversationCreateResponseFromJson(response.body);
+  }
 }

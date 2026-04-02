@@ -36,6 +36,7 @@
         "paypal/paypal-checkout-sdk": "dev-master",
         "predis/predis": "^2.1",
         "psr/log": "^2.0",
+        "pusher/pusher-php-server": "7.2",
         "razorpay/razorpay": "2.*",
         "rmccue/requests": "^2.0",
         "sebacarrasco93/laravel-payku": "^1.0",

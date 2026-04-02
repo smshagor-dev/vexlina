@@ -254,8 +254,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
                   SliverList(
                     delegate: SliverChildListDelegate([
-                      if (AppConfig.purchase_code == "")
-                        PiratedWidget(homeData: homeData),
                       const SizedBox(height: 0),
                       ListenableBuilder(
                         listenable: homeData,

@@ -16,10 +16,20 @@ class PurchaseHistoryCollection extends ResourceCollection
                     $pickup_point = $data->pickup_point;
                 }
 
+                $assignedDeliveryBoy = ($data->assign_delivery_boy && $data->delivery_boy)
+                    ? $data->delivery_boy
+                    : null;
+
                 return [
                     'id' => $data->id,
                     'code' => $data->code,
                     'user_id' => (int) $data->user_id,
+                    'delivery_boy' => $assignedDeliveryBoy ? [
+                        'id' => (int) $assignedDeliveryBoy->id,
+                        'name' => $assignedDeliveryBoy->name,
+                        'phone' => $assignedDeliveryBoy->phone,
+                        'avatar_original' => uploaded_asset($assignedDeliveryBoy->avatar_original),
+                    ] : null,
                     'shipping_address' => json_decode($data->shipping_address),
                     'payment_type' => ucwords(str_replace('_', ' ',translate( $data->payment_type))),
                     'pickup_point' => $pickup_point,

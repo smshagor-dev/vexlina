@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\ProductTranslation;
+use App\Utility\SkuUtility;
 use Artisan;
 use Auth;
 use Illuminate\Http\Request;
@@ -146,7 +147,7 @@ class AuctionService
         $product_stock->product_id  = $product->id;
         $product_stock->variant     = '';
         $product_stock->price       = 0;
-        $product_stock->sku         = $request->sku;
+        $product_stock->sku         = SkuUtility::forStock($product, '', $request->sku);
         $product_stock->qty         = 1;
         $product_stock->save();
 

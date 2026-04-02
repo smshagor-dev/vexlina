@@ -70,10 +70,12 @@
                                 <li class="fs-12 fw-400 has-transition opacity-50 hov-opacity-100">
                                     <a class="text-reset" href="{{ route('home') }}">{{ translate('Home') }}</a>
                                 </li>
-                                <i class="las la-angle-right fs-12 fw-600 text-gray hide_cat1"></i>
-                                <li class="fs-12 fw-400 has-transition opacity-50 hov-opacity-100">
-                                    <a class="text-reset" href="{{route('products.category', $detailedProduct->main_category->slug)}}">{{translate($detailedProduct->main_category->name ?? '')}}</a>
-                                </li>
+                                @if ($detailedProduct->main_category)
+                                    <i class="las la-angle-right fs-12 fw-600 text-gray hide_cat1"></i>
+                                    <li class="fs-12 fw-400 has-transition opacity-50 hov-opacity-100">
+                                        <a class="text-reset" href="{{ route('products.category', $detailedProduct->main_category->slug) }}">{{ translate($detailedProduct->main_category->name ?? '') }}</a>
+                                    </li>
+                                @endif
                                 <i class="las la-angle-right fs-12 fw-600 text-gray hide_cat1"></i>
                                 <li class="fs-12 fw-400 has-transition  text-reset">
                                     {{ strlen($detailedProduct->getTranslation('name')) > 50

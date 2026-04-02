@@ -18,6 +18,7 @@ class ClassifiedProductRepository {
 
     final response = await ApiRequest.get(url: url, headers: {
       "App-Language": app_language.$!,
+      "System-Key": AppConfig.system_key,
     });
 
     return classifiedAdsResponseFromJson(response.body);
@@ -48,6 +49,7 @@ class ClassifiedProductRepository {
       "App-Language": app_language.$!,
       "Content-Type": "application/json",
       "Authorization": "Bearer ${access_token.$}",
+      "System-Key": AppConfig.system_key,
     });
 
     return classifiedAdsResponseFromJson(response.body);
@@ -60,6 +62,7 @@ class ClassifiedProductRepository {
 
     final response = await ApiRequest.get(url: url, headers: {
       "App-Language": app_language.$!,
+      "System-Key": AppConfig.system_key,
     });
 
     return classifiedAdsResponseFromJson(response.body);
@@ -72,7 +75,7 @@ class ClassifiedProductRepository {
     final response = await ApiRequest.get(url: url, headers: {
       "App-Language": app_language.$!,
       "Currency-Code": SystemConfig.systemCurrency!.symbol!,
-
+      "System-Key": AppConfig.system_key,
     });
 
     return classifiedProductDetailsResponseFromJson(response.body);
@@ -85,6 +88,7 @@ class ClassifiedProductRepository {
       "App-Language": app_language.$!,
       "Content-Type": "application/json",
       "Authorization": "Bearer ${access_token.$}",
+      "System-Key": AppConfig.system_key,
     });
 
     return commonResponseFromJson(response.body);
@@ -101,6 +105,7 @@ class ClassifiedProductRepository {
         "App-Language": app_language.$!,
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
     );
@@ -117,6 +122,7 @@ class ClassifiedProductRepository {
         "App-Language": app_language.$!,
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
     );
@@ -134,6 +140,7 @@ class ClassifiedProductRepository {
         "App-Language": app_language.$!,
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
     );

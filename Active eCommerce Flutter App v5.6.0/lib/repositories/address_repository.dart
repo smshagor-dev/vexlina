@@ -25,6 +25,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
     );
     return addressResponseFromJson(response.body);
@@ -41,7 +42,7 @@ class AddressRepository {
       headers: {
         "Content-Type": "application/json",
         "App-Language": app_language.$!,
-        "System-key": AppConfig.system_key,
+        "System-Key": AppConfig.system_key,
       },
     );
     return cityResponseFromJson(response.body);
@@ -55,6 +56,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       middleware: BannedUser(),
     );
@@ -88,6 +90,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -127,6 +130,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -178,6 +182,7 @@ class AddressRepository {
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -192,6 +197,7 @@ class AddressRepository {
       headers: {
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       middleware: BannedUser(),
     );
@@ -201,26 +207,54 @@ class AddressRepository {
 
   Future<dynamic> getAriaListByCity({cityId = 0, name = ""}) async {
     String url = ("${AppConfig.BASE_URL}/areas-by-city/$cityId?name=$name");
-    final response = await ApiRequest.get(url: url, middleware: BannedUser());
+    final response = await ApiRequest.get(
+      url: url,
+      headers: {
+        "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
+      },
+      middleware: BannedUser(),
+    );
     return cityResponseFromJson(response.body);
   }
 
   Future<dynamic> getCityListByState({stateId = 0, name = ""}) async {
     String url = ("${AppConfig.BASE_URL}/cities-by-state/$stateId?name=$name");
-    final response = await ApiRequest.get(url: url, middleware: BannedUser());
+    final response = await ApiRequest.get(
+      url: url,
+      headers: {
+        "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
+      },
+      middleware: BannedUser(),
+    );
     return cityResponseFromJson(response.body);
   }
 
   Future<dynamic> getStateListByCountry({countryId = 0, name = ""}) async {
     String url =
         ("${AppConfig.BASE_URL}/states-by-country/$countryId?name=$name");
-    final response = await ApiRequest.get(url: url, middleware: BannedUser());
+    final response = await ApiRequest.get(
+      url: url,
+      headers: {
+        "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
+      },
+      middleware: BannedUser(),
+    );
     return myStateResponseFromJson(response.body);
   }
 
   Future<dynamic> getCountryList({name = ""}) async {
     String url = ("${AppConfig.BASE_URL}/countries?name=$name");
-    final response = await ApiRequest.get(url: url, middleware: BannedUser());
+    final response = await ApiRequest.get(
+      url: url,
+      headers: {
+        "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
+      },
+      middleware: BannedUser(),
+    );
     return countryResponseFromJson(response.body);
   }
 
@@ -245,6 +279,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -269,6 +304,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -293,6 +329,7 @@ class AddressRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),

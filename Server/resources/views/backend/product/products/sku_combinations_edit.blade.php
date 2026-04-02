@@ -24,26 +24,18 @@
         @foreach ($combinations as $key => $combination)
             @php
                 $variation_available = false;
-                $sku = '';
-                foreach (explode(' ', $product_name) as $key => $value) {
-                    $sku .= substr($value, 0, 1);
-                }
-
                 $str = '';
                 foreach ($combination as $key => $item){
                     if($key > 0 ) {
                         $str .= '-'.str_replace(' ', '', $item);
-                        $sku .='-'.str_replace(' ', '', $item);
                     }
                     else {
                         if($colors_active == 1) {
                             $color_name = \App\Models\Color::where('code', $item)->first()->name;
                             $str .= $color_name;
-                            $sku .='-'.$color_name;
                         }
                         else {
                             $str .= str_replace(' ', '', $item);
-                            $sku .='-'.str_replace(' ', '', $item);
                         }
                     }
                     $stock = $product->stocks->where('variant', $str)->first();
@@ -73,14 +65,19 @@
                            @endphp" min="0" step="0.01" class="form-control" required>
                 </td>
                 <td>
-                    <input type="text" name="sku_{{ $str }}" value="@php
-                            if($stock != null) {
+                    <div class="input-group">
+                        <input type="text" name="sku_{{ $str }}" value="@php
+                            if($stock != null && filled($stock->sku)) {
                                 echo $stock->sku;
                             }
                             else {
-                                echo $str;
+                                echo \App\Utility\SkuUtility::preview($product_name, $str);
                             }
-                           @endphp" class="form-control">
+                           @endphp" class="form-control" maxlength="32">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-soft-secondary" onclick="generateVariantSku(this)" data-variant="{{ $str }}">{{ translate('Generate') }}</button>
+                        </div>
+                    </div>
                 </td>
                 <td>
                     <input type="number" lang="en" name="qty_{{ $str }}" value="@php

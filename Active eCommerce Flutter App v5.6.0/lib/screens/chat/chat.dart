@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Chat extends StatefulWidget {
   const Chat({
@@ -21,12 +22,14 @@ class Chat extends StatefulWidget {
     this.messengerName,
     this.messengerTitle,
     this.messengerImage,
+    this.messengerPhone,
   });
 
   final int? conversationId;
   final String? messengerName;
   final String? messengerTitle;
   final String? messengerImage;
+  final String? messengerPhone;
 
   @override
   State<Chat> createState() => _ChatState();
@@ -62,7 +65,7 @@ class _ChatState extends State<Chat> {
     _list.addAll(messageResponse.data);
     _isInitial = false;
     _showLoadingContainer = false;
-    _lastId = _list[0].id;
+    _lastId = _list.isNotEmpty ? _list[0].id : 0;
     setState(() {});
 
     fetchNewMessage();
@@ -101,7 +104,7 @@ class _ChatState extends State<Chat> {
         message: chatText,
       );
       _list = [messageResponse.data, _list].expand((x) => x).toList();
-      _lastId = _list[0].id;
+      _lastId = _list.isNotEmpty ? _list[0].id : 0;
       setState(() {});
     }
   }
@@ -115,13 +118,19 @@ class _ChatState extends State<Chat> {
   }
 
   getNewMessage() async {
+    if ((widget.conversationId ?? 0) == 0) {
+      return;
+    }
+
     var messageResponse = await ChatRepository().getNewMessageResponse(
       conversationId: widget.conversationId,
       lastMessageId: _lastId,
     );
 
-    _list = [messageResponse.data, _list].expand((x) => x).toList(); //prepend
-    _lastId = _list[0].id;
+    if ((messageResponse.data ?? []).isNotEmpty) {
+      _list = [messageResponse.data, _list].expand((x) => x).toList();
+      _lastId = _list.isNotEmpty ? _list[0].id : 0;
+    }
 
     if (mounted) {
       setState(() {});
@@ -260,6 +269,17 @@ class _ChatState extends State<Chat> {
         children: [
           Row(
             children: [
+              if ((widget.messengerPhone ?? "").trim().isNotEmpty)
+                IconButton(
+                  onPressed: _makeVoiceCall,
+                  icon: const Icon(Icons.call_rounded),
+                  color: MyTheme.dark_font_grey,
+                  tooltip: 'Voice call',
+                ),
+            ],
+          ),
+          Row(
+            children: [
               Container(
                 width: 35,
                 height: 35,
@@ -306,6 +326,18 @@ class _ChatState extends State<Chat> {
         child: UsefulElements.backButton(context),
       ),
     );
+  }
+
+  Future<void> _makeVoiceCall() async {
+    final phone = widget.messengerPhone?.trim();
+    if (phone == null || phone.isEmpty) {
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   buildChatList() {

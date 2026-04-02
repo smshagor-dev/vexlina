@@ -16,10 +16,10 @@ class FileUploadRepository {
     Map<String, String> header = {
       "App-Language": app_language.$!,
       "Authorization": "Bearer ${access_token.$}",
+      "System-Key": AppConfig.system_key,
       "Content-Type":
           "multipart/form-data; boundary=<calculated when request is sent>",
-      "Accept": "*/*",
-      "System-Key": AppConfig.system_key
+      "Accept": "*/*"
     };
 
     final httpReq = http.MultipartRequest("POST", url);

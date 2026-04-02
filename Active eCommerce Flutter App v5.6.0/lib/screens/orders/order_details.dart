@@ -18,7 +18,9 @@ import 'package:active_ecommerce_cms_demo_app/helpers/system_config.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/order_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/refund_request_repository.dart';
+import 'package:active_ecommerce_cms_demo_app/repositories/chat_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/checkout/checkout.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/chat/chat.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/main.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/refund_request.dart';
 import 'package:flutter/cupertino.dart';
@@ -29,6 +31,7 @@ import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../custom/dash_divider.dart';
 import '../checkout/cart.dart';
@@ -1371,6 +1374,12 @@ class _OrderDetailsState extends State<OrderDetails> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: DashedDivider(),
             ),
+            _buildDeliveryBoyActions(),
+            if (order.delivery_boy != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: DashedDivider(),
+              ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1862,6 +1871,138 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   String _priceText(String? value) {
     return convertPrice(value ?? "0");
+  }
+
+  Future<void> _openDeliveryBoyChat() async {
+    if (_orderDetails?.id == null) {
+      return;
+    }
+
+    Loading.show(context);
+    final response = await ChatRepository().getCreateDeliveryConversationResponse(
+      orderId: _orderDetails!.id!,
+    );
+    Loading.close();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (response.result == true && response.conversationId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Chat(
+            conversationId: response.conversationId,
+            messengerName: response.shopName ?? 'Delivery Boy',
+            messengerTitle: response.title ?? 'Delivery Chat',
+            messengerImage: response.shopLogo,
+            messengerPhone: response.participantPhone,
+          ),
+        ),
+      );
+    } else {
+      ToastComponent.showDialog(response.message ?? 'Unable to open chat.');
+    }
+  }
+
+  Future<void> _callDeliveryBoy() async {
+    final phone = _orderDetails?.delivery_boy?.phone?.trim();
+    if (phone == null || phone.isEmpty) {
+      ToastComponent.showDialog('Delivery boy phone is not available.');
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      ToastComponent.showDialog('Could not start the call.');
+    }
+  }
+
+  Widget _buildDeliveryBoyActions() {
+    final deliveryBoy = _orderDetails?.delivery_boy;
+    if (deliveryBoy == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xffFFF7F3),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: MyTheme.accent_color.withValues(alpha: .18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Delivery Boy',
+            style: TextStyle(
+              color: MyTheme.dark_font_grey,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _displayText(deliveryBoy.name, fallback: 'Assigned delivery boy'),
+            style: TextStyle(
+              color: MyTheme.font_grey,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Btn.basic(
+                  onPressed: _openDeliveryBoyChat,
+                  color: MyTheme.accent_color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: const Text(
+                    'Message Delivery Boy',
+                    style: TextStyle(color: Colors.white, fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Btn.basic(
+                  onPressed: _callDeliveryBoy,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: MyTheme.accent_color.withValues(alpha: .35),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Voice Call',
+                    style: TextStyle(
+                      color: MyTheme.accent_color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void _showQrPreview(String? code) {

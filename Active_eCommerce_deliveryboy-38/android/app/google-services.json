@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "181569601531",
+    "firebase_url": "https://blogiflys-394711-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "blogiflys-394711",
+    "storage_bucket": "blogiflys-394711.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181569601531:android:86ec729bcff2c0e326d55e",
+        "android_client_info": {
+          "package_name": "com.vexlina.apps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "181569601531-52hkp96s5bloc2cjuparhikp1hefhsi0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vexlina.apps",
+            "certificate_hash": "a76be5aa3b2b87345ca583d11d23ab8a5402bbe5"
+          }
+        },
+        {
+          "client_id": "181569601531-7lhi4l76ckfkgmd645c01fjpbetlm6gh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCihcjaIspfJBAsyNZSt982nUAB9XKKMI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104719699196553229410",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181569601531:android:b5007db834bfc53326d55e",
+        "android_client_info": {
+          "package_name": "com.vexlina.deliveryboy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "181569601531-7lhi4l76ckfkgmd645c01fjpbetlm6gh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCihcjaIspfJBAsyNZSt982nUAB9XKKMI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104719699196553229410",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181569601531:android:9eb0df9f021dc9ec26d55e",
+        "android_client_info": {
+          "package_name": "com.vexlina.seller"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "181569601531-7lhi4l76ckfkgmd645c01fjpbetlm6gh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCihcjaIspfJBAsyNZSt982nUAB9XKKMI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104719699196553229410",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

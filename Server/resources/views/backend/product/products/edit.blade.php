@@ -1,6 +1,142 @@
 @extends('backend.layouts.app')
 
 @section('content')
+<style>
+    .page-content {
+        background: linear-gradient(180deg, #f8fafc 0%, #f4f6fb 100%);
+        min-height: 100vh;
+    }
+
+    .aiz-titlebar {
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(8px);
+    }
+
+    .product-edit-shell {
+        gap: 1.25rem;
+        align-items: flex-start;
+    }
+
+    .page-side-nav {
+        position: sticky;
+        top: 24px;
+        min-width: 220px;
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+        border: 1px solid #e7ebf3;
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+    }
+
+    .product-edit-shell .page-side-nav {
+        display: none;
+    }
+
+    .page-side-nav .nav-link {
+        border-radius: 12px;
+        color: #475569;
+        font-weight: 600;
+        margin-bottom: .35rem;
+    }
+
+    .page-side-nav .nav-link.active {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .tab-content > .tab-pane > .bg-white {
+        border: 1px solid #e7ebf3;
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+        background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    }
+
+    .product-edit-shell .flex-grow-1 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .tab-content {
+        column-count: 2;
+        column-gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .tab-content > .tab-pane {
+        display: inline-block !important;
+        vertical-align: top;
+        width: 100%;
+        opacity: 1 !important;
+        margin: 0 0 1rem;
+        break-inside: avoid;
+        -webkit-column-break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .tab-content > .tab-pane#seo > .bg-white,
+    .tab-content > .tab-pane#shipping > .bg-white,
+    .tab-content > .tab-pane#warranty > .bg-white,
+    .tab-content > .tab-pane#frequenty-bought-product > .bg-white {
+        padding: 1.25rem !important;
+    }
+
+    .tab-content h5.fs-17 {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #0f172a;
+        margin-bottom: 1rem !important;
+        padding-bottom: .85rem !important;
+        border-bottom: 1px solid #e9edf5 !important;
+    }
+
+    .tab-content .form-control,
+    .tab-content .input-group-text,
+    .tab-content .btn,
+    .language-bar {
+        border-radius: 10px;
+    }
+
+    .tab-content .form-control {
+        border-color: #dbe3ee;
+        min-height: 42px;
+        box-shadow: none;
+    }
+
+    .tab-content textarea.form-control {
+        min-height: 110px;
+    }
+
+    .tab-content .form-control:focus {
+        border-color: #80a7ff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .tab-content .card {
+        border: 1px solid #e6ebf2;
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    .tab-content .card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e6ebf2;
+    }
+
+    @media (max-width: 1199.98px) {
+        .tab-content {
+            column-count: 1;
+        }
+
+        .page-side-nav {
+            position: static;
+            min-width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .product-edit-shell {
+            display: block !important;
+        }
+    }
+</style>
 <div class="page-content">
     <div class="aiz-titlebar text-left mt-2 pb-2 px-3 px-md-2rem border-bottom border-gray">
         <div class="row align-items-center">
@@ -18,7 +154,7 @@
         </div>
     </div>
 
-    <div class="d-sm-flex">
+    <div class="d-sm-flex product-edit-shell">
         <!-- page side nav -->
         <div class="page-side-nav c-scrollbar-light px-3 py-2">
             <ul class="nav nav-tabs flex-sm-column border-0" role="tablist" aria-orientation="vertical">
@@ -162,7 +298,12 @@
                                         <!-- Barcode -->
                                         <div class="form-group mb-2">
                                             <label class="col-from-label fs-13">{{translate('Barcode')}}</label>
-                                            <input type="text" class="form-control" name="barcode" placeholder="{{ translate('Barcode') }}" value="{{ $product->barcode }}">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" name="barcode" placeholder="{{ translate('Barcode') }}" value="{{ $product->barcode }}" maxlength="19">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-soft-secondary" onclick="generateBarcode(this)">{{ translate('Generate') }}</button>
+                                                </div>
+                                            </div>
                                         </div>
                                         @endif
                                     </div>
@@ -684,7 +825,12 @@
                                         <label class="col-from-label">
                                             {{translate('SKU')}}
                                         </label>
-                                        <input type="text" placeholder="{{ translate('SKU') }}" value="{{ optional($product->stocks->first())->sku }}" name="sku" class="form-control">
+                                        <div class="input-group">
+                                            <input type="text" placeholder="{{ translate('SKU') }}" value="{{ optional($product->stocks->first())->sku }}" name="sku" class="form-control" maxlength="32">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-soft-secondary" onclick="generateSimpleSku(this)">{{ translate('Generate') }}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- External link -->
@@ -1212,6 +1358,66 @@
 
     function delete_variant(em){
         $(em).closest('.variant').remove();
+    }
+
+    function randomAlphaSegment(length) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let segment = '';
+
+        for (let i = 0; i < length; i++) {
+            segment += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return segment;
+    }
+
+    function randomNumericSegment(length, seed) {
+        let digits = String(Math.abs(seed)).replace(/\D/g, '');
+        while (digits.length < length) {
+            digits += Math.floor(Math.random() * 10).toString();
+        }
+
+        return digits.substring(0, length);
+    }
+
+    function buildCode() {
+        const now = new Date();
+        const highRes = typeof performance !== 'undefined' ? Math.floor(performance.now() * 1000) : 0;
+        const dateSeed = parseInt(
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(now.getFullYear()).slice(-2),
+            10
+        );
+        const timeSeed = parseInt(
+            String(highRes).slice(-4) +
+            String(now.getSeconds()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getHours()).padStart(2, '0'),
+            10
+        );
+
+        return [
+            randomAlphaSegment(4),
+            randomNumericSegment(4, dateSeed),
+            randomNumericSegment(4, timeSeed),
+            randomAlphaSegment(4)
+        ].join('-');
+    }
+
+    function generateSimpleSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[name="sku"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateVariantSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[type="text"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateBarcode(button) {
+        const $barcodeInput = $(button).closest('.input-group').find('input[name="barcode"]');
+        $barcodeInput.val(buildCode());
     }
 
     function update_sku(){

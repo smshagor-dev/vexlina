@@ -64,6 +64,7 @@ class DetailedOrder {
     this.date,
     this.links,
     this.cancelRequest,
+    this.delivery_boy,
   });
 
   int? id;
@@ -93,6 +94,7 @@ class DetailedOrder {
   String? date;
   Links? links;
   bool? cancelRequest;
+  DeliveryContact? delivery_boy;
 
   factory DetailedOrder.fromJson(Map<String, dynamic> json) => DetailedOrder(
     id: json["id"],
@@ -130,6 +132,9 @@ class DetailedOrder {
     gst_applicable: json["gst_applicable"],
     date: json["date"],
     links: Links.fromJson(json["links"]),
+    delivery_boy: json["delivery_boy"] == null
+        ? null
+        : DeliveryContact.fromJson(json["delivery_boy"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -158,6 +163,36 @@ class DetailedOrder {
     "gst_applicable": gst_applicable,
     "date": date,
     "links": links!.toJson(),
+    "delivery_boy": delivery_boy?.toJson(),
+  };
+}
+
+class DeliveryContact {
+  DeliveryContact({
+    this.id,
+    this.name,
+    this.phone,
+    this.avatarOriginal,
+  });
+
+  int? id;
+  String? name;
+  String? phone;
+  String? avatarOriginal;
+
+  factory DeliveryContact.fromJson(Map<String, dynamic> json) =>
+      DeliveryContact(
+        id: json["id"],
+        name: json["name"],
+        phone: json["phone"],
+        avatarOriginal: json["avatar_original"],
+      );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "phone": phone,
+    "avatar_original": avatarOriginal,
   };
 }
 

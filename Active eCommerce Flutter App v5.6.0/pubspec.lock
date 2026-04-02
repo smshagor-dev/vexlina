@@ -756,7 +756,7 @@ packages:
     source: hosted
     version: "5.9.3"
   flutter_secure_storage:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_secure_storage
       sha256: "9cad52d75ebc511adfae3d447d5d13da15a55a92c9410e50f67335b6d21d16ea"
@@ -1637,6 +1637,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  pusher_channels_flutter:
+    dependency: "direct main"
+    description:
+      name: pusher_channels_flutter
+      sha256: "0b06194d85d1665d21e634ea091917b28670fb6d585d76903a4f72d894906000"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.0"
   rename:
     dependency: "direct main"
     description:

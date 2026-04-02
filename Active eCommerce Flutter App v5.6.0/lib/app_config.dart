@@ -8,15 +8,12 @@ class AppConfig {
   static String app_version = "v1.0.0"; //this shows in the splash screen
   static String search_bar_text =
       "Search in Vexlina..."; //this will show in app Search bar.
-  static String purchase_code =
-      "b15c483b-686a-1343-a919-810ac895d0dc"; //enter your purchase code for the app from codecanyon
-  static String system_key =
-      r"b15c483b-686a-1343-a919-810ac895d0dc"; //enter your purchase code for the app from codecanyon
 
   //Default language config
   static String default_language = "en";
   static String mobile_app_code = "en";
   static bool app_language_rtl = false;
+  static String system_key = "b15c483b-686a-1343-a919-810ac895d0dc";
   //configure this
   static const bool HTTPS =
       true; //if you are using localhost , set this to false

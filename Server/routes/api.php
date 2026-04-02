@@ -12,6 +12,8 @@ use App\Http\Controllers\SteadfastWebhookController;
 Route::group(['prefix' => 'v2/auth', 'middleware' => ['app_language']], function () {
 
     Route::post('info', [AuthController::class, 'getUserInfoByAccessToken']);
+    Route::post('delivery-boy/support-message', [AuthController::class, 'deliverySupportMessage']);
+    Route::post('seller/support-message', [AuthController::class, 'sellerSupportMessage']);
     Route::controller(AuthController::class)->group(function () {
         Route::post('login', 'login');
         Route::post('signup', 'signup');
@@ -70,6 +72,9 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
             Route::get('purchase-history-details/{id}', [DeliveryBoyController::class, 'details'])->middleware('auth:sanctum');
             Route::get('purchase-history-items/{id}', [DeliveryBoyController::class, 'items'])->middleware('auth:sanctum');
         });
+        Route::controller(ChatController::class)->group(function () {
+            Route::post('chat/open', 'openDeliveryBoyConversation')->middleware('auth:sanctum');
+        });
     });
 
     Route::apiResource('carts', CartController::class)->only('destroy');
@@ -123,6 +128,7 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
             Route::post('chat/insert-message', 'insert_message')->middleware('auth:sanctum');
             Route::get('chat/get-new-messages/{conversation_id}/{last_message_id}', 'get_new_messages')->middleware('auth:sanctum');
             Route::post('chat/create-conversation', 'create_conversation')->middleware('auth:sanctum');
+            Route::post('chat/create-delivery-conversation', 'createDeliveryConversation')->middleware('auth:sanctum');
         });
 
         Route::controller(PurchaseHistoryController::class)->group(function () {

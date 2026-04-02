@@ -21,7 +21,7 @@ class PhotoProvider with ChangeNotifier {
         "Authorization":
             access_token.$ != null ? "Bearer ${access_token.$}" : '',
         "Content-Type": "application/json",
-        "System-key": AppConfig.system_key
+        "System-Key": AppConfig.system_key,
       }).timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {

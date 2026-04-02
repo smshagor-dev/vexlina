@@ -61,7 +61,9 @@
         @if ($detailedProduct->brand != null)
             <div class="d-flex align-items-center">
                 <span class="fs-14 fw-400 text-dark pr-2">{{ translate('Brand') }}</span>
-                <span class="fs-14 fw-400 text-blue"><a href="{{route('products.brand', $detailedProduct->brand->slug)}}">{{ $detailedProduct->brand->name }}</a></span>
+                <span class="fs-14 fw-400 text-blue">
+                    <a href="{{ route('products.brand', $detailedProduct->brand->slug) }}">{{ $detailedProduct->brand->name }}</a>
+                </span>
             </div>
         @endif
         <!--RIGHT-->
@@ -248,7 +250,7 @@
                     <img src="{{ static_asset('/assets/img/seller_type.svg') }}" alt="seller">
                 </div>
                 <div>
-                    @if ($detailedProduct->added_by == 'seller' && get_setting('vendor_system_activation') == 1)
+                    @if ($detailedProduct->added_by == 'seller' && get_setting('vendor_system_activation') == 1 && optional($detailedProduct->user)->shop)
                         <p class="m-0 fs-14">
                             <span class="fw-400 text-gray">{{ translate('Sold by') }}</span>
                             <a href="{{ route('shop.visit', $detailedProduct->user->shop->slug) }}" class="fw-bold text-blue ml-2">{{ $detailedProduct->user->shop->name }}</a>
@@ -273,7 +275,7 @@
                             <span class="fw-400 text-gray">{{ translate('Brand') }}</span>
                             <span class="fw-bold text-dark pl-5px">{{ $detailedProduct->brand->name }}</span>
                         </p>
-                        <a href="{{route('products.brand', $detailedProduct->brand->slug)}}" class="fs-14 fw-400 text-blue animate-underline-blue has-transition">{{ translate('Products from this brand') }}</a>
+                        <a href="{{ route('products.brand', $detailedProduct->brand->slug) }}" class="fs-14 fw-400 text-blue animate-underline-blue has-transition">{{ translate('Products from this brand') }}</a>
                     </div>
                 </div>
             @endif
@@ -594,7 +596,7 @@
                         <img src="{{ static_asset('/assets/img/seller_type.svg') }}" alt="seller">
                     </div>
                     <div>
-                        @if ($detailedProduct->added_by == 'seller' && get_setting('vendor_system_activation') == 1)
+                        @if ($detailedProduct->added_by == 'seller' && get_setting('vendor_system_activation') == 1 && optional($detailedProduct->user)->shop)
                             <p class="m-0 fs-14">
                                 <span class="fw-400 text-gray">{{ translate('Sold by') }}</span>
                                 <a href="{{ route('shop.visit', $detailedProduct->user->shop->slug) }}" class="fw-bold text-blue pl-15px">{{ $detailedProduct->user->shop->name }}</a>
@@ -619,7 +621,7 @@
                                 <span class="fw-400 text-gray">{{ translate('Brand') }}</span>
                                 <span class="fw-bold text-dark pl-5px">{{ $detailedProduct->brand->name }}</span>
                             </p>
-                            <a href="{{route('products.brand', $detailedProduct->brand->slug)}}" class="fs-14 fw-400 text-blue animate-underline-blue has-transition">{{ translate('Products from this brand') }}</a>
+                            <a href="{{ route('products.brand', $detailedProduct->brand->slug) }}" class="fs-14 fw-400 text-blue animate-underline-blue has-transition">{{ translate('Products from this brand') }}</a>
                         </div>
                     </div>
                 @endif

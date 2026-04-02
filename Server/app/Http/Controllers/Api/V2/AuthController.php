@@ -5,9 +5,11 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\OTPVerificationController;
+use App\Mail\ContactMailManager;
 use App\Mail\GuestAccountOpeningMailManager;
 use App\Models\Address;
 use App\Models\BusinessSetting;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Notifications\AppEmailVerificationNotification;
@@ -16,6 +18,7 @@ use Socialite;
 use App\Models\Cart;
 use App\Rules\Recaptcha;
 use App\Utility\EmailUtility;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -443,6 +446,81 @@ class AuthController extends Controller
                 'email_verified' => $user->email_verified_at != null
             ]
         ]);
+    }
+
+    public function deliverySupportMessage(Request $request)
+    {
+        return $this->handleSupportMessage($request, 'Delivery Boy App Login Support', 'Delivery support message failed');
+    }
+
+    public function sellerSupportMessage(Request $request)
+    {
+        return $this->handleSupportMessage($request, 'Seller App Login Support', 'Seller support message failed');
+    }
+
+    protected function handleSupportMessage(Request $request, string $source, string $logContext)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:191',
+            'email' => 'required|email|max:191',
+            'phone' => 'nullable|string|max:50',
+            'subject' => 'required|string|max:191',
+            'message' => 'required|string|max:5000',
+        ], [
+            'name.required' => translate('Name is required'),
+            'email.required' => translate('Email is required'),
+            'email.email' => translate('Email must be a valid email address'),
+            'subject.required' => translate('Subject is required'),
+            'message.required' => translate('Message is required'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'result' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $admin = get_admin();
+
+        $content = "Source: {$source}\n"
+            ."Subject: {$request->subject}\n\n"
+            .$request->message;
+
+        $array = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'content' => str_replace("\n", "<br>", $content),
+            'subject' => $request->subject,
+            'from' => $request->email,
+        ];
+
+        try {
+            Mail::to($admin->email)->queue(new ContactMailManager($array));
+
+            Contact::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'content' => $content,
+            ]);
+
+            return response()->json([
+                'result' => true,
+                'message' => translate('Support message has been sent successfully'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error($logContext, [
+                'email' => $request->email,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'result' => false,
+                'message' => translate('Could not send support message'),
+            ], 500);
+        }
     }
 
 

@@ -1,6 +1,74 @@
 @extends('seller.layouts.app')
 
 @section('panel_content')
+    <style>
+        .page-content {
+            background: linear-gradient(180deg, #f8fafc 0%, #f4f6fb 100%);
+            min-height: 100vh;
+        }
+
+        .aiz-titlebar {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(8px);
+            padding: 1rem 1.25rem;
+            border: 1px solid #e7ebf3;
+            border-radius: 18px;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        .product-create-layout {
+            align-items: flex-start;
+        }
+
+        .product-create-layout > [class*="col-"] > .card {
+            border: 1px solid #e7ebf3;
+            border-radius: 18px;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+            background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+        }
+
+        .product-create-layout .card-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e6ebf2;
+        }
+
+        .product-create-layout .card-header h5 {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .product-create-layout .form-control,
+        .product-create-layout .input-group-text,
+        .product-create-layout .btn {
+            border-radius: 10px;
+        }
+
+        .product-create-layout .form-control {
+            border-color: #dbe3ee;
+            min-height: 42px;
+            box-shadow: none;
+        }
+
+        .product-create-layout .form-control:focus {
+            border-color: #80a7ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .product-create-layout textarea.form-control {
+            min-height: 110px;
+        }
+
+        .product-create-sidebar {
+            position: sticky;
+            top: 24px;
+        }
+
+        @media (max-width: 991.98px) {
+            .product-create-sidebar {
+                position: static;
+            }
+        }
+    </style>
     <div class="page-content mx-0">
         <div class="aiz-titlebar mt-2 mb-4">
             <div class="row align-items-center">
@@ -30,7 +98,7 @@
         <input type="hidden" id="data_type" value="physical">
 
         <form class="" action="{{ route('seller.products.store') }}" method="POST" enctype="multipart/form-data" id="choice_form">
-            <div class="row gutters-5">
+            <div class="row gutters-5 product-create-layout">
                 <div class="col-lg-8">
                     @csrf
                     <input type="hidden" name="added_by" value="seller">
@@ -91,8 +159,13 @@
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{ translate('Barcode') }}</label>
                                     <div class="col-md-8">
-                                        <input type="text" class="form-control" name="barcode"
-                                            placeholder="{{ translate('Barcode') }}">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="barcode"
+                                                placeholder="{{ translate('Barcode') }}" maxlength="19">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-soft-secondary" onclick="generateBarcode(this)">{{ translate('Generate') }}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             @endif
@@ -345,8 +418,13 @@
                                         {{ translate('SKU') }}
                                     </label>
                                     <div class="col-md-6">
-                                        <input type="text" placeholder="{{ translate('SKU') }}" name="sku"
-                                            class="form-control">
+                                        <div class="input-group">
+                                            <input type="text" placeholder="{{ translate('SKU') }}" name="sku"
+                                                class="form-control" maxlength="32">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-soft-secondary" onclick="generateSimpleSku(this)">{{ translate('Generate') }}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -417,50 +495,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0 h6">{{ translate('SEO Meta Tags') }}</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Meta Title') }}</label>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" name="meta_title"
-                                        placeholder="{{ translate('Meta Title') }}">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Description') }}</label>
-                                <div class="col-md-8">
-                                    <textarea name="meta_description" rows="8" class="form-control"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Keywords') }}</label>
-                                <div class="col-md-8">
-                                    <textarea class="resize-off form-control" name="meta_keywords" placeholder="{{translate('Keyword, Keyword')}}"></textarea>
-                                    <small class="text-muted">{{ translate('Separate with coma') }}</small>                                   
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-md-3 col-form-label"
-                                    for="signinSrEmail">{{ translate('Meta Image') }}</label>
-                                <div class="col-md-8">
-                                    <div class="input-group" data-toggle="aizuploader" data-type="image">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text bg-soft-secondary font-weight-medium">
-                                                {{ translate('Browse') }}</div>
-                                        </div>
-                                        <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                        <input type="hidden" name="meta_img" class="selected-files">
-                                    </div>
-                                    <div class="file-preview box sm">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     {{-- Refund --}}
                     @if (addon_is_activated('refund_request'))
                         <div class="card">
@@ -612,7 +646,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="col-lg-4 product-create-sidebar">
 
                     <div class="card">
                         <div class="card-header">
@@ -844,6 +878,50 @@
                         </div>
                         @endif
                     </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0 h6">{{ translate('SEO Meta Tags') }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-md-3 col-from-label">{{ translate('Meta Title') }}</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" name="meta_title"
+                                        placeholder="{{ translate('Meta Title') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-from-label">{{ translate('Description') }}</label>
+                                <div class="col-md-8">
+                                    <textarea name="meta_description" rows="8" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-from-label">{{ translate('Keywords') }}</label>
+                                <div class="col-md-8">
+                                    <textarea class="resize-off form-control" name="meta_keywords" placeholder="{{translate('Keyword, Keyword')}}"></textarea>
+                                    <small class="text-muted">{{ translate('Separate with coma') }}</small>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label"
+                                    for="signinSrEmail">{{ translate('Meta Image') }}</label>
+                                <div class="col-md-8">
+                                    <div class="input-group" data-toggle="aizuploader" data-type="image">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text bg-soft-secondary font-weight-medium">
+                                                {{ translate('Browse') }}</div>
+                                        </div>
+                                        <div class="form-control file-amount">{{ translate('Choose File') }}</div>
+                                        <input type="hidden" name="meta_img" class="selected-files">
+                                    </div>
+                                    <div class="file-preview box sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-12">
                     <div class="mar-all text-right mb-2">
@@ -960,6 +1038,66 @@
 
     function delete_variant(em) {
         $(em).closest('.variant').remove();
+    }
+
+    function randomAlphaSegment(length) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let segment = '';
+
+        for (let i = 0; i < length; i++) {
+            segment += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return segment;
+    }
+
+    function randomNumericSegment(length, seed) {
+        let digits = String(Math.abs(seed)).replace(/\D/g, '');
+        while (digits.length < length) {
+            digits += Math.floor(Math.random() * 10).toString();
+        }
+
+        return digits.substring(0, length);
+    }
+
+    function buildCode() {
+        const now = new Date();
+        const highRes = typeof performance !== 'undefined' ? Math.floor(performance.now() * 1000) : 0;
+        const dateSeed = parseInt(
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(now.getFullYear()).slice(-2),
+            10
+        );
+        const timeSeed = parseInt(
+            String(highRes).slice(-4) +
+            String(now.getSeconds()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getHours()).padStart(2, '0'),
+            10
+        );
+
+        return [
+            randomAlphaSegment(4),
+            randomNumericSegment(4, dateSeed),
+            randomNumericSegment(4, timeSeed),
+            randomAlphaSegment(4)
+        ].join('-');
+    }
+
+    function generateSimpleSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[name="sku"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateVariantSku(button) {
+        const $skuInput = $(button).closest('.input-group').find('input[type="text"]');
+        $skuInput.val(buildCode());
+    }
+
+    function generateBarcode(button) {
+        const $barcodeInput = $(button).closest('.input-group').find('input[name="barcode"]');
+        $barcodeInput.val(buildCode());
     }
 
     function update_sku() {
