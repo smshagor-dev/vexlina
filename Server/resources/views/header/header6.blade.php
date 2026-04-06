@@ -461,7 +461,7 @@ $bottomHeaderTextColor = get_setting('bottom_header_text_color');
                 <div class="position-static float-right">
                     <div class="aiz-user-top-menu bg-white rounded-0 border-top shadow-sm" style="width:220px;">
                         <ul class="list-unstyled no-scrollbar mb-0 text-left">
-                            @if (isAdmin())
+                            @if (Auth::check() && isAdmin() && !(auth()->user()->user_type == 'staff' && optional(optional(auth()->user()->staff)->pick_up_point)->id))
                             <li class="user-top-nav-element border border-top-0" data-id="1">
                                 <a href="{{ route('admin.dashboard') }}"
                                     class="text-truncate text-dark px-4 fs-14 d-flex align-items-center hov-column-gap-1">
@@ -476,7 +476,7 @@ $bottomHeaderTextColor = get_setting('bottom_header_text_color');
                             </li>
                             @else
                             <li class="user-top-nav-element border border-top-0" data-id="1">
-                                <a href="{{ route('dashboard') }}"
+                                <a href="{{ Auth::check() && auth()->user()->user_type == 'staff' && optional(optional(auth()->user()->staff)->pick_up_point)->id ? route('pickup-point.dashboard') : route('dashboard') }}"
                                     class="text-truncate text-dark px-4 fs-14 d-flex align-items-center hov-column-gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                                         <path id="Path_2916" data-name="Path 2916"

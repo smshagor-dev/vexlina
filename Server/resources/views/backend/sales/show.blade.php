@@ -63,7 +63,7 @@
                         <label for="update_delivery_status">{{ translate('Delivery Status') }}</label>
                         @if ($order->shipping_method == 'shiprocket')
                             <input type="text" class="form-control" value="{{ ucfirst(str_replace('_', ' ', $delivery_status)) }}" disabled>
-                        @elseif (auth()->user()->can('update_order_delivery_status') && $delivery_status != 'delivered' && $delivery_status != 'cancelled')
+                        @elseif (auth()->user()->can('update_order_delivery_status') && $delivery_status != 'delivered' && $delivery_status != 'cancelled' && $delivery_status != 'returned')
                             <select class="form-control aiz-selectpicker" data-minimum-results-for-search="Infinity"
                                 id="update_delivery_status">
                                 <option value="pending" @if ($delivery_status == 'pending') selected @endif>
@@ -78,9 +78,19 @@
                                 <option value="on_the_way" @if ($delivery_status == 'on_the_way') selected @endif>
                                     {{ translate('On The Way') }}
                                 </option>
+                                @if ($order->shipping_type == 'pickup_point')
+                                    <option value="reached" @if ($delivery_status == 'reached') selected @endif>
+                                        {{ translate('Reached') }}
+                                    </option>
+                                @endif
                                 <option value="delivered" @if ($delivery_status == 'delivered') selected @endif>
                                     {{ translate('Delivered') }}
                                 </option>
+                                @if ($order->shipping_type == 'pickup_point')
+                                    <option value="returned" @if ($delivery_status == 'returned') selected @endif>
+                                        {{ translate('Returned') }}
+                                    </option>
+                                @endif
                                 <option value="cancelled" @if ($delivery_status == 'cancelled') selected @endif>
                                     {{ translate('Cancel') }}
                                 </option>

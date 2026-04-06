@@ -1,100 +1,138 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/data_model/dashboard_summary_response.dart';
 import 'package:active_flutter_delivery_app/helpers/connectivity_helper.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
+import 'package:active_flutter_delivery_app/helpers/shared_value_helper.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/dashboard_repository.dart';
+import 'package:active_flutter_delivery_app/screens/assigned_delivery.dart';
 import 'package:active_flutter_delivery_app/screens/cancelled_delivery.dart';
-import 'package:active_flutter_delivery_app/screens/collection.dart';
 import 'package:active_flutter_delivery_app/screens/completed_delivery.dart';
 import 'package:active_flutter_delivery_app/screens/earnings.dart';
+import 'package:active_flutter_delivery_app/screens/on_the_way_delivery.dart';
 import 'package:active_flutter_delivery_app/screens/pending.dart';
+import 'package:active_flutter_delivery_app/screens/picked_delivery.dart';
+import 'package:active_flutter_delivery_app/screens/reached_delivery.dart';
 import 'package:active_flutter_delivery_app/ui_sections/drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:active_flutter_delivery_app/l10n/app_localizations.dart';
 
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WidgetsBindingObserver {
   ScrollController _mainScrollController = ScrollController();
-
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  //init
-  String _completed_delivery = ". . .";
-  String _pending_delivery = ". . .";
-  String _total_collection = ". . .";
-  String _total_earning = ". . .";
-  String _cancelled = ". . .";
-  String _on_the_way = ". . .";
+  String _completedDelivery = ". . .";
+  String _pendingDelivery = ". . .";
+  String _totalCollection = ". . .";
+  String _totalEarning = ". . .";
+  String _returned = ". . .";
+  String _onTheWay = ". . .";
   String _picked = ". . .";
   String _assigned = ". . .";
+  String _reached = ". . .";
+  DashboardSummaryResponse? _dashboardSummary;
+  bool _isFetchingSummary = false;
 
   double mHeight = 0, mWidth = 0;
 
   @override
   void initState() {
-    // TODO: implement initState
-
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     ConnectivityHelper().abortIfNotConnected(context, onPop);
-
-    /* if (is_logged_in.value == false) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
-        return Login();
-      }));
-    }*/
-    fetchSummary();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshDashboardSummary();
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _mainScrollController.dispose();
     super.dispose();
   }
 
-  fetchSummary() async {
-    var dashboardSummaryResponse =
-        await DashboardRepository().getDashboardSummaryResponse();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshDashboardSummary();
+    }
+  }
 
-    if (dashboardSummaryResponse != null) {
-      _completed_delivery =
-          dashboardSummaryResponse.completed_delivery.toString();
-      _pending_delivery = dashboardSummaryResponse.pending_delivery.toString();
-      _total_collection = dashboardSummaryResponse.total_collection??"...";
-      _total_earning = dashboardSummaryResponse.total_earning??"....";
-      _cancelled = dashboardSummaryResponse.cancelled.toString();
-      _on_the_way = dashboardSummaryResponse.on_the_way.toString();
-      _picked = dashboardSummaryResponse.picked.toString();
-      _assigned = dashboardSummaryResponse.assigned.toString();
-      setState(() {});
+  Future<void> fetchSummary() async {
+    if (_isFetchingSummary || access_token.$ == null || access_token.$!.isEmpty) {
+      return;
+    }
+
+    _isFetchingSummary = true;
+    try {
+      var dashboardSummaryResponse =
+          await DashboardRepository().getDashboardSummaryResponse();
+      _dashboardSummary = dashboardSummaryResponse;
+
+      _completedDelivery =
+          (dashboardSummaryResponse.completed_orders ??
+                      dashboardSummaryResponse.completed_delivery)
+                  ?.toString() ??
+              ". . .";
+      _pendingDelivery =
+          dashboardSummaryResponse.pending_delivery?.toString() ?? ". . .";
+      _totalCollection = dashboardSummaryResponse.total_collection ?? "...";
+      _totalEarning = dashboardSummaryResponse.total_earning ?? "....";
+      _returned = (dashboardSummaryResponse.return_orders ??
+              dashboardSummaryResponse.cancelled)
+          ?.toString() ??
+          ". . .";
+      _onTheWay = dashboardSummaryResponse.on_the_way?.toString() ?? ". . .";
+      _picked = dashboardSummaryResponse.picked?.toString() ?? ". . .";
+      _assigned = (dashboardSummaryResponse.upcoming_orders ??
+                  dashboardSummaryResponse.assigned)
+              ?.toString() ??
+          ". . .";
+      _reached = (dashboardSummaryResponse.reached_orders ??
+                  dashboardSummaryResponse.reached)
+              ?.toString() ??
+          ". . .";
+
+      if (mounted) {
+        setState(() {});
+      }
+    } finally {
+      _isFetchingSummary = false;
     }
   }
 
   Future<void> _onPageRefresh() async {
     reset();
-    fetchSummary();
+    await fetchSummary();
+  }
+
+  Future<void> _refreshDashboardSummary() async {
+    reset();
+    await fetchSummary();
   }
 
   reset() {
-    _completed_delivery = ". . .";
-    _pending_delivery = ". . .";
-    _total_collection = ". . .";
-    _total_earning = ". . .";
-    _cancelled = ". . .";
-    _on_the_way = ". . .";
+    _completedDelivery = ". . .";
+    _pendingDelivery = ". . .";
+    _totalCollection = ". . .";
+    _totalEarning = ". . .";
+    _returned = ". . .";
+    _onTheWay = ". . .";
     _picked = ". . .";
     _assigned = ". . .";
-
+    _reached = ". . .";
+    _dashboardSummary = null;
     setState(() {});
   }
 
   onPop(value) {
     ConnectivityHelper().abortIfNotConnected(context, onPop);
-    reset();
-    fetchSummary();
+    _refreshDashboardSummary();
   }
 
   @override
@@ -126,7 +164,6 @@ class _HomeState extends State<Home> {
               child: Image.asset(
                 "assets/hamburger.png",
                 height: 16,
-                //color: MyTheme.dark_grey,
                 color: MyTheme.grey_153,
               ),
             ),
@@ -140,11 +177,42 @@ class _HomeState extends State<Home> {
       elevation: 0.0,
       titleSpacing: 0,
       backgroundColor: Color.fromRGBO(39, 38, 43, 1),
-      actions: <Widget>[],
     );
   }
 
   buildBody(context) {
+    if (PortalHelper.isPickupPointApp) {
+      return RefreshIndicator(
+        color: MyTheme.accent_color,
+        backgroundColor: Colors.white,
+        onRefresh: _onPageRefresh,
+        child: CustomScrollView(
+          controller: _mainScrollController,
+          physics: AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _buildPickupOverviewCard(),
+                    const SizedBox(height: 16),
+                    if ((_dashboardSummary?.return_due_orders_count ?? 0) > 0) ...[
+                      _buildReturnDueAlertCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildPickupStatusGrid(context),
+                    const SizedBox(height: 16),
+                    _buildPickupEarningSection(),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       color: MyTheme.accent_color,
       backgroundColor: Colors.white,
@@ -165,6 +233,483 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Widget _buildPickupOverviewCard() {
+    final pickupPoint = _dashboardSummary?.pickup_point;
+    final managerName =
+        (user_name.$ != null && user_name.$!.trim().isNotEmpty)
+            ? user_name.$!.trim()
+            : "Pickup Point Manager";
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            const Color.fromRGBO(39, 38, 43, 1),
+            MyTheme.accent_color,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: MyTheme.accent_color.withValues(alpha: .18),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Greetings",
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: .85),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            managerName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if ((pickupPoint?.address ?? "").isNotEmpty)
+            Text(
+              pickupPoint!.address!,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: .82),
+                fontSize: 13,
+              ),
+            ),
+          if ((pickupPoint?.phone ?? "").isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                "Mobile: ${pickupPoint!.phone!}",
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: .82),
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: .12)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildOverviewMetric(
+                    "Upcoming",
+                    _assigned,
+                    onTap: () => _openPickupScreen(
+                      AssignedDelivery(show_back_button: true),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewMetric(
+                    "Reached",
+                    _reached,
+                    onTap: () => _openPickupScreen(
+                      ReachedDelivery(show_back_button: true),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewMetric(
+                    "Complete",
+                    _completedDelivery,
+                    onTap: () => _openPickupScreen(
+                      CompletedDelivery(show_back_button: true),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewMetric(
+                    "Returns",
+                    _returned,
+                    onTap: () => _openPickupScreen(
+                      CancelledDelivery(show_back_button: true),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewMetric(String label, String value, {VoidCallback? onTap}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: .72),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReturnDueAlertCard() {
+    final dueOrders = _dashboardSummary?.return_due_orders ?? [];
+    final dueCount = _dashboardSummary?.return_due_orders_count ?? dueOrders.length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(255, 244, 237, 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color.fromRGBO(250, 62, 0, .18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                height: 38,
+                width: 38,
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(250, 62, 0, .12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.assignment_return_outlined,
+                  color: Color.fromRGBO(250, 62, 0, 1),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Return Reminder",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color.fromRGBO(39, 38, 43, 1),
+                      ),
+                    ),
+                    Text(
+                      "$dueCount reached order${dueCount > 1 ? 's are' : ' is'} waiting for return action.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: MyTheme.grey_153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => _openPickupScreen(
+                  CancelledDelivery(show_back_button: true),
+                ),
+                child: const Text("Open"),
+              ),
+            ],
+          ),
+          if (dueOrders.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...dueOrders.map((order) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  "Order ${order.code ?? '-'} reached on ${order.reached_at ?? '-'} and should be returned if the customer did not receive it.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: MyTheme.grey_153,
+                    height: 1.4,
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _openPickupScreen(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) {
+      return screen;
+    })).then((value) => onPop(value));
+  }
+
+  Widget _buildPickupStatusGrid(BuildContext context) {
+    final cards = [
+      _PickupDashboardCardData(
+        title: PortalHelper.upcomingOrdersLabel,
+        count: _assigned,
+        color: MyTheme.blue,
+        screen: AssignedDelivery(show_back_button: true),
+      ),
+      _PickupDashboardCardData(
+        title: PortalHelper.pickedUpOrdersLabel,
+        count: _picked,
+        color: MyTheme.golden,
+        screen: PickedDelivery(show_back_button: true),
+      ),
+      _PickupDashboardCardData(
+        title: PortalHelper.onTheWayOrdersLabel,
+        count: _onTheWay,
+        color: MyTheme.red,
+        screen: OnTheWayDelivery(show_back_button: true),
+      ),
+      _PickupDashboardCardData(
+        title: PortalHelper.reachedOrdersLabel,
+        count: _reached,
+        color: MyTheme.lime,
+        screen: ReachedDelivery(show_back_button: true),
+      ),
+      _PickupDashboardCardData(
+        title: PortalHelper.completedLabel,
+        count: _completedDelivery,
+        color: const Color.fromRGBO(10, 132, 94, 1),
+        screen: CompletedDelivery(show_back_button: true),
+      ),
+      _PickupDashboardCardData(
+        title: PortalHelper.returnOrdersLabel,
+        count: _returned,
+        color: const Color.fromRGBO(209, 44, 44, 1),
+        screen: CancelledDelivery(show_back_button: true),
+      ),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: cards.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.25,
+      ),
+      itemBuilder: (context, index) {
+        final card = cards[index];
+        return InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) {
+              return card.screen;
+            })).then((value) => onPop(value));
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: card.color.withValues(alpha: .14)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: .04),
+                  blurRadius: 14,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: card.color.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.inventory_2_outlined, color: card.color),
+                ),
+                const Spacer(),
+                Text(
+                  card.title,
+                  maxLines: 2,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: MyTheme.font_grey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  card.count,
+                  style: TextStyle(
+                    fontSize: 26,
+                    color: card.color,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPickupEarningSection() {
+    final earnings = _dashboardSummary?.earning_summary ?? [];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .04),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Earning Summary",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: earnings.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.18,
+            ),
+            itemBuilder: (context, index) {
+              final item = earnings[index];
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(248, 249, 251, 1),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: MyTheme.light_grey),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label ?? "",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildEarningRow("Delivery", item.delivery_earning_string ?? "--"),
+                    const SizedBox(height: 6),
+                    _buildEarningRow("Return", item.return_earning_string ?? "--"),
+                    const Spacer(),
+                    Divider(height: 1, color: MyTheme.light_grey),
+                    const SizedBox(height: 10),
+                    _buildEarningRow(
+                      "Total",
+                      item.total_earning_string ?? "--",
+                      emphasize: true,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: MyTheme.accent_color,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) {
+                  return Earnings(show_back_button: true);
+                })).then((value) => onPop(value));
+              },
+              child: const Text(
+                "View Earnings Details",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarningRow(String label, String value, {bool emphasize = false}) {
+    final textStyle = TextStyle(
+      fontSize: emphasize ? 14 : 13,
+      color: emphasize ? MyTheme.dark_grey : MyTheme.font_grey,
+      fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+    );
+
+    return Row(
+      children: [
+        Text(label, style: textStyle),
+        const Spacer(),
+        Text(value, style: textStyle),
+      ],
+    );
+  }
+
   buildTopContainer() {
     return Container(
       width: double.infinity,
@@ -179,57 +724,25 @@ class _HomeState extends State<Home> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                InkWell(
+                _buildHeroCard(
+                  color: MyTheme.lime,
+                  icon: "assets/delivery_moving.png",
+                  label: PortalHelper.completedLabel,
+                  value: _completedDelivery,
                   onTap: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return CompletedDelivery(
-                        show_back_button: true,
-                      );
+                      return CompletedDelivery(show_back_button: true);
                     })).then((value) {
                       onPop(value);
                     });
                   },
-                  child: Container(
-                    height: 145,
-                    width: 170,
-                    decoration: BoxDecoration(
-                        color: MyTheme.lime,
-                        borderRadius: BorderRadius.all(Radius.circular(12))),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 24.0),
-                          child: Container(
-                              height: 50,
-                              width: 50,
-                              child: Image.asset(
-                                "assets/delivery_moving.png",
-                                color: Colors.grey.shade300,
-                              )),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            AppLocalizations.of(context)!.completed_delivery_ucf,
-                            style: TextStyle(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            _completed_delivery,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                 ),
-                InkWell(
+                _buildHeroCard(
+                  color: MyTheme.red,
+                  icon: "assets/clock.png",
+                  label: PortalHelper.pendingLabel,
+                  value: _pendingDelivery,
                   onTap: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
@@ -238,152 +751,97 @@ class _HomeState extends State<Home> {
                       onPop(value);
                     });
                   },
-                  child: Container(
-                    height: 145,
-                    width: 170,
-                    decoration: BoxDecoration(
-                        color: MyTheme.red,
-                        borderRadius: BorderRadius.all(Radius.circular(12))),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 24.0),
-                          child: Container(
-                              height: 50,
-                              width: 50,
-                              child: Image.asset(
-                                "assets/clock.png",
-                                color: Colors.grey.shade300,
-                              )),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            LangText(context).local!.pending_delivery_ucf,
-                            style: TextStyle(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            _pending_delivery,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                InkWell(
+                _buildHeroCard(
+                  color: MyTheme.orange,
+                  icon: "assets/delivery_moving.png",
+                  label: PortalHelper.collectionOrReturnLabel,
+                  value: PortalHelper.isPickupPointApp
+                      ? _returned
+                      : _totalCollection,
                   onTap: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return Collection(
-                        show_back_button: true,
-                      );
+                      return CancelledDelivery(show_back_button: true);
                     })).then((value) {
                       onPop(value);
                     });
                   },
-                  child: Container(
-                    height: 145,
-                    width: 170,
-                    decoration: BoxDecoration(
-                        color: MyTheme.orange,
-                        borderRadius: BorderRadius.all(Radius.circular(12))),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 24.0),
-                          child: Container(
-                              height: 50,
-                              width: 50,
-                              child: Image.asset(
-                                "assets/delivery_moving.png",
-                                color: Colors.grey.shade300,
-                              )),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            LangText(context).local!.total_collected_ucf,
-                            style: TextStyle(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            _total_collection,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                 ),
-                InkWell(
+                _buildHeroCard(
+                  color: MyTheme.blue,
+                  icon: "assets/dollar.png",
+                  label: PortalHelper.earningsLabel,
+                  value: _totalEarning,
                   onTap: () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return Earnings(
-                        show_back_button: true,
-                      );
+                      return Earnings(show_back_button: true);
                     })).then((value) {
                       onPop(value);
                     });
                   },
-                  child: Container(
-                    height: 145,
-                    width: 170,
-                    decoration: BoxDecoration(
-                        color: MyTheme.blue,
-                        borderRadius: BorderRadius.all(Radius.circular(12))),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 24.0),
-                          child: Container(
-                              height: 50,
-                              width: 50,
-                              child: Image.asset(
-                                "assets/dollar.png",
-                                color: Colors.grey.shade300,
-                              )),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            LangText(context).local!.earnings_ucf,
-                            style: TextStyle(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            _total_earning!,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroCard({
+    required Color color,
+    required String icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 145,
+        width: 170,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0),
+              child: Container(
+                height: 50,
+                width: 50,
+                child: Image.asset(
+                  icon,
+                  color: Colors.grey.shade300,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade300),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                value,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600),
+              ),
+            )
           ],
         ),
       ),
@@ -417,17 +875,18 @@ class _HomeState extends State<Home> {
             Padding(
               padding: const EdgeInsets.only(left: 16.0),
               child: Text(
-                LangText(context).local!.cancelled_delivery_ucf,
+                PortalHelper.returnedLabel,
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600),
               ),
             ),
+            Spacer(),
             Padding(
-              padding: const EdgeInsets.only(left: 100.0),
+              padding: const EdgeInsets.only(right: 20.0),
               child: Text(
-                _cancelled,
+                _returned,
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -450,125 +909,110 @@ class _HomeState extends State<Home> {
           InkWell(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return Pending(
-                  index: 0,
-                );
+                return PortalHelper.isPickupPointApp
+                    ? ReachedDelivery(show_back_button: true)
+                    : Pending(index: 0);
               })).then((value) {
                 onPop(value);
               });
             },
-            child: Column(
-              children: [
-                Container(
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: MyTheme.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Image.asset(
-                        "assets/human_run.png",
-                        color: Colors.white,
-                      ),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    "${LangText(context).local!.on_the_way_ucf} (${_on_the_way})",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: MyTheme.red,
-                        fontWeight: FontWeight.w600),
-                  ),
-                )
-              ],
+            child: _buildMiniCircle(
+              color: MyTheme.red,
+              icon: PortalHelper.isPickupPointApp
+                  ? null
+                  : "assets/human_run.png",
+              label: PortalHelper.isPickupPointApp
+                  ? "Reached ($_reached)"
+                  : "${LangText(context).local!.on_the_way_ucf} ($_onTheWay)",
+              fallbackIcon: PortalHelper.isPickupPointApp
+                  ? const Icon(Icons.task_alt, color: Colors.white)
+                  : null,
             ),
           ),
           InkWell(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return Pending(
-                  index: 1,
-                );
+                return Pending(index: PortalHelper.isPickupPointApp ? 2 : 1);
               })).then((value) {
                 onPop(value);
               });
             },
-            child: Column(
-              children: [
-                Container(
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: MyTheme.golden,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Image.asset(
-                        "assets/press.png",
-                        color: Colors.white,
-                      ),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    "${LangText(context).local!.picked_ucf} (${_picked})",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: MyTheme.golden,
-                        fontWeight: FontWeight.w600),
-                  ),
-                )
-              ],
+            child: _buildMiniCircle(
+              color: MyTheme.golden,
+              icon: "assets/press.png",
+              label: "${PortalHelper.pickedLabel} ($_picked)",
             ),
           ),
           InkWell(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return Pending(
-                  index: 2,
-                );
+                return Pending(index: PortalHelper.isPickupPointApp ? 3 : 2);
               })).then((value) {
                 onPop(value);
               });
             },
-            child: Column(
-              children: [
-                Container(
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: MyTheme.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Image.asset(
-                        "assets/sandclock.png",
-                        color: Colors.white,
-                      ),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    "${LangText(context).local!.assigned} (${_assigned})",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: MyTheme.blue,
-                        fontWeight: FontWeight.w600),
-                  ),
-                )
-              ],
+            child: _buildMiniCircle(
+              color: MyTheme.blue,
+              icon: "assets/sandclock.png",
+              label: "${PortalHelper.upcomingLabel} ($_assigned)",
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildMiniCircle({
+    required Color color,
+    String? icon,
+    Widget? fallbackIcon,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Container(
+          height: 60,
+          width: 60,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: fallbackIcon ??
+                Image.asset(
+                  icon!,
+                  color: Colors.white,
+                ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 14, color: color, fontWeight: FontWeight.w600),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+}
+
+class _PickupDashboardCardData {
+  _PickupDashboardCardData({
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.screen,
+  });
+
+  final String title;
+  final String count;
+  final Color color;
+  final Widget screen;
 }

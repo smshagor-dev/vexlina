@@ -58,6 +58,7 @@ class Order {
     this.lang,
     this.delivery_pickup_latitude,
     this.delivery_pickup_longitude,
+    this.return_due,
     this.links,
   });
 
@@ -77,6 +78,7 @@ class Order {
   double? lang;
   double? delivery_pickup_latitude;
   double? delivery_pickup_longitude;
+  bool? return_due;
   OrderLinks? links;
 
   static double? _parseDouble(dynamic value) {
@@ -138,6 +140,7 @@ class Order {
     lang: _parseDouble(json["lang"]),
     delivery_pickup_latitude: _parseDouble(json["delivery_pickup_latitude"]),
     delivery_pickup_longitude: _parseDouble(json["delivery_pickup_longitude"]),
+    return_due: json["return_due"],
     links: OrderLinks.fromJson(json["links"]),
   );
 
@@ -158,6 +161,7 @@ class Order {
     "lang": lang,
     "delivery_pickup_latitude": delivery_pickup_latitude,
     "delivery_pickup_longitude": delivery_pickup_longitude,
+    "return_due": return_due,
     "links": links!.toJson(),
   };
 }

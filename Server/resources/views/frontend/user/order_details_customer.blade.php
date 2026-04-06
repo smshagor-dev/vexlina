@@ -187,6 +187,35 @@
                             </div>
                         </div>
                     </div>
+
+                    @if ($order->assign_delivery_boy && $order->delivery_boy)
+                        <hr style="border-color: #fa3e0033;">
+                        <div class="mt-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start">
+                                <div class="mb-3 mb-md-0">
+                                    <div class="fw-700 fs-15 text-dark">{{ translate('Delivery Boy Support') }}</div>
+                                    <div class="text-muted fs-13">
+                                        {{ $order->delivery_boy->name }}
+                                        @if ($order->delivery_boy->phone)
+                                            <span class="d-block">{{ $order->delivery_boy->phone }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap">
+                                    <a href="{{ route('conversations.customer_delivery', encrypt($order->id)) }}"
+                                       class="btn btn-soft-primary btn-sm mr-2 mb-2">
+                                        <i class="las la-comment-dots mr-1"></i>{{ translate('Message Delivery Boy') }}
+                                    </a>
+                                    @if ($order->delivery_boy->phone)
+                                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $order->delivery_boy->phone) }}"
+                                           class="btn btn-primary btn-sm mb-2">
+                                            <i class="las la-phone mr-1"></i>{{ translate('Call Delivery Boy') }}
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

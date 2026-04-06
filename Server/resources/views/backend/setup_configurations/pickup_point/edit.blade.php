@@ -45,6 +45,38 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label class="col-sm-3 col-from-label" for="commission_type">{{translate('Commission Type')}}</label>
+                        <div class="col-sm-9">
+                            <select name="commission_type" id="commission_type" required class="form-control aiz-selectpicker">
+                                <option value="percent" @if ($pickup_point->commission_type == 'percent') selected @endif>{{ translate('Percentage') }}</option>
+                                <option value="flat" @if ($pickup_point->commission_type == 'flat') selected @endif>{{ translate('Flat Amount') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-from-label" for="commission_amount">{{translate('Commission Amount')}}</label>
+                        <div class="col-sm-9">
+                            <input type="number" min="0" step="0.01" placeholder="{{translate('Commission Amount')}}" id="commission_amount" name="commission_amount" value="{{ $pickup_point->commission_amount ?? 0 }}" class="form-control" required>
+                            <small class="text-muted">{{ translate('Use percentage value for percentage type, or fixed amount for flat type.') }}</small>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-from-label" for="return_commission_type">{{translate('Return Commission Type')}}</label>
+                        <div class="col-sm-9">
+                            <select name="return_commission_type" id="return_commission_type" required class="form-control aiz-selectpicker">
+                                <option value="percent" @if (($pickup_point->return_commission_type ?? 'percent') == 'percent') selected @endif>{{ translate('Percentage') }}</option>
+                                <option value="flat" @if (($pickup_point->return_commission_type ?? null) == 'flat') selected @endif>{{ translate('Flat Amount') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-from-label" for="return_commission_amount">{{translate('Return Commission Amount')}}</label>
+                        <div class="col-sm-9">
+                            <input type="number" min="0" step="0.01" placeholder="{{translate('Return Commission Amount')}}" id="return_commission_amount" name="return_commission_amount" value="{{ $pickup_point->return_commission_amount ?? 0 }}" class="form-control" required>
+                            <small class="text-muted">{{ translate('Use percentage value for percentage type, or fixed amount for flat type.') }}</small>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label class="col-sm-3 col-from-label">{{translate('Pickup Point Status')}}</label>
                         <div class="col-sm-3">
                             <label class="aiz-switch aiz-switch-success mb-0" style="margin-top:5px;">

@@ -124,6 +124,12 @@ class DeliveryBoyPurchaseHistoryMiniCollection extends ResourceCollection
                     $coordinates = $this->extractCoordinatesFromUser($data->user);
                 }
 
+                $reachedAt = $data->delivery_history_date ?: $data->updated_at;
+                $isReturnDue = false;
+                if ($reachedAt) {
+                    $isReturnDue = Carbon::parse($reachedAt)->startOfDay()->lte(Carbon::today()->subDays(5));
+                }
+
                 return [
                     'id' => $data->id,
                     'code' => $data->code,
@@ -137,6 +143,7 @@ class DeliveryBoyPurchaseHistoryMiniCollection extends ResourceCollection
                     'date' => Carbon::createFromFormat('Y-m-d H:i:s',$data->delivery_history_date)->format('d-m-Y'),
                     'cancel_request' => $data->cancel_request == 1,
                     'delivery_history_date' => $data->delivery_history_date,
+                    'return_due' => $isReturnDue,
                     'delivery_verification_status' => (bool) $data->delivery_verification_status,
                     'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
                     'location_available' => $coordinates['available'],

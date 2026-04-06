@@ -6,6 +6,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\isPreorder;
 use App\Http\Middleware\IsSeller;
 use App\Http\Middleware\IsCustomer;
+use App\Http\Middleware\IsPickupPointManager;
 use App\Http\Middleware\IsUser;
 use App\Http\Middleware\CheckoutMiddleware;
 use App\Http\Middleware\IsUnbanned;
@@ -77,6 +78,7 @@ class Kernel extends HttpKernel
         'isPreorder' => isPreorder::class,
         'seller' => IsSeller::class,
         'customer' => IsCustomer::class,
+        'pickup_point_manager' => IsPickupPointManager::class,
         'user' => IsUser::class,
         'unbanned' => IsUnbanned::class,
         'checkout' => CheckoutMiddleware::class,

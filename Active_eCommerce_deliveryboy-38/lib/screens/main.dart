@@ -1,4 +1,5 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/screens/home.dart';
 import 'package:active_flutter_delivery_app/screens/completed_delivery.dart';
@@ -19,7 +20,7 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   int _currentIndex = 0;
-  var _children = [
+  final List<Widget> _children = [
     Home(),
     CompletedDelivery(),
     Earnings(),
@@ -81,7 +82,7 @@ class _MainState extends State<Main> {
                         : Color.fromRGBO(153, 153, 153, 1),
                     height: 20,
                   ),
-                  label: LangText(context).local!.my_delivery_ucf),
+                  label: PortalHelper.completedLabel),
 
               BottomNavigationBarItem(
                   icon: Image.asset(
@@ -91,7 +92,7 @@ class _MainState extends State<Main> {
                         : Color.fromRGBO(153, 153, 153, 1),
                     height: 20,
                   ),
-                  label: LangText(context).local!.my_earnings_ucf),
+                  label: PortalHelper.earningsLabel),
               BottomNavigationBarItem(
                   icon: Image.asset(
                     "assets/profile.png",

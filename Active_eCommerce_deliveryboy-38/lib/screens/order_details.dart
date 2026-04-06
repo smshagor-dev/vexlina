@@ -1,5 +1,6 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/chat_repository.dart';
@@ -273,13 +274,14 @@ class _OrderDetailsState extends State<OrderDetails> {
           physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics()),
           slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _orderDetails != null
-                      ? buildTimeLineTiles()
-                      : buildTimeLineShimmer()),
-            ),
+            if (!PortalHelper.isPickupPointApp)
+              SliverToBoxAdapter(
+                child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _orderDetails != null
+                        ? buildTimeLineTiles()
+                        : buildTimeLineShimmer()),
+              ),
             SliverList(
                 delegate: SliverChildListDelegate([
               Padding(
@@ -318,17 +320,19 @@ class _OrderDetailsState extends State<OrderDetails> {
                 delegate: SliverChildListDelegate([
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 75,
-                    ),
-                    buildBottomSection()
-                  ],
-                ),
+                child: PortalHelper.isPickupPointApp
+                    ? buildBottomSection()
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 75,
+                          ),
+                          buildBottomSection()
+                        ],
+                      ),
               ),
-              widget.show_additional_section
+              widget.show_additional_section && !PortalHelper.isPickupPointApp
                   ? buildAdditionalSection()
                   : Container()
             ]))
@@ -936,7 +940,9 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
                 Spacer(),
                 Text(
-                  LangText(context).local!.shipping_method_ucf,
+                  PortalHelper.isPickupPointApp
+                      ? "Pickup Point"
+                      : LangText(context).local!.shipping_method_ucf,
                   style: TextStyle(
                       color: MyTheme.font_grey,
                       fontSize: 13,
@@ -954,11 +960,13 @@ class _OrderDetailsState extends State<OrderDetails> {
                         color: MyTheme.red,
                         fontSize: 14,
                         fontWeight: FontWeight.w600),
-                  ),
-                  Spacer(),
-                  Text(
-                    _orderDetails.shipping_type_string,
-                    style: TextStyle(
+                ),
+                Spacer(),
+                Text(
+                  PortalHelper.isPickupPointApp
+                      ? (_orderDetails.pickup_point?.name ?? "-")
+                      : _orderDetails.shipping_type_string,
+                  style: TextStyle(
                       color: MyTheme.grey_153,
                     ),
                   ),
@@ -1004,6 +1012,42 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ],
               ),
             ),
+            if (PortalHelper.isPickupPointApp &&
+                _orderDetails.pickup_point != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pickup Address",
+                            style: TextStyle(
+                                color: MyTheme.font_grey,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _orderDetails.pickup_point?.address ?? "-",
+                            style: TextStyle(color: MyTheme.grey_153),
+                          ),
+                          if ((_orderDetails.pickup_point?.phone ?? "").isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                _orderDetails.pickup_point?.phone ?? "",
+                                style: TextStyle(color: MyTheme.grey_153),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               children: [
                 Text(
@@ -1146,6 +1190,7 @@ class _OrderDetailsState extends State<OrderDetails> {
             ),
             _orderDetails.shipping_address.phone != null &&
                     _orderDetails.shipping_address.phone != ""
+                && !PortalHelper.isPickupPointApp
                 ? Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Column(
@@ -1339,7 +1384,9 @@ class _OrderDetailsState extends State<OrderDetails> {
         ),
       ),
       title: Text(
-        LangText(context).local!.order_details_ucf,
+        PortalHelper.isPickupPointApp && _orderDetails?.code != null
+            ? "Order ${_orderDetails.code}"
+            : LangText(context).local!.order_details_ucf,
         style: TextStyle(fontSize: 16, color: MyTheme.red),
       ),
       elevation: 0.0,

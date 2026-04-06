@@ -15,6 +15,7 @@ class AuthHelper {
       user_email.$ = loginResponse.user!.email;
       user_phone.$ = loginResponse.user!.phone;
       avatar_original.$ = loginResponse.user!.avatar_original;
+      user_type.$ = loginResponse.user!.type;
 
     }
   }
@@ -27,6 +28,7 @@ class AuthHelper {
       user_email.$ = "";
       user_phone.$ = "";
       avatar_original.$ = "";
+      user_type.$ = "";
   }
 
   ifNotLoggedIn(context) async {

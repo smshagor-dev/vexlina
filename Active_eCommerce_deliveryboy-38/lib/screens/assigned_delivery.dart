@@ -1,6 +1,7 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
 import 'package:active_flutter_delivery_app/data_model/order_mini_response.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -191,9 +192,11 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: Text(
-                  LangText(context)
-                      .local!
-                      .are_you_sure_to_mark_this_as_picked_up,
+                  PortalHelper.isPickupPointApp
+                      ? "Are you sure to mark this order as picked up?"
+                      : LangText(context)
+                          .local!
+                          .are_you_sure_to_mark_this_as_picked_up,
                   maxLines: 3,
                   style: TextStyle(color: MyTheme.font_grey, fontSize: 14),
                 ),
@@ -374,7 +377,7 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: Text(
-                    "${LangText(context).local!.assigned} (${_totalData.toString()})",
+                    "${PortalHelper.upcomingLabel} (${_totalData.toString()})",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 14,
@@ -485,7 +488,7 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.pending_delivery_ucf,
+            PortalHelper.upcomingOrdersLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],
@@ -716,7 +719,7 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                               const BorderRadius.all(Radius.circular(6.0))),
                       child: Center(
                         child: Text(
-                          LangText(context).local!.picked_ucf,
+                              PortalHelper.pickedLabel,
                           style: TextStyle(
                               color: MyTheme.font_grey,
                               fontSize: 13,
@@ -752,7 +755,9 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                               ),
                             ),
                             Text(
-                              LangText(context).local!.mark_as_picked,
+                              PortalHelper.isPickupPointApp
+                                  ? "Mark as Picked Up"
+                                  : LangText(context).local!.mark_as_picked,
                               style: TextStyle(
                                   color: MyTheme.font_grey,
                                   fontSize: 13,

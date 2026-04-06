@@ -7,6 +7,8 @@
     $top_banner_image_for_mobile = get_setting('top_banner_image_for_mobile');
     $topBanners = \App\Models\TopBanner::where('status', 1)->orderBy('id','desc')->get();
     $menu_style = get_setting('mobile_menu_style', 'modern'); // Add this setting in your admin panel
+    $isPickupPointManager = Auth::check() && auth()->user()->user_type == 'staff' && optional(optional(auth()->user()->staff)->pick_up_point)->id;
+    $dashboardRoute = $isPickupPointManager ? route('pickup-point.dashboard') : route('dashboard');
 @endphp 
     @if (count($topBanners) > 0 || $top_banner_image != null)
     <div class="position-relative top-banner removable-session z-1035 d-none" 
@@ -134,7 +136,7 @@
                     </h6>
                 </div>
                 <ul class="list-unstyled mb-4">
-                    @if (isAdmin())
+                    @if (isAdmin() && !$isPickupPointManager)
                         <li class="border-bottom border-soft-light">
                             <a href="{{ route('admin.dashboard') }}"
                                 class="d-flex align-items-center px-4 py-3 text-dark fs-14 fw-500">
@@ -144,9 +146,9 @@
                         </li>
                     @else
                         <li class="border-bottom border-soft-light">
-                            <a href="{{ route('dashboard') }}" 
+                            <a href="{{ $dashboardRoute }}" 
                                 class="d-flex align-items-center px-4 py-3 text-dark fs-14 fw-500
-                                        {{ areActiveRoutes(['dashboard'], ' active bg-soft-primary') }}">
+                                        {{ areActiveRoutes(['dashboard', 'pickup-point.dashboard'], ' active bg-soft-primary') }}">
                                 <i class="las la-tachometer-alt mr-3 text-info"></i>
                                 {{ translate('Dashboard') }}
                             </a>
@@ -277,7 +279,7 @@
                     <h6 class="fs-12 text-uppercase text-muted fw-600 mb-3">{{ translate('Quick Actions') }}</h6>
                     <div class="row no-gutters">
                         <div class="col-4 mb-3">
-                            <a href="{{ route('dashboard') }}" 
+                            <a href="{{ $dashboardRoute }}" 
                                class="d-flex flex-column align-items-center text-center p-2 rounded-lg hover-bg-soft-primary">
                                 <div class="size-45px rounded-circle bg-soft-info d-flex align-items-center justify-content-center mb-2">
                                     <i class="las la-tachometer-alt la-lg text-info"></i>
@@ -357,7 +359,7 @@
             @endif
 
             @auth
-                @if (isAdmin())
+                @if (isAdmin() && !$isPickupPointManager)
                     <div class="px-3 pt-3">
                         <div class="bg-gradient-info rounded-lg p-3">
                             <div class="d-flex align-items-center">

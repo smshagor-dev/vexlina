@@ -1,5 +1,6 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -352,7 +353,7 @@ class _PickedDeliveryState extends State<PickedDelivery> {
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: Text(
-              "${LangText(context).local!.picked_ucf} ($_totalData)",
+              "${PortalHelper.pickedLabel} ($_totalData)",
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 14,
@@ -427,7 +428,7 @@ class _PickedDeliveryState extends State<PickedDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.pending_delivery_ucf,
+            PortalHelper.pickedUpOrdersLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],

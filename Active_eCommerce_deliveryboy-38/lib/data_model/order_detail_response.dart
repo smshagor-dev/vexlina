@@ -38,6 +38,7 @@ class DetailedOrder {
     this.code,
     this.user_id,
     this.shipping_address,
+    this.pickup_point,
     this.shipping_type,
     this.shipping_type_string,
     this.payment_type,
@@ -59,6 +60,7 @@ class DetailedOrder {
   String? code;
   int? user_id;
   ShippingAddress? shipping_address;
+  OrderPickupPoint? pickup_point;
   String? shipping_type;
   String? shipping_type_string;
   String? payment_type;
@@ -80,6 +82,9 @@ class DetailedOrder {
     code: json["code"],
     user_id: json["user_id"],
     shipping_address: ShippingAddress.fromJson(json["shipping_address"]),
+    pickup_point: json["pickup_point"] == null
+        ? null
+        : OrderPickupPoint.fromJson(json["pickup_point"]),
     shipping_type: json["shipping_type"],
     shipping_type_string: json["shipping_type_string"],
     payment_type: json["payment_type"],
@@ -102,6 +107,7 @@ class DetailedOrder {
     "code": code,
     "user_id": user_id,
     "shipping_address": shipping_address!.toJson(),
+    "pickup_point": pickup_point?.toJson(),
     "shipping_type": shipping_type,
     "shipping_type_string": shipping_type_string,
     "payment_type": payment_type,
@@ -118,6 +124,35 @@ class DetailedOrder {
     "cancel_request": cancel_request,
     "links": links!.toJson(),
   };
+}
+
+class OrderPickupPoint {
+  OrderPickupPoint({
+    this.id,
+    this.name,
+    this.address,
+    this.phone,
+  });
+
+  int? id;
+  String? name;
+  String? address;
+  String? phone;
+
+  factory OrderPickupPoint.fromJson(Map<String, dynamic> json) =>
+      OrderPickupPoint(
+        id: json["id"],
+        name: json["name"],
+        address: json["address"],
+        phone: json["phone"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "address": address,
+        "phone": phone,
+      };
 }
 
 class Links {

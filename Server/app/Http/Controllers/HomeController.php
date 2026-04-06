@@ -192,7 +192,7 @@ class HomeController extends Controller
 
         if (Route::currentRouteName() == 'seller.login' && get_setting('vendor_system_activation') == 1) {
             return view('auth.' . get_setting('authentication_layout_select') . '.seller_login');
-        } else if (Route::currentRouteName() == 'deliveryboy.login' && addon_is_activated('delivery_boy')) {
+        } else if (in_array(Route::currentRouteName(), ['deliveryboy.login', 'pickup-point.login'], true) && addon_is_activated('delivery_boy')) {
             return view('auth.' . get_setting('authentication_layout_select') . '.deliveryboy_login');
         }
         return view('auth.' . get_setting('authentication_layout_select') . '.user_login');
@@ -291,6 +291,11 @@ class HomeController extends Controller
     {
         if (Auth::user()->user_type == 'seller') {
             return redirect()->route('seller.dashboard');
+        } elseif (
+            Auth::user()->user_type == 'staff' &&
+            optional(optional(Auth::user()->staff)->pick_up_point)->id
+        ) {
+            return redirect()->route('pickup-point.dashboard');
         } elseif (Auth::user()->user_type == 'customer') {
             $users_cart = Cart::where('user_id', auth()->user()->id)->first();
             if ($users_cart) {

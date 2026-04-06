@@ -16,6 +16,14 @@ class IsAdmin
      */
     public function handle($request, Closure $next)
     {
+        if (
+            Auth::check() &&
+            Auth::user()->user_type == 'staff' &&
+            optional(optional(Auth::user()->staff)->pick_up_point)->id
+        ) {
+            return redirect()->route('pickup-point.dashboard');
+        }
+
         if (Auth::check() && (Auth::user()->user_type == 'admin' || Auth::user()->user_type == 'staff')) {
             return $next($request);
         }

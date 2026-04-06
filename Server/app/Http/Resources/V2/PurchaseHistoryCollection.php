@@ -4,6 +4,7 @@ namespace App\Http\Resources\V2;
 
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Models\User;
 
 class PurchaseHistoryCollection extends ResourceCollection
 {
@@ -13,12 +14,18 @@ class PurchaseHistoryCollection extends ResourceCollection
             'data' => $this->collection->map(function ($data) {
                 $pickup_point = null;
                 if ($data->shipping_type == 'pickup_point' && $data->pickup_point_id) {
-                    $pickup_point = $data->pickup_point;
+                    $pickup_point = [
+                        'id' => $data->pickup_point->id,
+                        'name' => $data->pickup_point->getTranslation('name'),
+                        'address' => $data->pickup_point->getTranslation('address'),
+                        'phone' => $data->pickup_point->phone,
+                    ];
                 }
 
-                $assignedDeliveryBoy = ($data->assign_delivery_boy && $data->delivery_boy)
-                    ? $data->delivery_boy
-                    : null;
+                $assignedDeliveryBoy = null;
+                if ($data->assign_delivery_boy) {
+                    $assignedDeliveryBoy = $data->delivery_boy ?: User::find($data->assign_delivery_boy);
+                }
 
                 return [
                     'id' => $data->id,

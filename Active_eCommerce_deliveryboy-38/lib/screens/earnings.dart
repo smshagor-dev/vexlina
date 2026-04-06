@@ -1,4 +1,5 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -381,7 +382,7 @@ class _EarningsState extends State<Earnings> {
                   ),
                 ),
           Text(
-            LangText(context).local!.earnings_ucf,
+            PortalHelper.earningsLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],

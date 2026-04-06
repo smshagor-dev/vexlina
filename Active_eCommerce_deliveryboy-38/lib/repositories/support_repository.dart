@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:active_flutter_delivery_app/app_config.dart';
 import 'package:active_flutter_delivery_app/data_model/common_response.dart';
 import 'package:active_flutter_delivery_app/helpers/api_request.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shared_value_helper.dart';
 
 class SupportRepository {
@@ -22,7 +23,7 @@ class SupportRepository {
     });
 
     final response = await ApiRequest.post(
-      url: "${AppConfig.BASE_URL}/auth/delivery-boy/support-message",
+      url: "${AppConfig.BASE_URL}/auth/${PortalHelper.isPickupPointApp ? AppConfig.PICKUP_POINT_PREFIX : AppConfig.DELIVERY_PREFIX}/support-message",
       headers: {
         "Content-Type": "application/json",
         "App-Language": app_language.$!,

@@ -15,10 +15,11 @@
                                 <img src="{{ static_asset('assets/img/logo.png') }}" class="mw-100 mb-4" height="40">
                             @endif
                             <h1 class="fs-20 fs-md-24 fw-700 text-primary">{{ translate('Welcome Back !')}}</h1>
-                            <h5 class="fs-14 fw-400 text-dark">{{ translate('Login To Your Delivery Boy Account')}}</h5>
+                            <h5 class="fs-14 fw-400 text-dark">{{ translate('Login To Your Delivery Boy Or Pickup Point Account')}}</h5>
                         </div>
                         <form class="pad-hor" id="deliveryboy-login-form" method="POST" role="form" action="{{ route('login') }}">
                             @csrf
+                            <input type="hidden" name="delivery_portal" value="delivery_operations">
                             <!-- Email or Phone -->
                             <div class="form-group">
                                 <label for="email" class="fs-12 fw-500 text-secondary">{{  translate('Email') }}</label>

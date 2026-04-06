@@ -13,6 +13,7 @@ Route::group(['prefix' => 'v2/auth', 'middleware' => ['app_language']], function
 
     Route::post('info', [AuthController::class, 'getUserInfoByAccessToken']);
     Route::post('delivery-boy/support-message', [AuthController::class, 'deliverySupportMessage']);
+    Route::post('pickup-point/support-message', [AuthController::class, 'pickupPointSupportMessage']);
     Route::post('seller/support-message', [AuthController::class, 'sellerSupportMessage']);
     Route::controller(AuthController::class)->group(function () {
         Route::post('login', 'login');
@@ -74,6 +75,23 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
         });
         Route::controller(ChatController::class)->group(function () {
             Route::post('chat/open', 'openDeliveryBoyConversation')->middleware('auth:sanctum');
+        });
+    });
+
+    Route::prefix('pickup-point')->group(function () {
+        Route::controller(PickupPointController::class)->group(function () {
+            Route::get('dashboard-summary/{id}', 'dashboard_summary')->middleware('auth:sanctum');
+            Route::get('earning-summary/{id}', 'earning_summary')->middleware('auth:sanctum');
+            Route::get('earning/{id}', 'earning')->middleware('auth:sanctum');
+            Route::get('deliveries/upcoming/{id}', 'upcoming_orders')->middleware('auth:sanctum');
+            Route::get('deliveries/picked_up/{id}', 'picked_up_orders')->middleware('auth:sanctum');
+            Route::get('deliveries/on_the_way/{id}', 'on_the_way_orders')->middleware('auth:sanctum');
+            Route::get('deliveries/reached/{id}', 'reached_orders')->middleware('auth:sanctum');
+            Route::get('deliveries/completed/{id}', 'completed_orders')->middleware('auth:sanctum');
+            Route::get('deliveries/returned/{id}', 'returned_orders')->middleware('auth:sanctum');
+            Route::post('change-delivery-status', 'change_delivery_status')->middleware('auth:sanctum');
+            Route::get('purchase-history-details/{id}', 'details')->middleware('auth:sanctum');
+            Route::get('purchase-history-items/{id}', 'items')->middleware('auth:sanctum');
         });
     });
 
@@ -211,6 +229,7 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
         Route::get('reals/my-permissions', [ReelController::class, 'myPermissions'])->middleware('auth:sanctum');
         Route::get('reals/my-posts', [ReelController::class, 'myPosts'])->middleware('auth:sanctum');
         Route::post('reals/store', [ReelController::class, 'store'])->middleware('auth:sanctum');
+        Route::post('reals/{id}/update', [ReelController::class, 'update'])->middleware('auth:sanctum');
         Route::delete('reals/{id}', [ReelController::class, 'destroy'])->middleware('auth:sanctum');
         Route::post('reals/{id}/like', [ReelController::class, 'toggleLike'])->middleware('auth:sanctum');
         Route::post('reals/{id}/save', [ReelController::class, 'toggleSave'])->middleware('auth:sanctum');

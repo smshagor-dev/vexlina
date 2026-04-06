@@ -1,5 +1,6 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -187,9 +188,11 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: Text(
-                  LangText(context)
-                      .local!
-                      .are_you_sure_to_mark_this_as_delivered,
+                  PortalHelper.isPickupPointApp
+                      ? "Are you sure to accept this order as reached?"
+                      : LangText(context)
+                          .local!
+                          .are_you_sure_to_mark_this_as_delivered,
                   maxLines: 3,
                   style: TextStyle(color: MyTheme.font_grey, fontSize: 14),
                 ),
@@ -224,7 +227,8 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
   onConfirmMarkDelivered(order_id) async {
     var deliveryStatusChangeResponse = await DeliveryRepository()
         .getDeliveryStatusChangeResponse(
-            status: "delivered", order_id: order_id);
+            status: PortalHelper.isPickupPointApp ? "reached" : "delivered",
+            order_id: order_id);
 
     if (deliveryStatusChangeResponse.result == true) {
       ToastComponent.showDialog(deliveryStatusChangeResponse.message!, context,
@@ -464,7 +468,7 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.pending_delivery_ucf,
+            PortalHelper.onTheWayOrdersLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],
@@ -680,7 +684,7 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                             MaterialPageRoute(builder: (context) {
                           return OrderDetails(
                             id: _list[index].id,
-                            show_additional_section: true,
+                            show_additional_section: !PortalHelper.isPickupPointApp,
                           );
                         })).then((value) {
                           onPop(value);
@@ -699,7 +703,9 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                                   const BorderRadius.all(Radius.circular(6.0))),
                           child: Center(
                             child: Text(
-                              LangText(context).local!.delivered_ucf,
+                              PortalHelper.isPickupPointApp
+                                  ? "Reached"
+                                  : LangText(context).local!.delivered_ucf,
                               style: TextStyle(
                                   color: MyTheme.font_grey,
                                   fontSize: 13,
@@ -731,7 +737,9 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                                   child: buildCheckContainer(),
                                 ),
                                 Text(
-                                  LangText(context).local!.mark_as_delivered,
+                                  PortalHelper.isPickupPointApp
+                                      ? "Accept"
+                                      : LangText(context).local!.mark_as_delivered,
                                   style: TextStyle(
                                       color: MyTheme.font_grey,
                                       fontSize: 13,
@@ -746,7 +754,8 @@ class _OnTheWayDeliveryState extends State<OnTheWayDelivery> {
                         ),
                 ],
               ),
-              if (!_marked_ids.contains(_list[index].id))
+              if (!_marked_ids.contains(_list[index].id) &&
+                  !PortalHelper.isPickupPointApp)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: SizedBox(

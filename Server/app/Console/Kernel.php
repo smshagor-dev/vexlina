@@ -30,6 +30,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('lottary:drew')->dailyAt('00:00');
         $schedule->command('lottaries:activate')->dailyAt('00:00');
         $schedule->command('steadfast:sync-status')->everyTenMinutes()->withoutOverlapping()->runInBackground();
+        $schedule->command('pickup-point:notify-return-due-orders')->hourly()->withoutOverlapping()->runInBackground();
     }
 
     /**

@@ -37,6 +37,8 @@
                     <th data-breakpoints="lg">{{translate('Manager')}}</th>
                     <th data-breakpoints="lg">{{translate('Location')}}</th>
                     <th data-breakpoints="lg">{{translate('Pickup Station Contact')}}</th>
+                    <th data-breakpoints="lg">{{translate('Commission')}}</th>
+                    <th data-breakpoints="lg">{{translate('Return Commission')}}</th>
                     <th>{{translate('Status')}}</th>
                     <th width="10%" class="text-right">{{translate('Options')}}</th>
                 </tr>
@@ -55,6 +57,20 @@
                         @endif
                         <td>{{$pickup_point->getTranslation('address')}}</td>
                         <td>{{$pickup_point->phone}}</td>
+                        <td>
+                            @if ($pickup_point->commission_type == 'percent')
+                                {{ $pickup_point->commission_amount + 0 }}%
+                            @else
+                                {{ single_price($pickup_point->commission_amount) }}
+                            @endif
+                        </td>
+                        <td>
+                            @if (($pickup_point->return_commission_type ?? 'percent') == 'percent')
+                                {{ ($pickup_point->return_commission_amount ?? 0) + 0 }}%
+                            @else
+                                {{ single_price($pickup_point->return_commission_amount ?? 0) }}
+                            @endif
+                        </td>
                         <td>
                             @if ($pickup_point->pick_up_status != 1)
                                 <div class="badge badge-inline badge-danger">

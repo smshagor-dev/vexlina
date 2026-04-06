@@ -15,6 +15,7 @@
 //Admin
 
 use App\Http\Controllers\DeliveryBoyController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\OrderController;
 
 Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin', 'prevent-back-history']], function(){
@@ -56,6 +57,10 @@ Route::group(['middleware' => ['user', 'verified', 'unbanned', 'prevent-back-his
     Route::controller(DeliveryBoyController::class)->group(function () {
         Route::get('/delivery-boy/order-detail/{id}', 'order_detail')->name('delivery-boy.order-detail');
         Route::post('/delivery-boy/orders/verify-delivery', 'verify_delivery')->name('delivery-boy.orders.verify_delivery');
+    });
+
+    Route::controller(ConversationController::class)->group(function () {
+        Route::get('/delivery-boy/conversations/order/{order_id}', 'openDeliveryBoyConversation')->name('delivery-boy.conversations.order');
     });
     
 });

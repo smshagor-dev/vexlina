@@ -66,13 +66,14 @@
                                     text-transform: uppercase;
                                     letter-spacing: 1px;
                                 ">{{ translate('Welcome Back!')}}</h1>
-                            <p class="text-muted mb-4">{{ translate('Login to your delivery boy account')}}</p>
+                            <p class="text-muted mb-4">{{ translate('Login to your delivery boy or pickup point account')}}</p>
                         </div>
 
                         <!-- Login form -->
                         <div class="pt-2">
                             <form class="form-default" role="form" action="{{ route('login') }}" method="POST">
                                 @csrf
+                                <input type="hidden" name="delivery_portal" value="delivery_operations">
                                 
                                 <!-- Email -->
                                 <div class="form-group mb-4">

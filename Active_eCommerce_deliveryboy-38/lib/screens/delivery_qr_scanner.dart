@@ -3,7 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class DeliveryQrScanner extends StatefulWidget {
-  const DeliveryQrScanner({Key? key}) : super(key: key);
+  final String title;
+  final String description;
+
+  const DeliveryQrScanner({
+    Key? key,
+    this.title = 'Scan QR to Complete',
+    this.description =
+        'Align the customer QR code inside the frame to verify and complete the order.',
+  }) : super(key: key);
 
   @override
   State<DeliveryQrScanner> createState() => _DeliveryQrScannerState();
@@ -45,9 +53,9 @@ class _DeliveryQrScannerState extends State<DeliveryQrScanner> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Scan QR to Complete',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          widget.title,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: Stack(
@@ -62,10 +70,10 @@ class _DeliveryQrScannerState extends State<DeliveryQrScanner> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               color: Colors.black.withOpacity(0.7),
-              child: const Text(
-                'Align the customer QR code inside the frame to verify and complete the order.',
+              child: Text(
+                widget.description,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

@@ -48,12 +48,27 @@ class PickupPointController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'phone' => 'required|string|max:50',
+            'staff_id' => 'required|exists:staff,id',
+            'commission_type' => 'required|in:percent,flat',
+            'commission_amount' => 'required|numeric|min:0',
+            'return_commission_type' => 'required|in:percent,flat',
+            'return_commission_amount' => 'required|numeric|min:0',
+        ]);
+
         $pickup_point = new PickupPoint;
         $pickup_point->name = $request->name;
         $pickup_point->address = $request->address;
         $pickup_point->phone = $request->phone;
-        $pickup_point->pick_up_status = $request->pick_up_status;
+        $pickup_point->pick_up_status = $request->has('pick_up_status') ? 1 : 0;
         $pickup_point->staff_id = $request->staff_id;
+        $pickup_point->commission_type = $request->commission_type;
+        $pickup_point->commission_amount = $request->commission_amount;
+        $pickup_point->return_commission_type = $request->return_commission_type;
+        $pickup_point->return_commission_amount = $request->return_commission_amount;
         if ($pickup_point->save()) {
 
             $pickup_point_translation = PickupPointTranslation::firstOrNew(['lang' => env('DEFAULT_LANGUAGE'), 'pickup_point_id' => $pickup_point->id]);
@@ -104,6 +119,17 @@ class PickupPointController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'phone' => 'required|string|max:50',
+            'staff_id' => 'required|exists:staff,id',
+            'commission_type' => 'required|in:percent,flat',
+            'commission_amount' => 'required|numeric|min:0',
+            'return_commission_type' => 'required|in:percent,flat',
+            'return_commission_amount' => 'required|numeric|min:0',
+        ]);
+
         $pickup_point = PickupPoint::findOrFail($id);
         if($request->lang == env("DEFAULT_LANGUAGE")){
             $pickup_point->name = $request->name;
@@ -111,8 +137,12 @@ class PickupPointController extends Controller
         }
 
         $pickup_point->phone = $request->phone;
-        $pickup_point->pick_up_status = $request->pick_up_status;
+        $pickup_point->pick_up_status = $request->has('pick_up_status') ? 1 : 0;
         $pickup_point->staff_id = $request->staff_id;
+        $pickup_point->commission_type = $request->commission_type;
+        $pickup_point->commission_amount = $request->commission_amount;
+        $pickup_point->return_commission_type = $request->return_commission_type;
+        $pickup_point->return_commission_amount = $request->return_commission_amount;
         if ($pickup_point->save()) {
 
             $pickup_point_translation = PickupPointTranslation::firstOrNew(['lang' => $request->lang,  'pickup_point_id' => $pickup_point->id]);
