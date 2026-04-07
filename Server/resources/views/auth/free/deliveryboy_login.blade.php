@@ -25,7 +25,7 @@
                                 <!-- Titles -->
                                 <div class="text-center text-lg-left">
                                     <h1 class="fs-20 fs-md-24 fw-700 text-primary" style="text-transform: uppercase;">{{ translate('Welcome Back !')}}</h1>
-                                    <h5 class="fs-14 fw-400 text-dark">{{ translate('Login to your delivery boy account')}}</h5>
+                                    <h5 class="fs-14 fw-400 text-dark">{{ translate('Login to your delivery boy or pickup point account')}}</h5>
                                 </div>
 
                                 <!-- Login form -->
@@ -33,6 +33,7 @@
                                     <div class="">
                                         <form class="form-default" role="form" action="{{ route('login') }}" method="POST">
                                             @csrf
+                                            <input type="hidden" name="delivery_portal" value="delivery_operations">
                                             
                                             <!-- Email -->
                                             <div class="form-group">

@@ -2,12 +2,15 @@ import 'package:active_ecommerce_cms_demo_app/custom/dash_divider.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/toast_component.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/address_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shimmer_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/main_helpers.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/system_config.dart';
+import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
+import 'package:active_ecommerce_cms_demo_app/data_model/delivery_info_response.dart';
 import '../../providers/checkout_provider.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/address.dart'
     as address_ui;
@@ -19,6 +22,11 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  final Map<int, String> _pickupSearchQueries = {};
+  double? _pickupReferenceLatitude;
+  double? _pickupReferenceLongitude;
+  bool _isResolvingPickupLocation = false;
+
   double _extractAmount(String raw) {
     final sanitized = raw.replaceAll(RegExp(r'[^0-9.]'), '');
     if (sanitized.isEmpty) {
@@ -52,7 +60,132 @@ class _CheckoutPageState extends State<CheckoutPage> {
           provider.validateEmailOnFocusLoss();
         }
       });
+      _resolvePickupReferenceLocation();
     });
+  }
+
+  Future<void> _resolvePickupReferenceLocation() async {
+    if (_isResolvingPickupLocation) {
+      return;
+    }
+
+    setState(() {
+      _isResolvingPickupLocation = true;
+    });
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _pickupReferenceLatitude = position.latitude;
+        _pickupReferenceLongitude = position.longitude;
+      });
+    } catch (_) {
+      // Keep pickup list usable even when device location is unavailable.
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResolvingPickupLocation = false;
+        });
+      }
+    }
+  }
+
+  double? _pickupDistanceKm(PickupPoint point) {
+    if (_pickupReferenceLatitude == null ||
+        _pickupReferenceLongitude == null ||
+        point.latitude == null ||
+        point.longitude == null) {
+      return null;
+    }
+
+    return Geolocator.distanceBetween(
+          _pickupReferenceLatitude!,
+          _pickupReferenceLongitude!,
+          point.latitude!,
+          point.longitude!,
+        ) /
+        1000;
+  }
+
+  List<PickupPoint> _sortedPickupPoints(List<PickupPoint> pickupPoints) {
+    final sorted = List<PickupPoint>.from(pickupPoints);
+    if (_pickupReferenceLatitude == null || _pickupReferenceLongitude == null) {
+      return sorted;
+    }
+
+    sorted.sort((a, b) {
+      final distanceA = _pickupDistanceKm(a);
+      final distanceB = _pickupDistanceKm(b);
+
+      if (distanceA == null && distanceB == null) {
+        return 0;
+      }
+      if (distanceA == null) {
+        return 1;
+      }
+      if (distanceB == null) {
+        return -1;
+      }
+
+      return distanceA.compareTo(distanceB);
+    });
+
+    return sorted;
+  }
+
+  List<PickupPoint> _visiblePickupPoints(
+    int sellerIndex,
+    List<PickupPoint> pickupPoints,
+  ) {
+    final query = (_pickupSearchQueries[sellerIndex] ?? '').trim().toLowerCase();
+    final sorted = _sortedPickupPoints(pickupPoints);
+
+    if (query.isEmpty) {
+      return sorted;
+    }
+
+    return sorted.where((point) {
+      final haystack = [
+        point.name ?? '',
+        point.address ?? '',
+        point.phone ?? '',
+        point.workingHours ?? '',
+      ].join(' ').toLowerCase();
+
+      return haystack.contains(query);
+    }).toList();
+  }
+
+  PickupPoint? _defaultPickupPoint(List<PickupPoint> pickupPoints) {
+    final sorted = _sortedPickupPoints(pickupPoints);
+    return sorted.isNotEmpty ? sorted.first : null;
+  }
+
+  String _formatPickupDistance(double distanceKm) {
+    if (distanceKm < 1) {
+      return '${(distanceKm * 1000).round()} m away';
+    }
+
+    return '${distanceKm.toStringAsFixed(distanceKm < 10 ? 1 : 0)} km away';
   }
 
   @override
@@ -1102,6 +1235,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       itemCount: provider.deliveryInfoList.length,
       itemBuilder: (context, index) {
         var seller = provider.deliveryInfoList[index];
+        final pickupPoints = seller.pickupPoints ?? [];
+        final visiblePickupPoints = _visiblePickupPoints(index, pickupPoints);
+        final defaultPickupPoint = _defaultPickupPoint(pickupPoints);
         var currentOption =
             provider.sellerWiseShippingOption[index].shippingOption;
         return Container(
@@ -1162,14 +1298,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     "Home Delivery",
                     Icons.home_outlined,
                     provider,
+                    onTap: () =>
+                        provider.onShippingOptionChange(
+                          index,
+                          ShippingOption.HomeDelivery,
+                        ),
                   ),
                   const SizedBox(width: 10),
                   buildDeliveryTypeButton(
                     index,
                     ShippingOption.PickUpPoint,
-                    "Local Pickup",
+                    AppLocalizations.of(context)!.pickup_point_ucf,
                     Icons.location_on_outlined,
                     provider,
+                    onTap: () => provider.onShippingOptionChange(
+                      index,
+                      ShippingOption.PickUpPoint,
+                      pickupPointId: defaultPickupPoint?.id,
+                    ),
                   ),
                 ],
               ),
@@ -1178,18 +1324,116 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 15),
-                    const Text(
-                      "Select Pickup Point",
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.pickup_point_ucf,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    ...seller.pickupPoints.map<Widget>((point) {
+                    if (pickupPoints.isNotEmpty)
+                      TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            _pickupSearchQueries[index] = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Search by area or location",
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          suffixIcon:
+                              (_pickupSearchQueries[index] ?? '').isNotEmpty
+                              ? IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _pickupSearchQueries[index] = '';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.close, size: 18),
+                                )
+                              : null,
+                          isDense: true,
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: MyTheme.accent_color,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (pickupPoints.isNotEmpty) const SizedBox(height: 10),
+                    if (_pickupReferenceLatitude != null &&
+                        _pickupReferenceLongitude != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.near_me_outlined,
+                              size: 14,
+                              color: MyTheme.accent_color,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                "Showing nearest pickup points first",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: MyTheme.accent_color,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_isResolvingPickupLocation)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          "Checking your location for nearest pickup points...",
+                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ),
+                    if (pickupPoints.isEmpty)
+                      Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.pickup_point_is_unavailable_ucf,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    if (pickupPoints.isNotEmpty && visiblePickupPoints.isEmpty)
+                      const Text(
+                        "No pickup point matched your search",
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ...visiblePickupPoints.map<Widget>((point) {
                       bool isThisPointSelected =
                           provider.sellerWiseShippingOption[index].shippingId ==
                           point.id;
+                      final distanceKm = _pickupDistanceKm(point);
                       return GestureDetector(
                         onTap: () => provider.onShippingOptionChange(
                           index,
@@ -1227,15 +1471,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      point.name,
+                                      point.name ?? '',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                         color: isThisPointSelected
                                             ? MyTheme.accent_color
-                                            : Colors.black,
+                                          : Colors.black,
                                       ),
                                     ),
+                                    if (distanceKm != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatPickupDistance(distanceKm),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: MyTheme.accent_color,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: 4),
                                     Text(
                                       "Address: ${point.address}",
@@ -1251,6 +1506,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         color: Colors.grey,
                                       ),
                                     ),
+                                    if ((point.workingHours ?? '')
+                                        .trim()
+                                        .isNotEmpty)
+                                      Text(
+                                        "Hours: ${point.workingHours}",
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -1280,12 +1545,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
     String title,
     IconData icon,
     CheckoutProvider provider,
+    {VoidCallback? onTap}
   ) {
     bool isSelected =
         provider.sellerWiseShippingOption[index].shippingOption == option;
     return Expanded(
       child: GestureDetector(
-        onTap: () => provider.onShippingOptionChange(index, option),
+        onTap: onTap ?? () => provider.onShippingOptionChange(index, option),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(

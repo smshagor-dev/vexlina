@@ -1,27 +1,20 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/data_model/dashboard_summary_response.dart';
+import 'package:active_flutter_delivery_app/data_model/earning_or_collection_response.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
+import 'package:active_flutter_delivery_app/helpers/shared_value_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
-import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
+import 'package:active_flutter_delivery_app/repositories/dashboard_repository.dart';
 import 'package:active_flutter_delivery_app/repositories/delivery_repository.dart';
 import 'package:active_flutter_delivery_app/screens/order_details.dart';
+import 'package:active_flutter_delivery_app/screens/pickup_payout_info.dart';
+import 'package:active_flutter_delivery_app/screens/pickup_payouts.dart';
 import 'package:active_flutter_delivery_app/ui_sections/drawer.dart';
 import 'package:flutter/material.dart';
 
-
 class Earnings extends StatefulWidget {
-  Earnings({
-    Key? key,
-    this.show_back_button = false,
-  }) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  Earnings({Key? key, this.show_back_button = false}) : super(key: key);
 
   bool show_back_button;
 
@@ -30,160 +23,104 @@ class Earnings extends StatefulWidget {
 }
 
 class _EarningsState extends State<Earnings> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final ScrollController _scrollController = ScrollController();
 
-  ScrollController _scrollController = ScrollController();
-  ScrollController _xcrollController = ScrollController();
-
-  List<Sortable> _datewiseSortList = Sortable.getDatewiseSortList();
-  List<Sortable> _paymentTypeSortList = Sortable.getPaymentTypeSortList();
-
-  Sortable? _selectedDate;
-  Sortable? _selectedPaymentType;
-
-  late List<DropdownMenuItem<Sortable>> _dropdownDatewiseSortItems;
-  late List<DropdownMenuItem<Sortable>> _dropdownPaymentTypeSortItems;
-
-  //init
-
-  List<dynamic> _list = [];
+  final List<Datum> _list = [];
   bool _isInitial = true;
   int _page = 1;
-  int? _totalData = 0;
+  int _totalData = 0;
   bool _showLoadingContainer = false;
-  String _today_date = ". . .";
-  String _yesterday_date = ". . .";
-  String _today_earning = ". . .";
-  String _yesterday_earning = ". . .";
+  bool _isLoadingSummary = false;
 
-  String _defaultDateKey = '';
-  String _defaultPaymentTypeKey = '';
+  String _todayDate = ". . .";
+  String _yesterdayDate = ". . .";
+  String _todayEarning = ". . .";
+  String _yesterdayEarning = ". . .";
+  DashboardSummaryResponse? _dashboardSummary;
 
   @override
   void initState() {
-    // TODO: implement initState
-    init();
     super.initState();
-
     fetchAll();
 
-    _xcrollController.addListener(() {
-      //print("position: " + _xcrollController.position.pixels.toString());
-      //print("max: " + _xcrollController.position.maxScrollExtent.toString());
-
-      if (_xcrollController.position.pixels ==
-          _xcrollController.position.maxScrollExtent) {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent &&
+          _list.length < _totalData) {
         setState(() {
           _page++;
+          _showLoadingContainer = true;
         });
-        _showLoadingContainer = true;
         fetchList();
       }
     });
   }
 
-  init() {
-    _dropdownDatewiseSortItems = buildDropdownItems(_datewiseSortList);
-
-    _dropdownPaymentTypeSortItems = buildDropdownItems(_paymentTypeSortList);
-
-    initSortableDefaults();
+  Future<void> fetchAll() async {
+    await Future.wait([
+      fetchSummary(),
+      fetchList(),
+    ]);
   }
 
-  initSortableDefaults() {
-    for (int x = 0; x < _dropdownDatewiseSortItems.length; x++) {
-      if (_dropdownDatewiseSortItems[x].value!.option_key == _defaultDateKey) {
-        _selectedDate = _dropdownDatewiseSortItems[x].value;
+  Future<void> fetchSummary() async {
+    if (_isLoadingSummary) return;
+    _isLoadingSummary = true;
+
+    try {
+      if (PortalHelper.isPickupPointApp) {
+        _dashboardSummary = await DashboardRepository().getDashboardSummaryResponse();
+      } else {
+        final earningSummaryResponse =
+            await DeliveryRepository().getEarningSummaryResponse();
+
+        _todayDate = earningSummaryResponse.today_date.toString();
+        _yesterdayDate = earningSummaryResponse.yesterday_date.toString();
+        _todayEarning = earningSummaryResponse.today_earning.toString();
+        _yesterdayEarning = earningSummaryResponse.yesterday_earning.toString();
+      }
+    } finally {
+      _isLoadingSummary = false;
+      if (mounted) {
+        setState(() {});
       }
     }
-
-    for (int x = 0; x < _dropdownPaymentTypeSortItems.length; x++) {
-      if (_dropdownPaymentTypeSortItems[x].value!.option_key ==
-          _defaultPaymentTypeKey) {
-        _selectedPaymentType = _dropdownPaymentTypeSortItems[x].value;
-      }
-    }
-
-    setState(() {});
   }
 
-  List<DropdownMenuItem<Sortable>> buildDropdownItems(List _paymentStatusList) {
-    List<DropdownMenuItem<Sortable>> items = [];
-    for (Sortable item in _paymentStatusList as Iterable<Sortable>) {
-      items.add(
-        DropdownMenuItem(
-          value: item,
-          child: Text(item.name),
-        ),
-      );
-    }
-    return items;
-  }
-
-  fetchAll() {
-    fetchSummary();
-    fetchList();
-  }
-
-  fetchSummary() async {
-    var earningSummaryResponse =
-        await DeliveryRepository().getEarningSummaryResponse();
-
-    if (earningSummaryResponse != null) {
-      _today_date = earningSummaryResponse.today_date.toString();
-      _yesterday_date = earningSummaryResponse.yesterday_date.toString();
-      _today_earning = earningSummaryResponse.today_earning.toString();
-      _yesterday_earning = earningSummaryResponse.yesterday_earning.toString();
+  Future<void> fetchList() async {
+    final listResponse = await DeliveryRepository().getEarningResponse(page: _page);
+    _list.addAll(listResponse.data ?? []);
+    _isInitial = false;
+    _totalData = listResponse.meta?.total ?? 0;
+    _showLoadingContainer = false;
+    if (mounted) {
       setState(() {});
     }
   }
 
-  fetchList() async {
-    var listResponse = await DeliveryRepository().getEarningResponse(
-      page: _page,
-    );
-    //print("or:"+orderResponse.toJson().toString());
-    _list.addAll(listResponse.data!);
-    _isInitial = false;
-    _totalData = listResponse.meta!.total;
-    _showLoadingContainer = false;
-    setState(() {});
-  }
-
-  reset() {
+  void reset() {
     _list.clear();
     _isInitial = true;
     _page = 1;
     _totalData = 0;
     _showLoadingContainer = false;
-
-    _today_date = ". . .";
-    _yesterday_date = ". . .";
-    _today_earning = ". . .";
-    _yesterday_earning = ". . .";
-
-    setState(() {});
-  }
-
-  resetFilterKeys() {
-    _defaultDateKey = '';
-    _defaultPaymentTypeKey = '';
-
+    _todayDate = ". . .";
+    _yesterdayDate = ". . .";
+    _todayEarning = ". . .";
+    _yesterdayEarning = ". . .";
+    _dashboardSummary = null;
     setState(() {});
   }
 
   Future<void> _onRefresh() async {
     reset();
-    resetFilterKeys();
-    initSortableDefaults();
-    fetchAll();
+    await fetchAll();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _scrollController.dispose();
-    _xcrollController.dispose();
     super.dispose();
   }
 
@@ -192,312 +129,541 @@ class _EarningsState extends State<Earnings> {
     return WillPopScope(
       onWillPop: () async => widget.show_back_button,
       child: Scaffold(
+        backgroundColor: const Color.fromRGBO(248, 249, 251, 1),
+        appBar: buildAppBar(context),
+        key: _scaffoldKey,
+        drawer: MainDrawer(),
+        body: RefreshIndicator(
+          color: MyTheme.accent_color,
           backgroundColor: Colors.white,
-          appBar: buildAppBar(context),
-          key: _scaffoldKey,
-          drawer: MainDrawer(),
-          body: Stack(
-            children: [
-              RefreshIndicator(
-                color: MyTheme.accent_color,
-                backgroundColor: Colors.white,
-                onRefresh: _onRefresh,
-                displacement: 0,
-                child: CustomScrollView(
-                  controller: _xcrollController,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                  slivers: [
-                    SliverList(
-                      delegate: SliverChildListDelegate([
-                        buildList(),
-                        Container(
-                          height: 100,
-                        )
-                      ]),
-                    )
-                  ],
-                ),
-              ),
-              Align(alignment: Alignment.center, child: buildLoadingContainer())
-            ],
-          )),
-    );
-  }
-
-  buildBottomAppBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Container(
-                height: 100,
-                width: 200,
-                decoration: BoxDecoration(
-                    color: MyTheme.blue,
-                    borderRadius: BorderRadius.all(Radius.circular(8))),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18.0, vertical: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
-                        child: Text(
-                          LangText(context).local!.today_ucf,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2.0),
-                        child: Text(
-                          _today_earning,
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Text(
-                        _today_date,
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              height: 100,
-              width: 200,
-              decoration: BoxDecoration(
-                  color: MyTheme.grey_153,
-                  borderRadius: BorderRadius.all(Radius.circular(8))),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics:
+                const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            slivers: [
+              SliverToBoxAdapter(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
-                      child: Text(
-                        LangText(context).local!.yesterday_ucf,
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2.0),
-                      child: Text(
-                        _yesterday_earning,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(
-                      _yesterday_date,
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
+                    PortalHelper.isPickupPointApp
+                        ? _buildPickupHeader()
+                        : _buildDeliveryHeader(),
+                    _buildSectionTitle(),
+                    _buildList(),
+                    const SizedBox(height: 90),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  buildAppBar(BuildContext context) {
+  PreferredSize buildAppBar(BuildContext context) {
     return PreferredSize(
-      preferredSize: Size.fromHeight(191.0),
+      preferredSize: const Size.fromHeight(92.0),
       child: AppBar(
-          centerTitle: false,
-          backgroundColor: Colors.white,
-          automaticallyImplyLeading: false,
-          actions: [
-            new Container(),
-          ],
-          elevation: 0.0,
-          titleSpacing: 0,
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.fromLTRB(0.0, 16.0, 0.0, 0.0),
-            child: Column(
-              children: [
-                Padding(
-                  padding: MediaQuery.of(context).viewPadding.top >
-                          30 //MediaQuery.of(context).viewPadding.top is the statusbar height, with a notch phone it results almost 50, without a notch it shows 24.0.For safety we have checked if its greater than thirty
-                      ? const EdgeInsets.only(top: 36.0)
-                      : const EdgeInsets.only(top: 14.0),
-                  child: buildTopAppBarContainer(),
+        centerTitle: false,
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        elevation: 0.0,
+        titleSpacing: 0,
+        flexibleSpace: Padding(
+          padding: const EdgeInsets.fromLTRB(0.0, 16.0, 0.0, 0.0),
+          child: Column(
+            children: [
+              Padding(
+                padding: MediaQuery.of(context).viewPadding.top > 30
+                    ? const EdgeInsets.only(top: 36.0)
+                    : const EdgeInsets.only(top: 14.0),
+                child: Row(
+                  children: [
+                    widget.show_back_button
+                        ? IconButton(
+                            icon: Icon(Icons.arrow_back, color: MyTheme.dark_grey),
+                            onPressed: () => Navigator.of(context).pop(),
+                          )
+                        : GestureDetector(
+                            onTap: () => _scaffoldKey.currentState!.openDrawer(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 18.0, horizontal: 12.0),
+                              child: Image.asset(
+                                'assets/hamburger.png',
+                                height: 16,
+                                color: MyTheme.dark_grey,
+                              ),
+                            ),
+                          ),
+                    Text(
+                      PortalHelper.earningsLabel,
+                      style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
+                    ),
+                  ],
                 ),
-                buildBottomAppBar(context)
-              ],
-            ),
-          )),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Container buildTopAppBarContainer() {
-    return Container(
-      child: Row(
+  Widget _buildPickupHeader() {
+    final pickupPoint = _dashboardSummary?.pickup_point;
+    final earnings = _dashboardSummary?.earning_summary ?? [];
+    final managerName = (user_name.$ != null && user_name.$!.trim().isNotEmpty)
+        ? user_name.$!.trim()
+        : (pickupPoint?.name ?? "Pickup Point Earnings");
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      child: Column(
         children: [
-          widget.show_back_button
-              ? Builder(
-                  builder: (context) => IconButton(
-                      icon: Icon(Icons.arrow_back, color: MyTheme.dark_grey),
-                      onPressed: () {
-                        return Navigator.of(context).pop();
-                      }),
-                )
-              : Builder(
-                  builder: (context) => GestureDetector(
-                    onTap: () {
-                      _scaffoldKey.currentState!.openDrawer();
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 18.0, horizontal: 12.0),
-                      child: Container(
-                        child: Image.asset(
-                          'assets/hamburger.png',
-                          height: 16,
-                          //color: MyTheme.dark_grey,
-                          color: MyTheme.dark_grey,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromRGBO(39, 38, 43, 1),
+                  Color.fromRGBO(250, 62, 0, 1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color.fromRGBO(250, 62, 0, .18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Commission Overview",
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: .82),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  managerName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "All delivery and return commissions are calculated directly from your pickup point setup.",
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: .78),
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: MyTheme.accent_color_2,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return const PickupPayouts(showBackButton: true);
+                          }));
+                        },
+                        child: const Text(
+                          "Make Payout",
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: .55),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return const PickupPayoutInfo();
+                          }));
+                        },
+                        child: const Text(
+                          "Edit Payout Info",
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-          Text(
-            LangText(context).local!.earnings_ucf,
-            style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: earnings.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.12,
+            ),
+            itemBuilder: (context, index) {
+              final item = earnings[index];
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: index.isEven
+                        ? const Color.fromRGBO(250, 62, 0, .12)
+                        : const Color.fromRGBO(17, 90, 255, .08),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: .04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label ?? "",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color.fromRGBO(39, 38, 43, 1),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildSummaryLine("Delivery", item.delivery_earning_string ?? "--"),
+                    const SizedBox(height: 6),
+                    _buildSummaryLine("Return", item.return_earning_string ?? "--"),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.only(top: 10),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.black.withValues(alpha: .06),
+                          ),
+                        ),
+                      ),
+                      child: _buildSummaryLine(
+                        "Total",
+                        item.total_earning_string ?? "--",
+                        emphasize: true,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  buildList() {
-    if (_isInitial && _list.length == 0) {
-      return SingleChildScrollView(
-          child: ShimmerHelper()
-              .buildListShimmer(item_count: 5, item_height: 100.0));
-    } else if (_list.length > 0) {
-      return SingleChildScrollView(
-        child: ListView.builder(
-          padding: const EdgeInsets.all(8.0),
-          itemCount: _list.length,
-          scrollDirection: Axis.vertical,
-          physics: NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemBuilder: (context, index) {
-            return Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return OrderDetails(
-                        id: _list[index].order_id,
-                      );
-                    }));
-                  },
-                  child: buildListItem(index),
-                ));
-          },
-        ),
-      );
-    } else if (_totalData == 0) {
-      return Center(child: Text(LangText(context).local!.no_data_is_available));
-    } else {
-      return Container(); // should never be happening
-    }
+  Widget _buildDeliveryHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildCompactSummaryCard(
+              title: LangText(context).local!.today_ucf,
+              value: _todayEarning,
+              caption: _todayDate,
+              color: MyTheme.blue,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildCompactSummaryCard(
+              title: LangText(context).local!.yesterday_ucf,
+              value: _yesterdayEarning,
+              caption: _yesterdayDate,
+              color: MyTheme.grey_153,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  buildListItem(int index) {
-    return Column(
-      children: [
-        Card(
-          shape: RoundedRectangleBorder(
-            side: new BorderSide(color: MyTheme.light_grey, width: 1.0),
-            borderRadius: BorderRadius.circular(8.0),
+  Widget _buildCompactSummaryCard({
+    required String title,
+    required String value,
+    required String caption,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: .18),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
           ),
-          elevation: 0.0,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    _list[index].order_code,
-                    style: TextStyle(
-                        color: MyTheme.grey_153,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Row(
-                    children: [
-                      Text(_list[index].date,
-                          style: TextStyle(
-                              color: MyTheme.font_grey, fontSize: 13)),
-                      Spacer(),
-                      Text(
-                        _list[index].earning,
-                        style: TextStyle(
-                            color: MyTheme.blue,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600),
-                      )
-                    ],
-                  ),
-                ),
-              ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: .84),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            caption,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: .84),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryLine(String label, String value, {bool emphasize = false}) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: emphasize ? 13 : 12,
+            color: emphasize ? MyTheme.dark_grey : MyTheme.font_grey,
+            fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: emphasize ? 13 : 12,
+            color: emphasize ? MyTheme.dark_grey : MyTheme.font_grey,
+            fontWeight: emphasize ? FontWeight.w700 : FontWeight.w600,
           ),
         ),
       ],
     );
   }
 
-  Container buildPaymentStatusCheckContainer(String payment_status) {
-    return Container(
-      height: 16,
-      width: 16,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0),
-          color: payment_status == "paid" ? Colors.green : Colors.red),
-      child: Padding(
-        padding: const EdgeInsets.all(3),
-        child: Icon(
-            payment_status == "paid" ? Icons.check : Icons.close,
-            color: Colors.white,
-            size: 10),
+  Widget _buildSectionTitle() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+      child: Row(
+        children: [
+          const Text(
+            "Recent Earnings",
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Color.fromRGBO(39, 38, 43, 1),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            "${_totalData > 0 ? _totalData : _list.length} entries",
+            style: TextStyle(
+              fontSize: 12,
+              color: MyTheme.font_grey,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Container buildLoadingContainer() {
+  Widget _buildList() {
+    if (_isInitial && _list.isEmpty) {
+      return SingleChildScrollView(
+        child: ShimmerHelper().buildListShimmer(item_count: 5, item_height: 100.0),
+      );
+    }
+
+    if (_list.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: Center(child: Text(LangText(context).local!.no_data_is_available)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      itemCount: _list.length + 1,
+      scrollDirection: Axis.vertical,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemBuilder: (context, index) {
+        if (index == _list.length) {
+          return _buildLoadingContainer();
+        }
+
+        final entry = _list[index];
+        final badgeColor =
+            entry.delivery_status == "returned" || entry.delivery_status == "Returned"
+                ? const Color.fromRGBO(209, 44, 44, 1)
+                : const Color.fromRGBO(10, 132, 94, 1);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return OrderDetails(id: entry.order_id);
+              }));
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: MyTheme.light_grey, width: 1.0),
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              elevation: 0.0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            entry.order_code ?? "--",
+                            style: TextStyle(
+                              color: MyTheme.dark_grey,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: .10),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            entry.delivery_status == "returned" ||
+                                    entry.delivery_status == "Returned"
+                                ? "Return"
+                                : "Delivery",
+                            style: TextStyle(
+                              color: badgeColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildMetaBlock("Date", entry.date),
+                        ),
+                        Expanded(
+                          child: _buildMetaBlock("Earning", entry.earning,
+                              valueColor: MyTheme.accent_color),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetaBlock(String label, String? value, {Color? valueColor}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: MyTheme.font_grey,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value ?? "--",
+          style: TextStyle(
+            color: valueColor ?? MyTheme.dark_grey,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingContainer() {
     return Container(
       height: _showLoadingContainer ? 36 : 0,
       width: double.infinity,
-      color: Colors.white,
+      color: Colors.transparent,
       child: Center(
         child: Text(_totalData == _list.length
             ? LangText(context).local!.no_more_items_ucf

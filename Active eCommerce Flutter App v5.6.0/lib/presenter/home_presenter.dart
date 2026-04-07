@@ -14,7 +14,6 @@ import 'package:active_ecommerce_cms_demo_app/repositories/order_repository.dart
 import 'package:active_ecommerce_cms_demo_app/repositories/product_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/sliders_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/single_banner/model.dart';
-import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 
 class HomePresenter extends ChangeNotifier {
@@ -54,6 +53,7 @@ class HomePresenter extends ChangeNotifier {
   List<Product> newArrivalProductList = [];
   List<Product> allProductList = [];
   List<order_mini.Order> onTheWayOrderList = [];
+  List<order_mini.Order> reachedPickupOrderList = [];
 
   /// Flags
   bool isCategoryInitial = true;
@@ -90,6 +90,9 @@ class HomePresenter extends ChangeNotifier {
   order_mini.Order? get firstOnTheWayOrder =>
       onTheWayOrderList.isNotEmpty ? onTheWayOrderList.first : null;
 
+  order_mini.Order? get firstPickupReachedOrder =>
+      reachedPickupOrderList.isNotEmpty ? reachedPickupOrderList.first : null;
+
   /// ================= FETCH ALL =================
 
   fetchAll() {
@@ -100,6 +103,7 @@ class HomePresenter extends ChangeNotifier {
     fetchFeaturedCategories();
     fetchTodaysDealProducts();
     fetchOnTheWayOrders();
+    fetchReachedPickupOrders();
     fetchFeaturedProducts();
     fetchNewArrivalProducts();
     fetchAllProducts();
@@ -169,11 +173,36 @@ class HomePresenter extends ChangeNotifier {
         page: 1,
         deliveryStatus: "on_the_way",
       );
-      onTheWayOrderList = res.orders ?? [];
+      onTheWayOrderList = (res.orders ?? [])
+          .where((order) => order.shippingType != "pickup_point")
+          .toList();
       notifyListeners();
     } catch (e) {
       debugPrint("On the way order error: $e");
       onTheWayOrderList.clear();
+      notifyListeners();
+    }
+  }
+
+  fetchReachedPickupOrders() async {
+    if (!(is_logged_in.$) || (access_token.$?.isEmpty ?? true)) {
+      reachedPickupOrderList.clear();
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final res = await OrderRepository().getOrderList(
+        page: 1,
+        deliveryStatus: "reached",
+      );
+      reachedPickupOrderList = (res.orders ?? [])
+          .where((order) => order.shippingType == "pickup_point")
+          .toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Reached pickup order error: $e");
+      reachedPickupOrderList.clear();
       notifyListeners();
     }
   }
@@ -294,6 +323,7 @@ class HomePresenter extends ChangeNotifier {
     flashDealBannerImageList.clear();
     todaysDealProductList.clear();
     onTheWayOrderList.clear();
+    reachedPickupOrderList.clear();
 
     isCarouselInitial = true;
     isBannerOneInitial = true;
@@ -375,6 +405,7 @@ class HomePresenter extends ChangeNotifier {
 
   @override
   void dispose() {
+    mainScrollController.dispose();
     pirated_logo_controller.dispose();
     super.dispose();
   }

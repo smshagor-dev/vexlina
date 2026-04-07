@@ -11,7 +11,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Alishohor Delivery App</string>
+	<string>Vexlina Go</string>
+	<key>CFBundleDisplayName</key>
+	<string>Vexlina Go</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

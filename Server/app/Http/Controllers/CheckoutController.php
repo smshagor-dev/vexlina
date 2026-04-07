@@ -455,7 +455,7 @@ class CheckoutController extends Controller
             $carrier_list = $carrier_query->get();
         }
 
-        return view('frontend.delivery_info', compact('carts', 'carrier_list', 'deliveryInfo'));
+        return view('frontend.delivery_info', compact('carts', 'carrier_list'));
     }
 
     public function store_delivery_info(Request $request)

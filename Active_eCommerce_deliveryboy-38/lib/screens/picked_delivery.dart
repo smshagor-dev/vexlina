@@ -1,5 +1,6 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -352,7 +353,7 @@ class _PickedDeliveryState extends State<PickedDelivery> {
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: Text(
-              "${LangText(context).local!.picked_ucf} ($_totalData)",
+              "${PortalHelper.pickedLabel} ($_totalData)",
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 14,
@@ -427,7 +428,7 @@ class _PickedDeliveryState extends State<PickedDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.pending_delivery_ucf,
+            PortalHelper.pickedUpOrdersLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],
@@ -608,8 +609,11 @@ class _PickedDeliveryState extends State<PickedDelivery> {
                     borderRadius: const BorderRadius.all(Radius.circular(6.0))),
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    minimumSize:
-                        Size((MediaQuery.of(context).size.width - 36) / 2, 0),
+                    minimumSize: Size(
+                        PortalHelper.isPickupPointApp
+                            ? (MediaQuery.of(context).size.width - 36)
+                            : ((MediaQuery.of(context).size.width - 36) / 2),
+                        0),
                     //height: 50,
                     backgroundColor: MyTheme.white,
                     shape: RoundedRectangleBorder(
@@ -647,66 +651,67 @@ class _PickedDeliveryState extends State<PickedDelivery> {
                   },
                 ),
               ),
-              _marked_ids.contains(_list[index].id)
-                  ? Container(
-                      height: 48,
-                      width: MediaQuery.of(context).size.width / 2 - 16,
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                              color: MyTheme.textfield_grey, width: 1),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(6.0))),
-                      child: Center(
-                        child: Text(
-                          LangText(context).local!.on_the_way_ucf,
-                          style: TextStyle(
-                              color: MyTheme.font_grey,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                              color: MyTheme.textfield_grey, width: 1),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(6.0))),
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          minimumSize: Size(
-                              (MediaQuery.of(context).size.width - 36) / 2, 0),
-                          //height: 50,
-                          backgroundColor: MyTheme.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(6.0))),
-                        ),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: Image.asset(
-                                "assets/human_run.png",
+              if (!PortalHelper.isPickupPointApp)
+                _marked_ids.contains(_list[index].id)
+                    ? Container(
+                        height: 48,
+                        width: MediaQuery.of(context).size.width / 2 - 16,
+                        decoration: BoxDecoration(
+                            border: Border.all(
+                                color: MyTheme.textfield_grey, width: 1),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(6.0))),
+                        child: Center(
+                          child: Text(
+                            LangText(context).local!.on_the_way_ucf,
+                            style: TextStyle(
                                 color: MyTheme.font_grey,
-                                height: 14,
-                              ),
-                            ),
-                            Text(
-                              LangText(context).local!.mark_as_on_the_way_ucf,
-                              style: TextStyle(
-                                  color: MyTheme.font_grey,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        onPressed: () {
-                          onPressMarkOnTheWay(_list[index].id);
-                        },
+                      )
+                    : Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                            border: Border.all(
+                                color: MyTheme.textfield_grey, width: 1),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(6.0))),
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            minimumSize: Size(
+                                (MediaQuery.of(context).size.width - 36) / 2, 0),
+                            //height: 50,
+                            backgroundColor: MyTheme.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(6.0))),
+                          ),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4.0),
+                                child: Image.asset(
+                                  "assets/human_run.png",
+                                  color: MyTheme.font_grey,
+                                  height: 14,
+                                ),
+                              ),
+                              Text(
+                                LangText(context).local!.mark_as_on_the_way_ucf,
+                                style: TextStyle(
+                                    color: MyTheme.font_grey,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            onPressMarkOnTheWay(_list[index].id);
+                          },
+                        ),
                       ),
-                    ),
             ],
           ),
         ),

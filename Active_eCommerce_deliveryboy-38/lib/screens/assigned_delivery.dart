@@ -1,6 +1,7 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
 import 'package:active_flutter_delivery_app/data_model/order_mini_response.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
@@ -191,9 +192,11 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: Text(
-                  LangText(context)
-                      .local!
-                      .are_you_sure_to_mark_this_as_picked_up,
+                  PortalHelper.isPickupPointApp
+                      ? "Are you sure to mark this order as picked up?"
+                      : LangText(context)
+                          .local!
+                          .are_you_sure_to_mark_this_as_picked_up,
                   maxLines: 3,
                   style: TextStyle(color: MyTheme.font_grey, fontSize: 14),
                 ),
@@ -374,7 +377,7 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: Text(
-                    "${LangText(context).local!.assigned} (${_totalData.toString()})",
+                    "${PortalHelper.upcomingLabel} (${_totalData.toString()})",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 14,
@@ -485,7 +488,7 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.pending_delivery_ucf,
+            PortalHelper.upcomingOrdersLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
         ],
@@ -601,6 +604,77 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                     ],
                   ),
                 ),
+                if (PortalHelper.isPickupPointApp &&
+                    _list[index].pickup_point != null)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8.0),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: MyTheme.soft_accent_color_2.withValues(alpha: .18),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: MyTheme.light_grey),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _list[index].pickup_point?.name ??
+                              _list[index].pickup_point_name ??
+                              "Pickup Point",
+                          style: TextStyle(
+                            color: MyTheme.font_grey,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if ((_list[index].pickup_point?.address ?? "").isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              _list[index].pickup_point!.address!,
+                              style: TextStyle(
+                                color: MyTheme.grey_153,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        if ((_list[index].pickup_point?.phone ?? "").isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              "Phone: ${_list[index].pickup_point!.phone!}",
+                              style: TextStyle(
+                                color: MyTheme.grey_153,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        if ((_list[index].pickup_point?.working_hours ?? "").isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              "Hours: ${_list[index].pickup_point!.working_hours!}",
+                              style: TextStyle(
+                                color: MyTheme.grey_153,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        if ((_list[index].pickup_point?.internal_code ?? "").isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              "Code: ${_list[index].pickup_point!.internal_code!}",
+                              style: TextStyle(
+                                color: MyTheme.grey_153,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -666,8 +740,11 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                     borderRadius: const BorderRadius.all(Radius.circular(6.0))),
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    minimumSize:
-                        Size((MediaQuery.of(context).size.width - 36) / 2, 0),
+                    minimumSize: Size(
+                        PortalHelper.isPickupPointApp
+                            ? (MediaQuery.of(context).size.width - 36)
+                            : ((MediaQuery.of(context).size.width - 36) / 2),
+                        0),
                     //height: 50,
                     backgroundColor: MyTheme.white,
                     shape: RoundedRectangleBorder(
@@ -705,66 +782,67 @@ class _AssignedDeliveryState extends State<AssignedDelivery> {
                   },
                 ),
               ),
-              _marked_ids.contains(_list[index].id)
-                  ? Container(
-                      height: 48,
-                      width: MediaQuery.of(context).size.width / 2 - 16,
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                              color: MyTheme.textfield_grey, width: 1),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(6.0))),
-                      child: Center(
-                        child: Text(
-                          LangText(context).local!.picked_ucf,
-                          style: TextStyle(
-                              color: MyTheme.font_grey,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                              color: MyTheme.textfield_grey, width: 1),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(6.0))),
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          minimumSize: Size(
-                              (MediaQuery.of(context).size.width - 36) / 2, 0),
-                          //height: 50,
-                          backgroundColor: MyTheme.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(6.0))),
-                        ),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: Image.asset(
-                                "assets/press.png",
+              if (!PortalHelper.isPickupPointApp)
+                _marked_ids.contains(_list[index].id)
+                    ? Container(
+                        height: 48,
+                        width: MediaQuery.of(context).size.width / 2 - 16,
+                        decoration: BoxDecoration(
+                            border: Border.all(
+                                color: MyTheme.textfield_grey, width: 1),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(6.0))),
+                        child: Center(
+                          child: Text(
+                                PortalHelper.pickedLabel,
+                            style: TextStyle(
                                 color: MyTheme.font_grey,
-                                height: 14,
-                              ),
-                            ),
-                            Text(
-                              LangText(context).local!.mark_as_picked,
-                              style: TextStyle(
-                                  color: MyTheme.font_grey,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        onPressed: () {
-                          onPressMarkPicked(_list[index].id);
-                        },
+                      )
+                    : Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                            border: Border.all(
+                                color: MyTheme.textfield_grey, width: 1),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(6.0))),
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            minimumSize: Size(
+                                (MediaQuery.of(context).size.width - 36) / 2, 0),
+                            //height: 50,
+                            backgroundColor: MyTheme.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(6.0))),
+                          ),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4.0),
+                                child: Image.asset(
+                                  "assets/press.png",
+                                  color: MyTheme.font_grey,
+                                  height: 14,
+                                ),
+                              ),
+                              Text(
+                                LangText(context).local!.mark_as_picked,
+                                style: TextStyle(
+                                    color: MyTheme.font_grey,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            onPressMarkPicked(_list[index].id);
+                          },
+                        ),
                       ),
-                    ),
             ],
           ),
         ),

@@ -38,6 +38,7 @@ class DetailedOrder {
     this.code,
     this.user_id,
     this.shipping_address,
+    this.pickup_point,
     this.shipping_type,
     this.shipping_type_string,
     this.payment_type,
@@ -52,6 +53,12 @@ class DetailedOrder {
     this.tax,
     this.date,
     this.cancel_request,
+    this.delivery_verification_status,
+    this.delivery_verified_at,
+    this.delivery_verified_by,
+    this.delivery_verification_source,
+    this.customer_pickup_qr_payload,
+    this.customer_pickup_qr_image,
     this.links,
   });
 
@@ -59,6 +66,7 @@ class DetailedOrder {
   String? code;
   int? user_id;
   ShippingAddress? shipping_address;
+  OrderPickupPoint? pickup_point;
   String? shipping_type;
   String? shipping_type_string;
   String? payment_type;
@@ -73,6 +81,12 @@ class DetailedOrder {
   String? tax;
   String? date;
   bool? cancel_request;
+  bool? delivery_verification_status;
+  String? delivery_verified_at;
+  dynamic delivery_verified_by;
+  String? delivery_verification_source;
+  String? customer_pickup_qr_payload;
+  String? customer_pickup_qr_image;
   Links? links;
 
   factory DetailedOrder.fromJson(Map<String, dynamic> json) => DetailedOrder(
@@ -80,6 +94,9 @@ class DetailedOrder {
     code: json["code"],
     user_id: json["user_id"],
     shipping_address: ShippingAddress.fromJson(json["shipping_address"]),
+    pickup_point: json["pickup_point"] == null
+        ? null
+        : OrderPickupPoint.fromJson(json["pickup_point"]),
     shipping_type: json["shipping_type"],
     shipping_type_string: json["shipping_type_string"],
     payment_type: json["payment_type"],
@@ -94,6 +111,12 @@ class DetailedOrder {
     tax: json["tax"],
     date: json["date"],
     cancel_request: json["cancel_request"],
+    delivery_verification_status: json["delivery_verification_status"],
+    delivery_verified_at: json["delivery_verified_at"],
+    delivery_verified_by: json["delivery_verified_by"],
+    delivery_verification_source: json["delivery_verification_source"],
+    customer_pickup_qr_payload: json["customer_pickup_qr_payload"],
+    customer_pickup_qr_image: json["customer_pickup_qr_image"],
     links: Links.fromJson(json["links"]),
   );
 
@@ -102,6 +125,7 @@ class DetailedOrder {
     "code": code,
     "user_id": user_id,
     "shipping_address": shipping_address!.toJson(),
+    "pickup_point": pickup_point?.toJson(),
     "shipping_type": shipping_type,
     "shipping_type_string": shipping_type_string,
     "payment_type": payment_type,
@@ -116,8 +140,105 @@ class DetailedOrder {
     "tax": tax,
     "date": date,
     "cancel_request": cancel_request,
+    "delivery_verification_status": delivery_verification_status,
+    "delivery_verified_at": delivery_verified_at,
+    "delivery_verified_by": delivery_verified_by,
+    "delivery_verification_source": delivery_verification_source,
+    "customer_pickup_qr_payload": customer_pickup_qr_payload,
+    "customer_pickup_qr_image": customer_pickup_qr_image,
     "links": links!.toJson(),
   };
+}
+
+class OrderPickupPoint {
+  OrderPickupPoint({
+    this.id,
+    this.name,
+    this.address,
+    this.phone,
+    this.internal_code,
+    this.opening_time,
+    this.closing_time,
+    this.working_hours,
+    this.pickup_hold_days,
+    this.instructions,
+    this.supports_return,
+    this.supports_cod,
+    this.latitude,
+    this.longitude,
+    this.pickup_window_deadline,
+    this.pickup_window_days_left,
+    this.is_return_due,
+  });
+
+  int? id;
+  String? name;
+  String? address;
+  String? phone;
+  String? internal_code;
+  String? opening_time;
+  String? closing_time;
+  String? working_hours;
+  int? pickup_hold_days;
+  String? instructions;
+  bool? supports_return;
+  bool? supports_cod;
+  double? latitude;
+  double? longitude;
+  String? pickup_window_deadline;
+  int? pickup_window_days_left;
+  bool? is_return_due;
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value.toString());
+  }
+
+  factory OrderPickupPoint.fromJson(Map<String, dynamic> json) =>
+      OrderPickupPoint(
+        id: json["id"],
+        name: json["name"],
+        address: json["address"],
+        phone: json["phone"],
+        internal_code: json["internal_code"],
+        opening_time: json["opening_time"],
+        closing_time: json["closing_time"],
+        working_hours: json["working_hours"],
+        pickup_hold_days: json["pickup_hold_days"],
+        instructions: json["instructions"],
+        supports_return: json["supports_return"],
+        supports_cod: json["supports_cod"],
+        latitude: _parseDouble(json["latitude"]),
+        longitude: _parseDouble(json["longitude"]),
+        pickup_window_deadline: json["pickup_window_deadline"],
+        pickup_window_days_left: json["pickup_window_days_left"],
+        is_return_due: json["is_return_due"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "address": address,
+        "phone": phone,
+        "internal_code": internal_code,
+        "opening_time": opening_time,
+        "closing_time": closing_time,
+        "working_hours": working_hours,
+        "pickup_hold_days": pickup_hold_days,
+        "instructions": instructions,
+        "supports_return": supports_return,
+        "supports_cod": supports_cod,
+        "latitude": latitude,
+        "longitude": longitude,
+        "pickup_window_deadline": pickup_window_deadline,
+        "pickup_window_days_left": pickup_window_days_left,
+        "is_return_due": is_return_due,
+      };
 }
 
 class Links {

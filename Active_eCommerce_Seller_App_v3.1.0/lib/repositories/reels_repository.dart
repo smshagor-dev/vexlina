@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:active_ecommerce_seller_app/data_model/common_response.dart';
 import 'package:active_ecommerce_seller_app/data_model/product_mini_response.dart';
 import 'package:active_ecommerce_seller_app/data_model/reels_response.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../api_request.dart';
@@ -58,7 +61,9 @@ class ReelsRepository {
     File? thumbnailFile,
     String? caption,
     int? productId,
+    int? durationSeconds,
     bool allowComments = true,
+    ValueChanged<double>? onProgress,
   }) async {
     final url = Uri.parse("${AppConfig.BASE_URL}/reals/store");
     final request = http.MultipartRequest("POST", url);
@@ -69,10 +74,37 @@ class ReelsRepository {
       "System-Key": AppConfig.system_key,
     });
 
-    request.files.add(await http.MultipartFile.fromPath("video", videoFile.path));
+    final totalBytes =
+        await videoFile.length() +
+        (thumbnailFile != null ? await thumbnailFile.length() : 0);
+    var uploadedBytes = 0;
+
+    request.files.add(
+      await _multipartFileWithProgress(
+        field: "video",
+        file: videoFile,
+        onChunkUploaded: (chunkLength) {
+          uploadedBytes += chunkLength;
+          onProgress?.call(
+            totalBytes == 0 ? 0 : (uploadedBytes / totalBytes).clamp(0.0, 1.0),
+          );
+        },
+      ),
+    );
     if (thumbnailFile != null) {
       request.files.add(
-        await http.MultipartFile.fromPath("thumbnail", thumbnailFile.path),
+        await _multipartFileWithProgress(
+          field: "thumbnail",
+          file: thumbnailFile,
+          onChunkUploaded: (chunkLength) {
+            uploadedBytes += chunkLength;
+            onProgress?.call(
+              totalBytes == 0
+                  ? 0
+                  : (uploadedBytes / totalBytes).clamp(0.0, 1.0),
+            );
+          },
+        ),
       );
     }
     if (caption != null && caption.trim().isNotEmpty) {
@@ -81,10 +113,58 @@ class ReelsRepository {
     if (productId != null) {
       request.fields["product_id"] = productId.toString();
     }
+    if (durationSeconds != null) {
+      request.fields["duration_seconds"] = durationSeconds.toString();
+    }
     request.fields["allow_comments"] = allowComments ? "1" : "0";
 
     final streamedResponse = await request.send();
+    onProgress?.call(1);
     final body = await streamedResponse.stream.bytesToString();
     return commonResponseFromJson(body);
+  }
+
+  Future<http.MultipartFile> _multipartFileWithProgress({
+    required String field,
+    required File file,
+    required void Function(int chunkLength) onChunkUploaded,
+  }) async {
+    final length = await file.length();
+    final stream = http.ByteStream(
+      file.openRead().transform(
+        StreamTransformer.fromHandlers(
+          handleData: (data, sink) {
+            onChunkUploaded(data.length);
+            sink.add(data);
+          },
+        ),
+      ),
+    );
+
+    return http.MultipartFile(
+      field,
+      stream,
+      length,
+      filename: file.uri.pathSegments.last,
+    );
+  }
+
+  Future<ReelDetailResponse> updateReel({
+    required int reelId,
+    String? caption,
+    int? productId,
+    required bool allowComments,
+  }) async {
+    final url = "${AppConfig.BASE_URL}/reals/$reelId/update";
+    final response = await ApiRequest.post(
+      url: url,
+      headers: _authHeaders(),
+      body: jsonEncode({
+        "caption": caption?.trim(),
+        "product_id": productId,
+        "allow_comments": allowComments,
+      }),
+    );
+    return reelDetailResponseFromJson(response.body);
   }
 }

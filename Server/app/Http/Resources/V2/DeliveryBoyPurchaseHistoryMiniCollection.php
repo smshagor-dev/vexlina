@@ -124,7 +124,22 @@ class DeliveryBoyPurchaseHistoryMiniCollection extends ResourceCollection
                     $coordinates = $this->extractCoordinatesFromUser($data->user);
                 }
 
+                $reachedAt = $data->delivery_history_date ?: $data->updated_at;
+                $holdDays = $data->pickup_point ? $data->pickup_point->holdDays() : 5;
+                $deadline = $reachedAt ? Carbon::parse($reachedAt)->startOfDay()->addDays($holdDays) : null;
+                $isReturnDue = $deadline ? Carbon::today()->greaterThanOrEqualTo($deadline->copy()->startOfDay()) : false;
+                $daysLeft = $deadline ? max(0, Carbon::today()->diffInDays($deadline, false)) : null;
+
                 return [
+                    'pickup_point' => $data->pickup_point ? [
+                        'id' => $data->pickup_point->id,
+                        'name' => $data->pickup_point->getTranslation('name'),
+                        'address' => $data->pickup_point->getTranslation('address'),
+                        'phone' => $data->pickup_point->phone,
+                        'internal_code' => $data->pickup_point->internal_code,
+                        'working_hours' => $data->pickup_point->workingHoursLabel(),
+                        'instructions' => $data->pickup_point->instructions,
+                    ] : null,
                     'id' => $data->id,
                     'code' => $data->code,
                     'user_id' => intval($data->user_id),
@@ -134,9 +149,13 @@ class DeliveryBoyPurchaseHistoryMiniCollection extends ResourceCollection
                     'delivery_status' => $data->delivery_status,
                     'delivery_status_string' => $data->delivery_status == 'pending'? "Order Placed" : ucwords(str_replace('_', ' ',  $data->delivery_status)),
                     'grand_total' => format_price($data->grand_total) ,
-                    'date' => Carbon::createFromFormat('Y-m-d H:i:s',$data->delivery_history_date)->format('d-m-Y'),
+                    'date' => optional($reachedAt)->format('d-m-Y') ?: optional($data->updated_at)->format('d-m-Y'),
                     'cancel_request' => $data->cancel_request == 1,
                     'delivery_history_date' => $data->delivery_history_date,
+                    'return_due' => $isReturnDue,
+                    'pickup_window_days_left' => $daysLeft,
+                    'pickup_window_deadline' => optional($deadline)->toDateString(),
+                    'pickup_point_name' => optional($data->pickup_point)->getTranslation('name'),
                     'delivery_verification_status' => (bool) $data->delivery_verification_status,
                     'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
                     'location_available' => $coordinates['available'],

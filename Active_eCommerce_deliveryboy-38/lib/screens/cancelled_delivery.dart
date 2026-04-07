@@ -1,11 +1,15 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/delivery_repository.dart';
+import 'package:active_flutter_delivery_app/screens/delivery_qr_scanner.dart';
 import 'package:active_flutter_delivery_app/screens/order_details.dart';
 import 'package:active_flutter_delivery_app/ui_sections/drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:toast/toast.dart';
 
 
 class CancelledDelivery extends StatefulWidget {
@@ -153,6 +157,39 @@ class _CancelledDeliveryState extends State<CancelledDelivery> {
     resetFilterKeys();
     initSortableDefaults();
     fetchData();
+  }
+
+  Future<void> _scanAndReturnOrder() async {
+    final scannedCode = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DeliveryQrScanner(
+          title: 'Scan QR to Return',
+          description:
+              'Scan the order QR code to return a reached order if return is available.',
+        ),
+      ),
+    );
+
+    if (scannedCode == null || scannedCode.toString().trim().isEmpty) {
+      return;
+    }
+
+    final response = await DeliveryRepository().getDeliveryStatusChangeResponse(
+      status: "returned",
+      delivery_verification_code: scannedCode.toString().trim(),
+    );
+
+    ToastComponent.showDialog(
+      response.message ?? "Status updated",
+      context,
+      gravity: Toast.center,
+      duration: Toast.lengthLong,
+    );
+
+    if (response.result == true) {
+      await _onRefresh();
+    }
   }
 
   @override
@@ -329,9 +366,30 @@ class _CancelledDeliveryState extends State<CancelledDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.cancelled_delivery_ucf,
+            PortalHelper.returnedLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
+          Spacer(),
+          if (PortalHelper.isPickupPointApp)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: MyTheme.accent_color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: _scanAndReturnOrder,
+                icon: const Icon(Icons.qr_code_scanner, size: 18),
+                label: const Text(
+                  "Scan QR",
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -392,17 +450,49 @@ class _CancelledDeliveryState extends State<CancelledDelivery> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(LangText(context).local!.order_code_ucf,
-                          style: TextStyle(
-                              color: MyTheme.font_grey,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600)),
-                      Text(
-                        _list[index].code,
-                        style: TextStyle(
-                            color: MyTheme.red,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(LangText(context).local!.order_code_ucf,
+                                    style: TextStyle(
+                                        color: MyTheme.font_grey,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600)),
+                                Text(
+                                  _list[index].code,
+                                  style: TextStyle(
+                                      color: MyTheme.red,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (PortalHelper.isPickupPointApp &&
+                              (_list[index].return_due == true))
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color.fromRGBO(209, 44, 44, .1),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: const Color.fromRGBO(209, 44, 44, .25),
+                                ),
+                              ),
+                              child: const Text(
+                                "Return Due",
+                                style: TextStyle(
+                                  color: Color.fromRGBO(209, 44, 44, 1),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -519,9 +609,11 @@ class _CancelledDeliveryState extends State<CancelledDelivery> {
                   style: TextButton.styleFrom(
                     minimumSize:
                         Size((MediaQuery.of(context).size.width - 36) / 2, 0),
-                    //height: 50,
-                    backgroundColor: MyTheme.red_disabled,
-                    // splashColor: Colors.transparent,
+                    backgroundColor: PortalHelper.isPickupPointApp
+                        ? (_list[index].payment_status == "paid"
+                            ? MyTheme.lime_disabled
+                            : MyTheme.red_disabled)
+                        : MyTheme.red_disabled,
 
                     shape: RoundedRectangleBorder(
                         borderRadius:
@@ -532,13 +624,21 @@ class _CancelledDeliveryState extends State<CancelledDelivery> {
                       Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: Icon(
-                          Icons.clear,
+                          PortalHelper.isPickupPointApp
+                              ? (_list[index].payment_status == "paid"
+                                  ? Icons.check_circle
+                                  : Icons.cancel)
+                              : Icons.clear,
                           size: 14,
                           color: MyTheme.white,
                         ),
                       ),
                       Text(
-                        LangText(context).local!.delivered_ucf,
+                        PortalHelper.isPickupPointApp
+                            ? (_list[index].payment_status == "paid"
+                                ? LangText(context).local!.paid_ucf
+                                : LangText(context).local!.unpaid_ucf)
+                            : LangText(context).local!.delivered_ucf,
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,

@@ -5,12 +5,14 @@ import 'package:active_ecommerce_cms_demo_app/custom/box_decorations.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/device_info.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/lang_text.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/toast_component.dart';
+import 'package:active_ecommerce_cms_demo_app/data_model/reels_response.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/auth_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/l10n/app_localizations.dart';
 import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/presenter/unRead_notification_counter.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/profile_repository.dart';
+import 'package:active_ecommerce_cms_demo_app/repositories/reels_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/address.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/auction/auction_products.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/blog_list_screen.dart';
@@ -73,6 +75,7 @@ class _ProfileState extends State<Profile> {
   int? _orderCounter = 0;
   String _orderCounterString = "00";
   late BuildContext loadingcontext;
+  ReelsPermissionData? _reelsPermission;
 
   @override
   void initState() {
@@ -128,6 +131,35 @@ class _ProfileState extends State<Profile> {
   fetchAll() {
     fetchCounters();
     getNotificationCount();
+    fetchReelsPermission();
+  }
+
+  Future<void> fetchReelsPermission() async {
+    if (!is_logged_in.$) {
+      if (_reelsPermission != null && mounted) {
+        setState(() => _reelsPermission = null);
+      }
+      return;
+    }
+
+    try {
+      final response = await ReelsRepository().getPermissions();
+      if (!mounted) return;
+      setState(() {
+        _reelsPermission = response.data;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _reelsPermission = null);
+    }
+  }
+
+  bool get _showCustomerReelsActions {
+    final permission = _reelsPermission;
+    if (!is_logged_in.$ || permission == null) {
+      return false;
+    }
+    return !permission.isSeller && permission.classifiedPackageId > 0;
   }
 
   getNotificationCount() async {
@@ -194,6 +226,7 @@ class _ProfileState extends State<Profile> {
     _wishlistCounterString = "00";
     _orderCounter = 0;
     _orderCounterString = "00";
+    _reelsPermission = null;
     setState(() {});
   }
 
@@ -287,7 +320,11 @@ class _ProfileState extends State<Profile> {
                 height: 30,
                 child: InkWell(
                   onTap: () {
-                    Navigator.pop(context);
+                    if (widget.showBackButton && Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                      return;
+                    }
+                    context.go("/");
                   },
                   child: Icon(Icons.close, color: MyTheme.white, size: 20),
                 ),
@@ -394,20 +431,20 @@ class _ProfileState extends State<Profile> {
 
           Divider(thickness: 1, color: MyTheme.light_grey),
           if (is_logged_in.$)
-          buildBottomVerticalCardListItem(
-            "assets/coupon.png",
-            LangText(context).local.coupons_ucf,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return Coupons();
-                  },
-                ),
-              );
-            },
-          ),
+            buildBottomVerticalCardListItem(
+              "assets/coupon.png",
+              LangText(context).local.coupons_ucf,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return Coupons();
+                    },
+                  ),
+                );
+              },
+            ),
 
           if (classified_product_status.$)
             Column(
@@ -1063,22 +1100,19 @@ class _ProfileState extends State<Profile> {
                     : () => null,
               ),
             ),
-            Container(
-              child: buildSettingAndAddonsHorizontalMenuItem(
-                "assets/shorts_logo.png",
-                "Upload reels",
-                is_logged_in.$
-                    ? () {
-                        Navigator.push(
-                          context,
-                          PageAnimation.fadeRoute(
-                            const RealsScreen(openComposerOnLoad: true),
-                          ),
-                        );
-                      }
-                    : () => null,
+            if (_showCustomerReelsActions)
+              Container(
+                child: buildSettingAndAddonsHorizontalMenuItem(
+                  "assets/shorts_logo.png",
+                  "Reels",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MyReelsScreen()),
+                    );
+                  },
+                ),
               ),
-            ),
           ];
 
           return Wrap(
@@ -1132,12 +1166,7 @@ class _ProfileState extends State<Profile> {
                 border: Border.all(color: const Color(0xffEAECF0)),
               ),
               alignment: Alignment.center,
-              child: Image.asset(
-                img,
-                width: 18,
-                height: 18,
-                color: iconColor,
-              ),
+              child: Image.asset(img, width: 18, height: 18, color: iconColor),
             ),
             SizedBox(height: 8),
             Text(

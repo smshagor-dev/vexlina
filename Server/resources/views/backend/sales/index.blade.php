@@ -48,8 +48,12 @@
                             {{ translate('Picked Up') }}</option>
                         <option value="on_the_way" @if ($delivery_status == 'on_the_way') selected @endif>
                             {{ translate('On The Way') }}</option>
+                        <option value="reached" @if ($delivery_status == 'reached') selected @endif>
+                            {{ translate('Reached') }}</option>
                         <option value="delivered" @if ($delivery_status == 'delivered') selected @endif>
                             {{ translate('Delivered') }}</option>
+                        <option value="returned" @if ($delivery_status == 'returned') selected @endif>
+                            {{ translate('Returned') }}</option>
                         <option value="cancelled" @if ($delivery_status == 'cancelled') selected @endif>
                             {{ translate('Cancel') }}</option>
                     </select>

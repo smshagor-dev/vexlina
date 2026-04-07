@@ -3,6 +3,9 @@ import 'dart:convert';
 ReelsFeedResponse reelsFeedResponseFromJson(String str) =>
     ReelsFeedResponse.fromJson(json.decode(str));
 
+ReelDetailResponse reelDetailResponseFromJson(String str) =>
+    ReelDetailResponse.fromJson(json.decode(str));
+
 ReelsPermissionsResponse reelsPermissionsResponseFromJson(String str) =>
     ReelsPermissionsResponse.fromJson(json.decode(str));
 
@@ -23,21 +26,39 @@ class ReelsFeedResponse {
     return ReelsFeedResponse(
       result: json["result"] ?? false,
       message: json["message"] ?? "",
-      data: (json["data"] as List? ?? [])
-          .map((e) => ReelItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
-      meta: json["meta"] == null
-          ? null
-          : ReelsMeta.fromJson(Map<String, dynamic>.from(json["meta"])),
+      data:
+          (json["data"] as List? ?? [])
+              .map((e) => ReelItem.fromJson(Map<String, dynamic>.from(e)))
+              .toList(),
+      meta:
+          json["meta"] == null
+              ? null
+              : ReelsMeta.fromJson(Map<String, dynamic>.from(json["meta"])),
+    );
+  }
+}
+
+class ReelDetailResponse {
+  ReelDetailResponse({required this.result, required this.message, this.data});
+
+  final bool result;
+  final String message;
+  final ReelItem? data;
+
+  factory ReelDetailResponse.fromJson(Map<String, dynamic> json) {
+    return ReelDetailResponse(
+      result: json["result"] ?? false,
+      message: json["message"]?.toString() ?? "",
+      data:
+          json["data"] == null
+              ? null
+              : ReelItem.fromJson(Map<String, dynamic>.from(json["data"])),
     );
   }
 }
 
 class ReelsPermissionsResponse {
-  ReelsPermissionsResponse({
-    required this.result,
-    this.data,
-  });
+  ReelsPermissionsResponse({required this.result, this.data});
 
   final bool result;
   final ReelsPermissionData? data;
@@ -45,22 +66,18 @@ class ReelsPermissionsResponse {
   factory ReelsPermissionsResponse.fromJson(Map<String, dynamic> json) {
     return ReelsPermissionsResponse(
       result: json["result"] ?? false,
-      data: json["data"] == null
-          ? null
-          : ReelsPermissionData.fromJson(
-              Map<String, dynamic>.from(json["data"]),
-            ),
+      data:
+          json["data"] == null
+              ? null
+              : ReelsPermissionData.fromJson(
+                Map<String, dynamic>.from(json["data"]),
+              ),
     );
   }
 }
 
 class ReelsMeta {
-  ReelsMeta({
-    this.currentPage,
-    this.lastPage,
-    this.total,
-    this.canPost,
-  });
+  ReelsMeta({this.currentPage, this.lastPage, this.total, this.canPost});
 
   final int? currentPage;
   final int? lastPage;
@@ -158,11 +175,50 @@ class ReelItem {
       isSaved: json["is_saved"] == true,
       canEdit: json["can_edit"] == true,
       user: ReelUser.fromJson(Map<String, dynamic>.from(json["user"] ?? {})),
-      product: json["product"] == null
-          ? null
-          : ReelProduct.fromJson(Map<String, dynamic>.from(json["product"])),
+      product:
+          json["product"] == null
+              ? null
+              : ReelProduct.fromJson(
+                Map<String, dynamic>.from(json["product"]),
+              ),
       link: json["link"]?.toString(),
       createdAt: json["created_at"]?.toString(),
+    );
+  }
+
+  ReelItem copyWith({
+    String? caption,
+    bool? allowComments,
+    ReelProduct? product,
+    String? link,
+    bool clearProduct = false,
+    int? viewsCount,
+    int? likesCount,
+    int? commentsCount,
+    int? sharesCount,
+    int? savesCount,
+    bool? isLiked,
+    bool? isSaved,
+  }) {
+    return ReelItem(
+      id: id,
+      caption: caption ?? this.caption,
+      videoUrl: videoUrl,
+      thumbnailUrl: thumbnailUrl,
+      durationSeconds: durationSeconds,
+      allowComments: allowComments ?? this.allowComments,
+      viewsCount: viewsCount ?? this.viewsCount,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      savesCount: savesCount ?? this.savesCount,
+      isLiked: isLiked ?? this.isLiked,
+      isSaved: isSaved ?? this.isSaved,
+      canEdit: canEdit,
+      user: user,
+      product: clearProduct ? null : (product ?? this.product),
+      link: clearProduct ? null : (link ?? this.link),
+      createdAt: createdAt,
     );
   }
 }
@@ -197,6 +253,10 @@ class ReelProduct {
     required this.name,
     required this.thumbnailImage,
     required this.price,
+    required this.mainPrice,
+    required this.strokedPrice,
+    required this.hasDiscount,
+    required this.discount,
     required this.link,
   });
 
@@ -205,6 +265,10 @@ class ReelProduct {
   final String name;
   final String? thumbnailImage;
   final String price;
+  final String mainPrice;
+  final String strokedPrice;
+  final bool hasDiscount;
+  final String discount;
   final String? link;
 
   factory ReelProduct.fromJson(Map<String, dynamic> json) {
@@ -214,6 +278,10 @@ class ReelProduct {
       name: json["name"]?.toString() ?? "",
       thumbnailImage: json["thumbnail_image"]?.toString(),
       price: json["price"]?.toString() ?? "",
+      mainPrice: json["main_price"]?.toString() ?? "",
+      strokedPrice: json["stroked_price"]?.toString() ?? "",
+      hasDiscount: json["has_discount"] == true,
+      discount: json["discount"]?.toString() ?? "",
       link: json["link"]?.toString(),
     );
   }

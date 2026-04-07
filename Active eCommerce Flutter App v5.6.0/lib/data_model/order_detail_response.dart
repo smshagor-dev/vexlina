@@ -65,6 +65,12 @@ class DetailedOrder {
     this.links,
     this.cancelRequest,
     this.delivery_boy,
+    this.deliveryVerificationStatus,
+    this.deliveryVerifiedAt,
+    this.deliveryVerifiedBy,
+    this.deliveryVerificationSource,
+    this.customerPickupQrPayload,
+    this.customerPickupQrImage,
   });
 
   int? id;
@@ -95,6 +101,12 @@ class DetailedOrder {
   Links? links;
   bool? cancelRequest;
   DeliveryContact? delivery_boy;
+  bool? deliveryVerificationStatus;
+  String? deliveryVerifiedAt;
+  int? deliveryVerifiedBy;
+  String? deliveryVerificationSource;
+  String? customerPickupQrPayload;
+  String? customerPickupQrImage;
 
   factory DetailedOrder.fromJson(Map<String, dynamic> json) => DetailedOrder(
     id: json["id"],
@@ -135,6 +147,12 @@ class DetailedOrder {
     delivery_boy: json["delivery_boy"] == null
         ? null
         : DeliveryContact.fromJson(json["delivery_boy"]),
+    deliveryVerificationStatus: json["delivery_verification_status"],
+    deliveryVerifiedAt: json["delivery_verified_at"],
+    deliveryVerifiedBy: json["delivery_verified_by"],
+    deliveryVerificationSource: json["delivery_verification_source"],
+    customerPickupQrPayload: json["customer_pickup_qr_payload"],
+    customerPickupQrImage: json["customer_pickup_qr_image"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -164,6 +182,12 @@ class DetailedOrder {
     "date": date,
     "links": links!.toJson(),
     "delivery_boy": delivery_boy?.toJson(),
+    "delivery_verification_status": deliveryVerificationStatus,
+    "delivery_verified_at": deliveryVerifiedAt,
+    "delivery_verified_by": deliveryVerifiedBy,
+    "delivery_verification_source": deliveryVerificationSource,
+    "customer_pickup_qr_payload": customerPickupQrPayload,
+    "customer_pickup_qr_image": customerPickupQrImage,
   };
 }
 
@@ -263,6 +287,19 @@ class PickupPoint {
     this.name,
     this.address,
     this.phone,
+    this.internalCode,
+    this.openingTime,
+    this.closingTime,
+    this.workingHours,
+    this.pickupHoldDays,
+    this.instructions,
+    this.supportsReturn,
+    this.supportsCod,
+    this.latitude,
+    this.longitude,
+    this.pickupWindowDeadline,
+    this.pickupWindowDaysLeft,
+    this.isReturnDue,
     this.pickUpStatus,
     this.cashOnPickupStatus,
     this.createdAt,
@@ -274,6 +311,19 @@ class PickupPoint {
   String? name;
   String? address;
   String? phone;
+  String? internalCode;
+  String? openingTime;
+  String? closingTime;
+  String? workingHours;
+  int? pickupHoldDays;
+  String? instructions;
+  bool? supportsReturn;
+  bool? supportsCod;
+  dynamic latitude;
+  dynamic longitude;
+  String? pickupWindowDeadline;
+  int? pickupWindowDaysLeft;
+  bool? isReturnDue;
   int? pickUpStatus;
   dynamic cashOnPickupStatus;
   DateTime? createdAt;
@@ -285,6 +335,19 @@ class PickupPoint {
     name: json["name"],
     address: json["address"],
     phone: json["phone"],
+    internalCode: json["internal_code"],
+    openingTime: json["opening_time"],
+    closingTime: json["closing_time"],
+    workingHours: json["working_hours"],
+    pickupHoldDays: json["pickup_hold_days"],
+    instructions: json["instructions"],
+    supportsReturn: json["supports_return"],
+    supportsCod: json["supports_cod"],
+    latitude: json["latitude"],
+    longitude: json["longitude"],
+    pickupWindowDeadline: json["pickup_window_deadline"],
+    pickupWindowDaysLeft: json["pickup_window_days_left"],
+    isReturnDue: json["is_return_due"],
     pickUpStatus: json["pick_up_status"],
     cashOnPickupStatus: json["cash_on_pickup_status"],
     createdAt: json["created_at"] == null
@@ -301,6 +364,19 @@ class PickupPoint {
     "name": name,
     "address": address,
     "phone": phone,
+    "internal_code": internalCode,
+    "opening_time": openingTime,
+    "closing_time": closingTime,
+    "working_hours": workingHours,
+    "pickup_hold_days": pickupHoldDays,
+    "instructions": instructions,
+    "supports_return": supportsReturn,
+    "supports_cod": supportsCod,
+    "latitude": latitude,
+    "longitude": longitude,
+    "pickup_window_deadline": pickupWindowDeadline,
+    "pickup_window_days_left": pickupWindowDaysLeft,
+    "is_return_due": isReturnDue,
     "pick_up_status": pickUpStatus,
     "cash_on_pickup_status": cashOnPickupStatus,
     "created_at": createdAt?.toIso8601String(),

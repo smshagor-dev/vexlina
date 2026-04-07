@@ -22,6 +22,9 @@ class PickupPointResource extends JsonResource
             "phone"       			=> $this->phone,
             "pick_up_status"        => $this->pick_up_status,
             "cash_on_pickup_status" => $this->cash_on_pickup_status,
+            "working_hours"         => $this->workingHoursLabel(),
+            "latitude"              => $this->latitude,
+            "longitude"             => $this->longitude,
         ];
     }
 

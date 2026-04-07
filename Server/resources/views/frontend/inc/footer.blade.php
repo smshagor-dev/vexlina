@@ -592,12 +592,16 @@
     $isWalletActive = request()->routeIs('wallet.*') || request()->routeIs('wallet.index');
     $isCartActive = request()->routeIs('cart') || request()->routeIs('checkout.shipping_info') || request()->routeIs('checkout.store_shipping_infostore');
     $isCategoriesActive = request()->routeIs('categories.all');
-    $isProfileActive = request()->routeIs('dashboard') || request()->routeIs('customer.*') || request()->routeIs('admin.dashboard');
+    $isPickupPointManager = Auth::check() && auth()->user()->user_type == 'staff' && optional(optional(auth()->user()->staff)->pick_up_point)->id;
+    $isProfileActive = request()->routeIs('dashboard') || request()->routeIs('customer.*') || request()->routeIs('admin.dashboard') || request()->routeIs('pickup-point.*');
     $profileRoute = route('user.login');
     $walletRoute = route('user.login');
 
     if (Auth::check()) {
-        if (isAdmin()) {
+        if ($isPickupPointManager) {
+            $profileRoute = route('pickup-point.dashboard');
+            $walletRoute = route('pickup-point.dashboard');
+        } elseif (isAdmin()) {
             $profileRoute = route('admin.dashboard');
             $walletRoute = route('admin.dashboard');
         } elseif (isSeller()) {

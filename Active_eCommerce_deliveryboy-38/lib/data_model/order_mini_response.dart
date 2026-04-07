@@ -42,6 +42,7 @@ class OrderMiniResponse {
 
 class Order {
   Order({
+    this.pickup_point,
     this.id,
     this.code,
     this.user_id,
@@ -58,9 +59,14 @@ class Order {
     this.lang,
     this.delivery_pickup_latitude,
     this.delivery_pickup_longitude,
+    this.return_due,
+    this.pickup_window_days_left,
+    this.pickup_window_deadline,
+    this.pickup_point_name,
     this.links,
   });
 
+  MiniPickupPoint? pickup_point;
   int? id;
   String? code;
   int? user_id;
@@ -77,6 +83,10 @@ class Order {
   double? lang;
   double? delivery_pickup_latitude;
   double? delivery_pickup_longitude;
+  bool? return_due;
+  int? pickup_window_days_left;
+  String? pickup_window_deadline;
+  String? pickup_point_name;
   OrderLinks? links;
 
   static double? _parseDouble(dynamic value) {
@@ -122,6 +132,9 @@ class Order {
           : null;
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
+    pickup_point: json["pickup_point"] == null
+        ? null
+        : MiniPickupPoint.fromJson(json["pickup_point"]),
     id: json["id"],
     code: json["code"],
     user_id: json["user_id"],
@@ -138,10 +151,15 @@ class Order {
     lang: _parseDouble(json["lang"]),
     delivery_pickup_latitude: _parseDouble(json["delivery_pickup_latitude"]),
     delivery_pickup_longitude: _parseDouble(json["delivery_pickup_longitude"]),
+    return_due: json["return_due"],
+    pickup_window_days_left: json["pickup_window_days_left"],
+    pickup_window_deadline: json["pickup_window_deadline"],
+    pickup_point_name: json["pickup_point_name"],
     links: OrderLinks.fromJson(json["links"]),
   );
 
   Map<String, dynamic> toJson() => {
+    "pickup_point": pickup_point?.toJson(),
     "id": id,
     "code": code,
     "user_id": user_id,
@@ -158,7 +176,52 @@ class Order {
     "lang": lang,
     "delivery_pickup_latitude": delivery_pickup_latitude,
     "delivery_pickup_longitude": delivery_pickup_longitude,
+    "return_due": return_due,
+    "pickup_window_days_left": pickup_window_days_left,
+    "pickup_window_deadline": pickup_window_deadline,
+    "pickup_point_name": pickup_point_name,
     "links": links!.toJson(),
+  };
+}
+
+class MiniPickupPoint {
+  MiniPickupPoint({
+    this.id,
+    this.name,
+    this.address,
+    this.phone,
+    this.internal_code,
+    this.working_hours,
+    this.instructions,
+  });
+
+  int? id;
+  String? name;
+  String? address;
+  String? phone;
+  String? internal_code;
+  String? working_hours;
+  String? instructions;
+
+  factory MiniPickupPoint.fromJson(Map<String, dynamic> json) =>
+      MiniPickupPoint(
+        id: json["id"],
+        name: json["name"],
+        address: json["address"],
+        phone: json["phone"],
+        internal_code: json["internal_code"],
+        working_hours: json["working_hours"],
+        instructions: json["instructions"],
+      );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "address": address,
+    "phone": phone,
+    "internal_code": internal_code,
+    "working_hours": working_hours,
+    "instructions": instructions,
   };
 }
 

@@ -2,23 +2,50 @@
 
 namespace App\Http\Resources\V2;
 
+use App\Services\OrderDeliveryVerificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Models\User;
 
 class PurchaseHistoryCollection extends ResourceCollection
 {
     public function toArray($request)
     {
+        $verificationService = app(OrderDeliveryVerificationService::class);
+
         return [
-            'data' => $this->collection->map(function ($data) {
+            'data' => $this->collection->map(function ($data) use ($verificationService) {
                 $pickup_point = null;
                 if ($data->shipping_type == 'pickup_point' && $data->pickup_point_id) {
-                    $pickup_point = $data->pickup_point;
+                    $holdDays = $data->pickup_point->holdDays();
+                    $reachedAt = $data->delivery_history_date ?: $data->updated_at;
+                    $deadline = $reachedAt ? Carbon::parse($reachedAt)->startOfDay()->addDays($holdDays) : null;
+                    $daysLeft = $deadline ? max(0, Carbon::today()->diffInDays($deadline, false)) : null;
+                    $pickup_point = [
+                        'id' => $data->pickup_point->id,
+                        'name' => $data->pickup_point->getTranslation('name'),
+                        'address' => $data->pickup_point->getTranslation('address'),
+                        'phone' => $data->pickup_point->phone,
+                        'internal_code' => $data->pickup_point->internal_code,
+                        'opening_time' => $data->pickup_point->opening_time,
+                        'closing_time' => $data->pickup_point->closing_time,
+                        'working_hours' => $data->pickup_point->workingHoursLabel(),
+                        'pickup_hold_days' => $holdDays,
+                        'instructions' => $data->pickup_point->instructions,
+                        'supports_return' => $data->pickup_point->supportsReturn(),
+                        'supports_cod' => $data->pickup_point->supportsCod(),
+                        'latitude' => $data->pickup_point->latitude,
+                        'longitude' => $data->pickup_point->longitude,
+                        'pickup_window_deadline' => optional($deadline)->toDateString(),
+                        'pickup_window_days_left' => $daysLeft,
+                        'is_return_due' => $data->delivery_status === 'reached' && $deadline ? Carbon::today()->greaterThanOrEqualTo($deadline->copy()->startOfDay()) : false,
+                    ];
                 }
 
-                $assignedDeliveryBoy = ($data->assign_delivery_boy && $data->delivery_boy)
-                    ? $data->delivery_boy
-                    : null;
+                $assignedDeliveryBoy = null;
+                if ($data->assign_delivery_boy) {
+                    $assignedDeliveryBoy = $data->delivery_boy ?: User::find($data->assign_delivery_boy);
+                }
 
                 return [
                     'id' => $data->id,
@@ -34,7 +61,9 @@ class PurchaseHistoryCollection extends ResourceCollection
                     'payment_type' => ucwords(str_replace('_', ' ',translate( $data->payment_type))),
                     'pickup_point' => $pickup_point,
                     'shipping_type' => $data->shipping_type,
-                    'shipping_type_string' => $data->shipping_type != null ? ucwords(str_replace('_', ' ', translate($data->shipping_type))) : "",
+                    'shipping_type_string' => $data->shipping_type === 'pickup_point'
+                        ? translate('Pickup Point')
+                        : ($data->shipping_type != null ? ucwords(str_replace('_', ' ', translate($data->shipping_type))) : ""),
                     'payment_status' => $data->payment_status,
                     'payment_status_string' => ucwords(str_replace('_', ' ', translate($data->payment_status))),
                     'delivery_status' => $data->delivery_status,
@@ -52,6 +81,12 @@ class PurchaseHistoryCollection extends ResourceCollection
                     'delivery_verified_at' => optional($data->delivery_verified_at)->toDateTimeString(),
                     'delivery_verified_by' => $data->delivery_verified_by,
                     'delivery_verification_source' => $data->delivery_verification_source,
+                    'customer_pickup_qr_payload' => $data->shipping_type == 'pickup_point' && $data->delivery_status == 'reached'
+                        ? $verificationService->buildPickupQrPayload($data)
+                        : null,
+                    'customer_pickup_qr_image' => $data->shipping_type == 'pickup_point' && $data->delivery_status == 'reached'
+                        ? $verificationService->buildPickupQrImageUrl($data)
+                        : null,
                     'links' => [
                         'details' => ''
                     ]

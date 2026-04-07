@@ -22,6 +22,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PickupPointDashboardController;
 use App\Http\Controllers\Payment\AamarpayController;
 use App\Http\Controllers\Payment\AuthorizenetController;
 use App\Http\Controllers\Payment\BkashController;
@@ -129,6 +130,7 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/users/login', 'login')->name('user.login')->middleware('handle-demo-login');
     Route::get('/seller/login', 'login')->name('seller.login')->middleware('handle-demo-login');
     Route::get('/deliveryboy/login', 'login')->name('deliveryboy.login')->middleware('handle-demo-login');
+    Route::get('/pickup-point/login', 'login')->name('pickup-point.login')->middleware('handle-demo-login');
     Route::get('/users/registration', 'registration')->name('user.registration')->middleware('handle-demo-login');
     Route::post('/users/login/cart', 'cart_login')->name('cart.login.submit')->middleware('handle-demo-login');
 
@@ -188,6 +190,24 @@ Route::controller(HomeController::class)->group(function () {
     
     
     Route::post('/orders/check-steadfast-status', [OrderController::class, 'checkSteadfastStatus'])->name('orders.check_steadfast_status');
+});
+
+Route::group(['prefix' => 'pickup-point', 'middleware' => ['auth', 'verified', 'unbanned', 'prevent-back-history', 'pickup_point_manager']], function () {
+    Route::controller(PickupPointDashboardController::class)->group(function () {
+        Route::get('/dashboard', 'dashboard')->name('pickup-point.dashboard');
+        Route::get('/dashboard/summary', 'dashboardSummary')->name('pickup-point.dashboard.summary');
+        Route::get('/upcoming-orders', 'upcomingOrders')->name('pickup-point.upcoming-orders');
+        Route::get('/pickup-orders', 'pickupOrders')->name('pickup-point.pickup-orders');
+        Route::get('/on-the-way-orders', 'onTheWayOrders')->name('pickup-point.on-the-way-orders');
+        Route::get('/reached-orders', 'reachedOrders')->name('pickup-point.reached-orders');
+        Route::get('/completed-orders', 'completedOrders')->name('pickup-point.completed-orders');
+        Route::get('/return-orders', 'returnOrders')->name('pickup-point.return-orders');
+        Route::get('/payouts', 'payouts')->name('pickup-point.payouts');
+        Route::get('/order-detail/{id}', 'orderDetail')->name('pickup-point.order-detail');
+        Route::post('/orders/update-delivery-status', 'updateDeliveryStatus')->name('pickup-point.orders.update-delivery-status');
+        Route::post('/payouts/update-info', 'updatePayoutInfo')->name('pickup-point.payouts.update-info');
+        Route::post('/payouts/request-store', 'storePayoutRequest')->name('pickup-point.payouts.request-store');
+    });
 });
 
 // Language Switch
@@ -383,7 +403,9 @@ Route::group(['middleware' => ['customer', 'verified', 'unbanned']], function ()
 
     Route::controller(ReelController::class)->group(function () {
         Route::get('/my-reels', 'dashboard')->name('reels.dashboard');
+        Route::get('/reels/{id}/edit', 'edit')->name('reels.edit');
         Route::post('/reels', 'store')->name('reels.store');
+        Route::post('/reels/{id}/update', 'update')->name('reels.update');
         Route::post('/reels/{id}/like', 'toggleLike')->name('reels.like');
         Route::post('/reels/{id}/save', 'toggleSave')->name('reels.save');
         Route::post('/reels/{id}/comment', 'storeComment')->name('reels.comment');
@@ -419,6 +441,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::controller(ConversationController::class)->group(function () {
         Route::get('/conversations/destroy/{id}', 'destroy')->name('conversations.destroy');
         Route::post('conversations/refresh', 'refresh')->name('conversations.refresh');
+        Route::get('/conversations/customer-delivery/{order_id}', 'openCustomerDeliveryConversation')->name('conversations.customer_delivery');
     });
 
     // Product Query

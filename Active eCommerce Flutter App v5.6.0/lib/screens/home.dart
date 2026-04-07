@@ -1,4 +1,3 @@
-import 'package:active_ecommerce_cms_demo_app/app_config.dart';
 import 'package:active_ecommerce_cms_demo_app/custom/flash%20deals%20banner/flash_deal_banner.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/business_setting_helper.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
@@ -30,7 +29,6 @@ import '../custom/home_banner_one.dart';
 import '../custom/home_banner_three.dart';
 import '../custom/home_carousel_slider.dart';
 import '../custom/home_search_box.dart';
-import '../custom/pirated_widget.dart';
 import '../data_model/flash_deal_response.dart' hide Product;
 import '../data_model/product_mini_response.dart' show Product;
 import '../single_banner/sincle_banner_page.dart';
@@ -85,8 +83,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    homeData.pirated_logo_controller.dispose();
-    homeData.mainScrollController.dispose();
+    homeData.dispose();
     super.dispose();
   }
 
@@ -603,12 +600,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     BuildContext context,
     HomePresenter homeData,
   ) {
-    final activeOrder = homeData.firstOnTheWayOrder;
+    final activePickupOrder = homeData.firstPickupReachedOrder;
+    final activeOrder = activePickupOrder ?? homeData.firstOnTheWayOrder;
     if (activeOrder == null) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    final qrUrl = _buildOrderQrUrl(activeOrder.code, size: 180);
+    final isPickupReached =
+        activePickupOrder != null &&
+        activeOrder.shippingType == 'pickup_point' &&
+        activeOrder.deliveryStatus == 'reached';
+    final qrUrl = isPickupReached
+        ? (activeOrder.customerPickupQrImage ??
+              _buildOrderQrUrl(activeOrder.customerPickupQrPayload, size: 180))
+        : _buildOrderQrUrl(activeOrder.code, size: 180);
     const darkCard = Color(0xff283246);
     const darkCardAlt = Color(0xff313C52);
     const textMuted = Color(0xffB7C0CC);
@@ -704,7 +709,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'On The Way',
+                                          isPickupReached
+                                              ? 'Pickup Ready'
+                                              : 'On The Way',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -716,7 +723,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         ),
                                         SizedBox(height: 4.h),
                                         Text(
-                                          _displayText(activeOrder.date),
+                                          isPickupReached
+                                              ? _buildPickupWindowText(
+                                                  activeOrder.pickupPoint,
+                                                )
+                                              : _displayText(activeOrder.date),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -728,7 +739,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         ),
                                         SizedBox(height: 4.h),
                                         Text(
-                                          _displayText(activeOrder.code),
+                                          isPickupReached
+                                              ? _displayText(
+                                                  activeOrder.pickupPoint?.name,
+                                                  fallback: _displayText(
+                                                    activeOrder.code,
+                                                  ),
+                                                )
+                                              : _displayText(activeOrder.code),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -1089,6 +1107,30 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
     final encoded = Uri.encodeComponent(normalized);
     return "https://api.qrserver.com/v1/create-qr-code/?size=${size}x$size&data=$encoded&format=png&color=000000&bgcolor=ffffff";
+  }
+
+  String _buildPickupWindowText(dynamic pickupPoint) {
+    final int? daysLeft = pickupPoint?.pickupWindowDaysLeft;
+    final bool isReturnDue = pickupPoint?.isReturnDue == true;
+    final String deadline = _displayText(
+      pickupPoint?.pickupWindowDeadline,
+      fallback: '',
+    );
+
+    if (isReturnDue) {
+      return deadline.isEmpty ? 'Pickup window expired' : 'Expired on $deadline';
+    }
+
+    if (daysLeft != null) {
+      if (daysLeft <= 0) {
+        return deadline.isEmpty ? 'Pickup today' : 'Collect by $deadline';
+      }
+      return deadline.isEmpty
+          ? '$daysLeft day${daysLeft > 1 ? 's' : ''} left'
+          : '$daysLeft day${daysLeft > 1 ? 's' : ''} left · $deadline';
+    }
+
+    return deadline.isEmpty ? 'Ready for pickup' : 'Collect by $deadline';
   }
 
   Widget _buildProductStrip(List<Product> products, bool isLoading) {

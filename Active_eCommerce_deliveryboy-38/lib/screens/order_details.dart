@@ -1,5 +1,6 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/chat_repository.dart';
@@ -8,7 +9,6 @@ import 'package:active_flutter_delivery_app/repositories/order_repository.dart';
 import 'package:active_flutter_delivery_app/screens/delivery_chat.dart';
 import 'package:active_flutter_delivery_app/services/calls_and_messages_service.dart';
 import 'package:flutter/material.dart';
-
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:toast/toast.dart';
 
@@ -273,13 +273,14 @@ class _OrderDetailsState extends State<OrderDetails> {
           physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics()),
           slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _orderDetails != null
-                      ? buildTimeLineTiles()
-                      : buildTimeLineShimmer()),
-            ),
+            if (!PortalHelper.isPickupPointApp)
+              SliverToBoxAdapter(
+                child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _orderDetails != null
+                        ? buildTimeLineTiles()
+                        : buildTimeLineShimmer()),
+              ),
             SliverList(
                 delegate: SliverChildListDelegate([
               Padding(
@@ -318,17 +319,28 @@ class _OrderDetailsState extends State<OrderDetails> {
                 delegate: SliverChildListDelegate([
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 75,
-                    ),
-                    buildBottomSection()
-                  ],
-                ),
+                child: PortalHelper.isPickupPointApp
+                    ? (_orderDetails == null
+                        ? ShimmerHelper().buildBasicShimmer(height: 180.0)
+                        : Column(
+                        children: [
+                          if (_orderDetails.delivery_verification_status != null)
+                            _buildPickupVerificationCard(),
+                          const SizedBox(height: 12),
+                          buildBottomSection(),
+                        ],
+                      ))
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 75,
+                          ),
+                          Expanded(child: buildBottomSection())
+                        ],
+                      ),
               ),
-              widget.show_additional_section
+              widget.show_additional_section && !PortalHelper.isPickupPointApp
                   ? buildAdditionalSection()
                   : Container()
             ]))
@@ -339,8 +351,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 
   buildBottomSection() {
-    return Expanded(
-      child: _orderDetails != null
+    return _orderDetails != null
           ? Column(
               children: [
                 Padding(
@@ -471,7 +482,98 @@ class _OrderDetailsState extends State<OrderDetails> {
                     )),
               ],
             )
-          : ShimmerHelper().buildBasicShimmer(height: 100.0),
+          : ShimmerHelper().buildBasicShimmer(height: 100.0);
+  }
+
+  Widget _buildPickupVerificationCard() {
+    final verified = _orderDetails.delivery_verification_status == true;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: MyTheme.light_grey),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                "Customer Pickup QR",
+                style: TextStyle(
+                  color: MyTheme.font_grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: verified
+                      ? Colors.green.withValues(alpha: .1)
+                      : Colors.orange.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  verified ? "Verified" : "Pending",
+                  style: TextStyle(
+                    color: verified ? Colors.green : Colors.orange.shade800,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            verified
+                ? "Verified at ${_orderDetails.delivery_verified_at ?? '-'}"
+                : "Scan the customer pickup QR from the scanner action to complete handover.",
+            style: TextStyle(color: MyTheme.grey_153, fontSize: 12),
+          ),
+          if ((_orderDetails.customer_pickup_qr_image ?? "").isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  _orderDetails.customer_pickup_qr_image ?? "",
+                  width: 148,
+                  height: 148,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 148,
+                    height: 148,
+                    color: Colors.grey.shade100,
+                    alignment: Alignment.center,
+                    child: Text(
+                      _orderDetails.code ?? "",
+                      style: TextStyle(
+                        color: MyTheme.font_grey,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            "Fallback code: ${_orderDetails.code ?? '-'}",
+            style: TextStyle(
+              color: MyTheme.accent_color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -936,7 +1038,9 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
                 Spacer(),
                 Text(
-                  LangText(context).local!.shipping_method_ucf,
+                  PortalHelper.isPickupPointApp
+                      ? "Pickup Point"
+                      : LangText(context).local!.shipping_method_ucf,
                   style: TextStyle(
                       color: MyTheme.font_grey,
                       fontSize: 13,
@@ -954,11 +1058,13 @@ class _OrderDetailsState extends State<OrderDetails> {
                         color: MyTheme.red,
                         fontSize: 14,
                         fontWeight: FontWeight.w600),
-                  ),
-                  Spacer(),
-                  Text(
-                    _orderDetails.shipping_type_string,
-                    style: TextStyle(
+                ),
+                Spacer(),
+                Text(
+                  PortalHelper.isPickupPointApp
+                      ? (_orderDetails.pickup_point?.name ?? "-")
+                      : _orderDetails.shipping_type_string,
+                  style: TextStyle(
                       color: MyTheme.grey_153,
                     ),
                   ),
@@ -1004,6 +1110,91 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ],
               ),
             ),
+            if (PortalHelper.isPickupPointApp &&
+                _orderDetails.pickup_point != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pickup Address",
+                            style: TextStyle(
+                                color: MyTheme.font_grey,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _orderDetails.pickup_point?.address ?? "-",
+                            style: TextStyle(color: MyTheme.grey_153),
+                          ),
+                          if ((_orderDetails.pickup_point?.internal_code ?? "").isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                "Code: ${_orderDetails.pickup_point?.internal_code ?? ""}",
+                                style: TextStyle(color: MyTheme.grey_153),
+                              ),
+                            ),
+                          if ((_orderDetails.pickup_point?.phone ?? "").isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                _orderDetails.pickup_point?.phone ?? "",
+                                style: TextStyle(color: MyTheme.grey_153),
+                              ),
+                            ),
+                          if ((_orderDetails.pickup_point?.working_hours ?? "").isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                "Hours: ${_orderDetails.pickup_point?.working_hours ?? ""}",
+                                style: TextStyle(color: MyTheme.grey_153),
+                              ),
+                            ),
+                          if (_orderDetails.pickup_point?.pickup_window_days_left != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: (_orderDetails.pickup_point?.is_return_due ?? false)
+                                      ? MyTheme.red.withValues(alpha: .1)
+                                      : MyTheme.soft_accent_color_2.withValues(alpha: .35),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  (_orderDetails.pickup_point?.is_return_due ?? false)
+                                      ? "Pickup window expired. Return action required."
+                                      : "Pickup window: ${_orderDetails.pickup_point?.pickup_window_days_left} day(s) left",
+                                  style: TextStyle(
+                                    color: (_orderDetails.pickup_point?.is_return_due ?? false)
+                                        ? MyTheme.red
+                                        : MyTheme.accent_color,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if ((_orderDetails.pickup_point?.instructions ?? "").isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                _orderDetails.pickup_point?.instructions ?? "",
+                                style: TextStyle(color: MyTheme.grey_153),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               children: [
                 Text(
@@ -1146,6 +1337,7 @@ class _OrderDetailsState extends State<OrderDetails> {
             ),
             _orderDetails.shipping_address.phone != null &&
                     _orderDetails.shipping_address.phone != ""
+                && !PortalHelper.isPickupPointApp
                 ? Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Column(
@@ -1339,7 +1531,9 @@ class _OrderDetailsState extends State<OrderDetails> {
         ),
       ),
       title: Text(
-        LangText(context).local!.order_details_ucf,
+        PortalHelper.isPickupPointApp && _orderDetails?.code != null
+            ? "Order ${_orderDetails.code}"
+            : LangText(context).local!.order_details_ucf,
         style: TextStyle(fontSize: 16, color: MyTheme.red),
       ),
       elevation: 0.0,

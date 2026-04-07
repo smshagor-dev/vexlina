@@ -9,7 +9,7 @@ import 'package:active_ecommerce_cms_demo_app/my_theme.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/auth_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/change_language.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/currency_change.dart';
-import 'package:active_ecommerce_cms_demo_app/screens/home.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/main.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/profile_edit.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/address.dart';
 import 'package:flutter/material.dart';
@@ -192,7 +192,7 @@ class _SettingsState extends State<Settings> {
           }
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => Home()),
+            MaterialPageRoute(builder: (context) => const Main(goBack: false)),
             (route) => false,
           );
         }

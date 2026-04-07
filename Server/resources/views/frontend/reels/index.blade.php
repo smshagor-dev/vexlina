@@ -114,10 +114,20 @@
             <div class="row">
                 @forelse ($reels as $reel)
                     <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                        @php
+                            $videoUpload = $reel->video;
+                            $thumbnailUpload = $reel->thumbnail;
+                            $videoUrl = $videoUpload ? my_asset($videoUpload->file_name) : null;
+                            $thumbnailUrl = $thumbnailUpload ? my_asset($thumbnailUpload->file_name) : '';
+                            $videoMime = $videoUpload && $videoUpload->extension === 'webm' ? 'video/webm' : 'video/mp4';
+                        @endphp
                         <div class="reel-card">
                             <div class="reel-card__media">
-                                <video controls preload="metadata" poster="{{ $reel->thumbnail_upload_id ? uploaded_asset($reel->thumbnail_upload_id) : '' }}">
-                                    <source src="{{ uploaded_asset($reel->video_upload_id) }}">
+                                <video controls preload="metadata" playsinline poster="{{ $thumbnailUrl }}">
+                                    @if ($videoUrl)
+                                        <source src="{{ $videoUrl }}" type="{{ $videoMime }}">
+                                    @endif
+                                    <a href="{{ $videoUrl ?: route('reels.show', $reel->id) }}">{{ translate('Open reel video') }}</a>
                                 </video>
                                 <div class="reel-card__overlay">
                                     <span class="reel-card__pill">{{ optional($reel->created_at)->diffForHumans() }}</span>

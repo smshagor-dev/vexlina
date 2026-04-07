@@ -32,6 +32,7 @@
         .studio-grid-card video { width: 100%; aspect-ratio: 9/15; object-fit: cover; background: #0f172a; }
         .studio-grid-card__body { padding: 18px; }
         .studio-grid-card__caption { min-height: 72px; color: #344054; line-height: 1.6; }
+        .studio-grid-card__meta { color: #667085; font-size: 13px; margin-top: 10px; }
         .studio-grid-card__stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin: 16px 0; }
         .studio-grid-card__stats span { border-radius: 14px; background: #f8fafc; padding: 10px 6px; text-align: center; font-size: 12px; font-weight: 700; color: #475467; }
         .studio-grid-card__actions { display: flex; gap: 10px; }
@@ -81,13 +82,27 @@
                     <div class="row">
                         @forelse ($reels as $reel)
                             <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                                @php
+                                    $videoUpload = $reel->video;
+                                    $thumbnailUpload = $reel->thumbnail;
+                                    $videoUrl = $videoUpload ? my_asset($videoUpload->file_name) : null;
+                                    $thumbnailUrl = $thumbnailUpload ? my_asset($thumbnailUpload->file_name) : '';
+                                    $videoMime = $videoUpload && $videoUpload->extension === 'webm' ? 'video/webm' : 'video/mp4';
+                                @endphp
                                 <div class="studio-grid-card">
-                                    <video controls preload="metadata" poster="{{ $reel->thumbnail_upload_id ? uploaded_asset($reel->thumbnail_upload_id) : '' }}">
-                                        <source src="{{ uploaded_asset($reel->video_upload_id) }}">
+                                    <video controls preload="metadata" playsinline poster="{{ $thumbnailUrl }}">
+                                        @if ($videoUrl)
+                                            <source src="{{ $videoUrl }}" type="{{ $videoMime }}">
+                                        @endif
+                                        <a href="{{ $videoUrl ?: route('reels.show', $reel->id) }}">{{ translate('Open reel video') }}</a>
                                     </video>
                                     <div class="studio-grid-card__body">
                                         <div class="small text-muted mb-2">{{ optional($reel->created_at)->diffForHumans() }}</div>
                                         <div class="studio-grid-card__caption">{{ \Illuminate\Support\Str::limit($reel->caption ?: translate('No caption added.'), 120) }}</div>
+                                        <div class="studio-grid-card__meta">
+                                            <div>{{ $reel->product ? $reel->product->name : translate('No linked product') }}</div>
+                                            <div>{{ $reel->allow_comments ? translate('Comments on') : translate('Comments off') }}</div>
+                                        </div>
                                         <div class="studio-grid-card__stats">
                                             <span>{{ $reel->views_count }} {{ translate('Views') }}</span>
                                             <span>{{ $reel->likes_count }} {{ translate('Likes') }}</span>
@@ -96,6 +111,7 @@
                                         </div>
                                         <div class="studio-grid-card__actions">
                                             <a href="{{ route('reels.show', $reel->id) }}" class="btn btn-dark flex-grow-1">{{ translate('Open') }}</a>
+                                            <a href="{{ route('reels.edit', $reel->id) }}" class="btn btn-soft-primary flex-grow-1">{{ translate('Edit') }}</a>
                                             <form action="{{ route('reels.destroy', $reel->id) }}" method="POST" class="flex-grow-1">
                                                 @csrf
                                                 <button class="btn btn-soft-danger w-100">{{ translate('Delete') }}</button>

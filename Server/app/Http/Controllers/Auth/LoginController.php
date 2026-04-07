@@ -264,8 +264,10 @@ class LoginController extends Controller
      * Check user's role and redirect user based on their role
      * @return
      */
-    public function authenticated()
+    public function authenticated(Request $request = null, $user = null)
     {
+        $request = $request ?: request();
+
         if (session('temp_user_id') != null) {
             if(auth()->user()->user_type == 'customer'){
                 Cart::where('temp_user_id', session('temp_user_id'))
@@ -282,7 +284,29 @@ class LoginController extends Controller
             Session::forget('temp_user_id');
         }
 
-        if (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
+        if ($request->input('delivery_portal') === 'delivery_operations') {
+            if (auth()->user()->user_type == 'delivery_boy') {
+                return redirect()->route('dashboard');
+            }
+
+            if (
+                auth()->user()->user_type == 'staff' &&
+                optional(optional(auth()->user()->staff)->pick_up_point)->id
+            ) {
+                return redirect()->route('pickup-point.dashboard');
+            }
+
+            auth()->logout();
+            flash(translate('This login page is only for delivery boys or pickup point managers.'))->error();
+            return redirect()->route('deliveryboy.login');
+        }
+
+        if (
+            auth()->user()->user_type == 'staff' &&
+            optional(optional(auth()->user()->staff)->pick_up_point)->id
+        ) {
+            return redirect()->route('pickup-point.dashboard');
+        } elseif (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
             CoreComponentRepository::instantiateShopRepository();
             return redirect()->route('admin.dashboard');
         } elseif (auth()->user()->user_type == 'seller') {

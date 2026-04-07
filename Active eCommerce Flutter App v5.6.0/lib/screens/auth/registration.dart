@@ -10,7 +10,7 @@ import 'package:active_ecommerce_cms_demo_app/other_config.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/auth_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/profile_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/common_webview_screen.dart';
-import 'package:active_ecommerce_cms_demo_app/screens/home.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/main.dart';
 import 'package:active_ecommerce_cms_demo_app/ui_elements/auth_ui.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
@@ -338,13 +338,14 @@ WebView Page resource error:
           ),
         );
       } else {
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) {
-              return Home();
+              return const Main(goBack: false);
             },
           ),
+          (route) => false,
         );
       }
     }

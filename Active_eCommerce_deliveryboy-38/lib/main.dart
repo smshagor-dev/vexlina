@@ -31,12 +31,14 @@ main() async {
       user_email.$ = userByTokenResponse.user!.email;
       user_phone.$ = userByTokenResponse.user!.phone;
       avatar_original.$ = userByTokenResponse.user!.avatar_original;
+      user_type.$ = userByTokenResponse.user!.type;
     } else {
       AuthHelper().clearUserData();
     }
 
   }
   is_logged_in.load();
+  user_type.load();
   // user_id.load();
   // user_name.load();
   // user_email.load();

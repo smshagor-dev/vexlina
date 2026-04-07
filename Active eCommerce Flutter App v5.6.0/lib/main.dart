@@ -59,6 +59,9 @@ import 'screens/seller_details.dart';
 import 'services/push_notification_service.dart';
 import 'single_banner/photo_provider.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -81,6 +84,7 @@ void main() async {
 var routes = GoRouter(
   overridePlatformDefaultLocation: false,
   navigatorKey: OneContext().key,
+  observers: [routeObserver],
   initialLocation: "/",
   routes: [
     GoRoute(

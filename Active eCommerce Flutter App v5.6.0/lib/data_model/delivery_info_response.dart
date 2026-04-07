@@ -6,6 +6,14 @@
 
 import 'dart:convert';
 
+double? _toNullableDouble(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+
+  return double.tryParse(value.toString());
+}
+
 List<DeliveryInfoResponse> deliveryInfoResponseFromJson(String str) =>
     List<DeliveryInfoResponse>.from(
       json.decode(str).map((x) => DeliveryInfoResponse.fromJson(x)),
@@ -34,11 +42,13 @@ class DeliveryInfoResponse {
         name: json["name"],
         ownerId: json["owner_id"],
         cartItems: List<CartItem>.from(
-          json["cart_items"].map((x) => CartItem.fromJson(x)),
+          (json["cart_items"] ?? []).map((x) => CartItem.fromJson(x)),
         ),
-        carriers: Carriers.fromJson(json["carriers"]),
+        carriers: json["carriers"] == null
+            ? Carriers(data: [])
+            : Carriers.fromJson(json["carriers"]),
         pickupPoints: List<PickupPoint>.from(
-          json["pickup_points"].map((x) => PickupPoint.fromJson(x)),
+          (json["pickup_points"] ?? []).map((x) => PickupPoint.fromJson(x)),
         ),
       );
 
@@ -57,7 +67,7 @@ class Carriers {
   List<Datum>? data;
 
   factory Carriers.fromJson(Map<String, dynamic> json) => Carriers(
-    data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+    data: List<Datum>.from((json["data"] ?? []).map((x) => Datum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -149,6 +159,9 @@ class PickupPoint {
     this.phone,
     this.pickUpStatus,
     this.cashOnPickupStatus,
+    this.workingHours,
+    this.latitude,
+    this.longitude,
   });
 
   var id;
@@ -158,6 +171,9 @@ class PickupPoint {
   String? phone;
   var pickUpStatus;
   dynamic cashOnPickupStatus;
+  String? workingHours;
+  double? latitude;
+  double? longitude;
 
   factory PickupPoint.fromJson(Map<String, dynamic> json) => PickupPoint(
     id: json["id"],
@@ -167,6 +183,9 @@ class PickupPoint {
     phone: json["phone"],
     pickUpStatus: json["pick_up_status"],
     cashOnPickupStatus: json["cash_on_pickup_status"],
+    workingHours: json["working_hours"],
+    latitude: _toNullableDouble(json["latitude"]),
+    longitude: _toNullableDouble(json["longitude"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -177,5 +196,8 @@ class PickupPoint {
     "phone": phone,
     "pick_up_status": pickUpStatus,
     "cash_on_pickup_status": cashOnPickupStatus,
+    "working_hours": workingHours,
+    "latitude": latitude,
+    "longitude": longitude,
   };
 }

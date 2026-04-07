@@ -63,6 +63,21 @@ class ReelController extends Controller
 
         return view('frontend.reels.studio', [
             'canPost' => $this->canPost($user),
+            'reel' => null,
+        ]);
+    }
+
+    public function edit($id)
+    {
+        $user = auth()->user();
+        $reel = ReelPost::with(['product', 'video', 'thumbnail'])
+            ->where('user_id', $user->id)
+            ->where('status', '!=', 'deleted')
+            ->findOrFail($id);
+
+        return view('frontend.reels.studio', [
+            'canPost' => $this->canPost($user),
+            'reel' => $reel,
         ]);
     }
 
@@ -77,8 +92,9 @@ class ReelController extends Controller
         $request->validate([
             'caption' => 'nullable|string|max:2000',
             'product_id' => 'nullable|integer|exists:products,id',
+            'duration_seconds' => 'nullable|integer|max:30',
             'allow_comments' => 'nullable|boolean',
-            'video' => 'required|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm|max:51200',
+            'video' => 'required|file|mimetypes:video/mp4,video/webm|max:51200',
             'thumbnail' => 'nullable|image|max:5120',
         ]);
 
@@ -98,7 +114,44 @@ class ReelController extends Controller
             'status' => 'published',
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'result' => true,
+                'message' => translate('Reel posted successfully.'),
+                'redirect' => route('reels.dashboard'),
+            ]);
+        }
+
         flash(translate('Reel posted successfully.'))->success();
+        return redirect()->route('reels.dashboard');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $reel = ReelPost::where('user_id', auth()->id())
+            ->where('status', '!=', 'deleted')
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'caption' => 'nullable|string|max:2000',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'allow_comments' => 'nullable|boolean',
+        ]);
+
+        $reel->caption = $validated['caption'] ?? null;
+        $reel->product_id = $validated['product_id'] ?? null;
+        $reel->allow_comments = $request->boolean('allow_comments');
+        $reel->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'result' => true,
+                'message' => translate('Reel updated successfully.'),
+                'redirect' => route('reels.dashboard'),
+            ]);
+        }
+
+        flash(translate('Reel updated successfully.'))->success();
         return redirect()->route('reels.dashboard');
     }
 

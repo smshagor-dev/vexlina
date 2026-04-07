@@ -180,9 +180,16 @@
                 </div>
             @endif
             @if (Auth::user()->balance < $walletPayableTotal)
-                <button type="button" class="btn btn-secondary" disabled>
-                    {{ translate('Insufficient balance') }}
-                </button>
+                <div>
+                    <button type="button" class="btn btn-secondary" disabled>
+                        {{ translate('Insufficient balance') }}
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ route('wallet.index') }}" class="btn btn-primary fs-14 fw-700 px-5 rounded-0">
+                        {{ translate('Recharge Wallet') }}
+                    </a>
+                </div>
             @else
                 <button type="button" onclick="use_wallet()"
                     class="btn btn-primary fs-14 fw-700 px-5 rounded-0">

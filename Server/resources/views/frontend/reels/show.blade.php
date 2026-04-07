@@ -3,6 +3,13 @@
 @section('meta_title'){{ translate('Reel Details') }}@stop
 
 @section('content')
+    @php
+        $videoUpload = $reel->video;
+        $thumbnailUpload = $reel->thumbnail;
+        $videoUrl = $videoUpload ? my_asset($videoUpload->file_name) : null;
+        $thumbnailUrl = $thumbnailUpload ? my_asset($thumbnailUpload->file_name) : '';
+        $videoMime = $videoUpload && $videoUpload->extension === 'webm' ? 'video/webm' : 'video/mp4';
+    @endphp
     <section class="py-4 bg-light">
         <div class="container">
             <div class="mb-3">
@@ -14,8 +21,11 @@
             <div class="card border-0 shadow-sm overflow-hidden">
                 <div class="row no-gutters">
                     <div class="col-lg-6 bg-dark">
-                        <video class="w-100 h-100" controls autoplay preload="metadata" poster="{{ $reel->thumbnail_upload_id ? uploaded_asset($reel->thumbnail_upload_id) : '' }}">
-                            <source src="{{ uploaded_asset($reel->video_upload_id) }}">
+                        <video class="w-100 h-100" controls autoplay preload="metadata" playsinline poster="{{ $thumbnailUrl }}">
+                            @if ($videoUrl)
+                                <source src="{{ $videoUrl }}" type="{{ $videoMime }}">
+                            @endif
+                            <a href="{{ $videoUrl ?: route('reels.index') }}">{{ translate('Open reel video') }}</a>
                         </video>
                     </div>
                     <div class="col-lg-6">

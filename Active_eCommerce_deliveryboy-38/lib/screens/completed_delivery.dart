@@ -1,12 +1,16 @@
 import 'package:active_flutter_delivery_app/custom/lang_text.dart';
+import 'package:active_flutter_delivery_app/custom/toast_component.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shimmer_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/sortable.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/delivery_repository.dart';
+import 'package:active_flutter_delivery_app/screens/delivery_qr_scanner.dart';
 import 'package:active_flutter_delivery_app/screens/order_details.dart';
 import 'package:active_flutter_delivery_app/screens/pending.dart';
 import 'package:active_flutter_delivery_app/ui_sections/drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:toast/toast.dart';
 
 
 class CompletedDelivery extends StatefulWidget {
@@ -164,6 +168,39 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
     resetFilterKeys();
     initSortableDefaults();
     fetchData();
+  }
+
+  Future<void> _scanAndCompleteOrder() async {
+    final scannedCode = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DeliveryQrScanner(
+          title: 'Scan QR to Complete',
+          description:
+              'Scan the order QR code to complete an eligible reached order.',
+        ),
+      ),
+    );
+
+    if (scannedCode == null || scannedCode.toString().trim().isEmpty) {
+      return;
+    }
+
+    final response = await DeliveryRepository().getDeliveryStatusChangeResponse(
+      status: "delivered",
+      delivery_verification_code: scannedCode.toString().trim(),
+    );
+
+    ToastComponent.showDialog(
+      response.message ?? "Status updated",
+      context,
+      gravity: Toast.center,
+      duration: Toast.lengthLong,
+    );
+
+    if (response.result == true) {
+      await _onRefresh();
+    }
   }
 
   @override
@@ -333,9 +370,30 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
                   ),
                 ),
           Text(
-            LangText(context).local!.completed_delivery_ucf,
+            PortalHelper.completedLabel,
             style: TextStyle(fontSize: 16, color: MyTheme.accent_color),
           ),
+          Spacer(),
+          if (PortalHelper.isPickupPointApp)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: MyTheme.accent_color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: _scanAndCompleteOrder,
+                icon: const Icon(Icons.qr_code_scanner, size: 18),
+                label: const Text(
+                  "Scan QR",
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -523,9 +581,11 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
                   style: TextButton.styleFrom(
                     minimumSize:
                         Size((MediaQuery.of(context).size.width - 36) / 2, 0),
-                    //height: 50,
-                    backgroundColor: MyTheme.lime_disabled,
-                    // splashColor: Colors.transparent,
+                    backgroundColor: PortalHelper.isPickupPointApp
+                        ? (_list[index].payment_status == "paid"
+                            ? MyTheme.lime_disabled
+                            : MyTheme.red_disabled)
+                        : MyTheme.lime_disabled,
                     shape: RoundedRectangleBorder(
                         borderRadius:
                             const BorderRadius.all(Radius.circular(6.0))),
@@ -535,13 +595,21 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
                       Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: Icon(
-                          Icons.done,
+                          PortalHelper.isPickupPointApp
+                              ? (_list[index].payment_status == "paid"
+                                  ? Icons.check_circle
+                                  : Icons.cancel)
+                              : Icons.done,
                           size: 14,
                           color: MyTheme.white,
                         ),
                       ),
                       Text(
-                        LangText(context).local!.delivered_ucf,
+                        PortalHelper.isPickupPointApp
+                            ? (_list[index].payment_status == "paid"
+                                ? LangText(context).local!.paid_ucf
+                                : LangText(context).local!.unpaid_ucf)
+                            : LangText(context).local!.delivered_ucf,
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -613,7 +681,7 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
                           )),
                     ),
                     Text(
-                      LangText(context).local!.completed_delivery_ucf,
+                      PortalHelper.completedLabel,
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -648,7 +716,7 @@ class _CompletedDeliveryState extends State<CompletedDelivery> {
                           )),
                     ),
                     Text(
-                      LangText(context).local!.pending_delivery_ucf,
+                      PortalHelper.pendingLabel,
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,

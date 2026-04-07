@@ -54,7 +54,21 @@ class _ChatState extends State<Chat> {
   void initState() {
     super.initState();
 
+    _chatTextController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+
     fetchData();
+  }
+
+  @override
+  void dispose() {
+    _chatTextController.dispose();
+    _chatScrollController.dispose();
+    timer?.cancel();
+    super.dispose();
   }
 
   fetchData() async {
@@ -146,10 +160,15 @@ class _ChatState extends State<Chat> {
       child: Scaffold(
         backgroundColor: MyTheme.mainColor,
         appBar: buildAppBar2(context),
-        body: Stack(
+        body: Column(
           children: [
-            !_isInitial ? conversations() : chatShimmer(),
-            typeSmsSection(),
+            Expanded(
+              child: !_isInitial ? conversations() : chatShimmer(),
+            ),
+            SafeArea(
+              top: false,
+              child: typeSmsSection(),
+            ),
           ],
         ),
       ),
@@ -265,59 +284,50 @@ class _ChatState extends State<Chat> {
       scrolledUnderElevation: 0.0,
       elevation: 0,
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              if ((widget.messengerPhone ?? "").trim().isNotEmpty)
-                IconButton(
-                  onPressed: _makeVoiceCall,
-                  icon: const Icon(Icons.call_rounded),
-                  color: MyTheme.dark_font_grey,
-                  tooltip: 'Voice call',
-                ),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
-                width: 35,
-                height: 35,
-                margin: EdgeInsets.only(right: 14),
-                child: Stack(
-                  children: [
-                    UsefulElements.roundImageWithPlaceholder(
-                      elevation: 1,
-                      borderWidth: 0,
-                      url: widget.messengerImage,
-                      width: 35.0,
-                      height: 35.0,
-                      fit: BoxFit.cover,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: DeviceInfo(context).width! / 3,
-                    child: Text(
-                      widget.messengerName!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: MyTheme.dark_font_grey,
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 35,
+                  height: 35,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Stack(
+                    children: [
+                      UsefulElements.roundImageWithPlaceholder(
+                        elevation: 1,
+                        borderWidth: 0,
+                        url: widget.messengerImage,
+                        width: 35.0,
+                        height: 35.0,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    widget.messengerName ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: MyTheme.dark_font_grey,
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
+          if ((widget.messengerPhone ?? "").trim().isNotEmpty)
+            IconButton(
+              onPressed: _makeVoiceCall,
+              icon: const Icon(Icons.call_rounded),
+              color: MyTheme.dark_font_grey,
+              tooltip: 'Voice call',
+            ),
         ],
       ),
       backgroundColor: MyTheme.mainColor,
@@ -530,55 +540,47 @@ class _ChatState extends State<Chat> {
   );
 
   conversations() {
-    return SingleChildScrollView(
+    return ListView.builder(
       reverse: true,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 60),
-        child: ListView.builder(
-          reverse: true,
-          itemCount: _list.length,
-          shrinkWrap: true,
-          padding: const EdgeInsets.only(top: 10, bottom: 10),
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.only(
-                left: 14,
-                right: 14,
-                top: 10,
-                bottom: 10,
+      itemCount: _list.length,
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
+      itemBuilder: (context, index) {
+        return Container(
+          padding: const EdgeInsets.only(
+            left: 14,
+            right: 14,
+            top: 10,
+            bottom: 10,
+          ),
+          child: Column(
+            children: [
+              (index == _list.length - 1) ||
+                      _list[index].year != _list[index + 1].year ||
+                      _list[index].month != _list[index + 1].month
+                  ? UsefulElements().customContainer(
+                      width: 100,
+                      height: 20,
+                      borderRadius: 5,
+                      child: Text(
+                        "${_list[index].date}",
+                        style: const TextStyle(
+                          fontSize: 8,
+                          color: Color(0xff999999),
+                        ),
+                      ),
+                    )
+                  : Container(),
+              const SizedBox(height: 5),
+              Align(
+                alignment: (_list[index].sendType == "customer"
+                    ? Alignment.topRight
+                    : Alignment.topLeft),
+                child: smsContainer(index),
               ),
-              child: Column(
-                children: [
-                  (index == _list.length - 1) ||
-                          _list[index].year != _list[index + 1].year ||
-                          _list[index].month != _list[index + 1].month
-                      ? UsefulElements().customContainer(
-                          width: 100,
-                          height: 20,
-                          borderRadius: 5,
-                          child: Text(
-                            "${_list[index].date}",
-                            style: const TextStyle(
-                              fontSize: 8,
-                              color: Color(0xff999999),
-                            ),
-                          ),
-                        )
-                      : Container(),
-                  const SizedBox(height: 5),
-                  Align(
-                    alignment: (_list[index].sendType == "customer"
-                        ? Alignment.topRight
-                        : Alignment.topLeft),
-                    child: smsContainer(index),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -647,96 +649,77 @@ class _ChatState extends State<Chat> {
   }
 
   Widget typeSmsSection() {
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Container(
-        padding: const EdgeInsets.only(left: 20, bottom: 10, top: 10),
-        height: 60,
-        width: double.infinity,
-        color: Colors.white.withValues(alpha: 0.95),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.only(left: 10, right: 10),
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Color(0xffEFEFEF),
-                ),
-                child: TextField(
-                  controller: _chatTextController,
-                  textAlign: TextAlign.start,
-                  decoration: const InputDecoration(
-                    hintText: "  Type your message here . . .",
-                    hintStyle: TextStyle(
-                      color: Color(0xff999999),
-                      fontSize: 12,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 15),
+    return Container(
+      width: double.infinity,
+      color: Colors.white.withValues(alpha: 0.98),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              constraints: const BoxConstraints(minHeight: 52),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                color: const Color(0xffEFEFEF),
+              ),
+              child: TextField(
+                controller: _chatTextController,
+                textAlign: TextAlign.start,
+                minLines: 1,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: "Type your message here . . .",
+                  hintStyle: TextStyle(
+                    color: Color(0xff999999),
+                    fontSize: 12,
                   ),
+                  border: InputBorder.none,
                 ),
               ),
             ),
-            const SizedBox(width: 20),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 6, 0),
-              child: Container(
-                width: 56.0,
-                height: 56.0,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Color(0xffD1D1D1), width: 2.0),
-                ),
-                child: FloatingActionButton(
-                  onPressed: _chatTextController.text.trim().isNotEmpty
-                      ? () {
-                          onTapSendMessage();
-                        }
-                      : null,
-                  backgroundColor: MyTheme.accent_color,
-                  elevation: 0,
-                  shape: const CircleBorder(),
-                  child: const Icon(Icons.send, color: Colors.white, size: 18),
-                ),
-              ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: FloatingActionButton(
+              onPressed: _chatTextController.text.trim().isNotEmpty
+                  ? () {
+                      onTapSendMessage();
+                    }
+                  : null,
+              backgroundColor: MyTheme.accent_color,
+              elevation: 0,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.send, color: Colors.white, size: 18),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   chatShimmer() {
-    return SingleChildScrollView(
+    return ListView.builder(
       reverse: true,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 60),
-        child: ListView.builder(
-          reverse: true,
-          itemCount: 10,
-          shrinkWrap: true,
-          padding: const EdgeInsets.only(top: 10, bottom: 10),
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.only(
-                left: 14,
-                right: 14,
-                top: 10,
-                bottom: 10,
-              ),
-              child: Align(
-                alignment: (index.isOdd
-                    ? Alignment.topRight
-                    : Alignment.topLeft),
-                child: smsShimmer(index),
-              ),
-            );
-          },
-        ),
-      ),
+      itemCount: 10,
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
+      itemBuilder: (context, index) {
+        return Container(
+          padding: const EdgeInsets.only(
+            left: 14,
+            right: 14,
+            top: 10,
+            bottom: 10,
+          ),
+          child: Align(
+            alignment: (index.isOdd ? Alignment.topRight : Alignment.topLeft),
+            child: smsShimmer(index),
+          ),
+        );
+      },
     );
   }
 

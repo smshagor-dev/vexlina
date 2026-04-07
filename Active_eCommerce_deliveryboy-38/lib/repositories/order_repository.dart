@@ -3,6 +3,7 @@ import 'package:active_flutter_delivery_app/helpers/api_request.dart';
 import 'package:flutter/foundation.dart';
 import 'package:active_flutter_delivery_app/data_model/order_detail_response.dart';
 import 'package:active_flutter_delivery_app/data_model/order_item_response.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shared_value_helper.dart';
 
 
@@ -10,7 +11,7 @@ class OrderRepository {
 
   Future<OrderDetailResponse> getOrderDetails(
       {@required int? id = 0}) async {
-    var url = "${AppConfig.BASE_URL}/${AppConfig.DELIVERY_PREFIX}/purchase-history-details/" +
+    var url = "${AppConfig.BASE_URL}/${PortalHelper.apiPrefix}/purchase-history-details/" +
         id.toString();
 
 
@@ -26,7 +27,7 @@ class OrderRepository {
 
   Future<OrderItemResponse> getOrderItems(
       {@required int? id = 0}) async {
-    var url = "${AppConfig.BASE_URL}/${AppConfig.DELIVERY_PREFIX}/purchase-history-items/" +
+    var url = "${AppConfig.BASE_URL}/${PortalHelper.apiPrefix}/purchase-history-items/" +
         id.toString();
 
 

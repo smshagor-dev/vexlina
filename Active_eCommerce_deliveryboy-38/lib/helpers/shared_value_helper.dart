@@ -59,3 +59,9 @@ final SharedValue<String?> user_phone = SharedValue(
   key: "user_phone", // disk storage key for shared_preferences
   autosave: true, // autosave to shared prefs when value changes
 );
+
+final SharedValue<String?> user_type = SharedValue(
+  value: "", // initial value
+  key: "user_type", // disk storage key for shared_preferences
+  autosave: true, // autosave to shared prefs when value changes
+);

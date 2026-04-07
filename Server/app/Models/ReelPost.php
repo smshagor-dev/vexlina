@@ -35,12 +35,12 @@ class ReelPost extends Model
 
     public function video()
     {
-        return $this->belongsTo(Upload::class, 'video_upload_id');
+        return $this->belongsTo(Upload::class, 'video_upload_id')->withTrashed();
     }
 
     public function thumbnail()
     {
-        return $this->belongsTo(Upload::class, 'thumbnail_upload_id');
+        return $this->belongsTo(Upload::class, 'thumbnail_upload_id')->withTrashed();
     }
 
     public function likes()

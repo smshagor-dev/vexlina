@@ -60,6 +60,7 @@ class _OrderDetailsState extends State<OrderDetails> {
     'on_delivery',
     'picked_up',
     'on_the_way',
+    'reached',
     'delivered',
   ];
 
@@ -920,7 +921,7 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   buildTimeLineTiles() {
     return SizedBox(
-      height: 60,
+      height: 68,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1083,7 +1084,59 @@ class _OrderDetailsState extends State<OrderDetails> {
           ),
 
           // ----------------------------------------------------------------
-          // STEP 4: Delivered
+          // STEP 4: Reached
+          // ----------------------------------------------------------------
+          Expanded(
+            child: TimelineTile(
+              axis: TimelineAxis.horizontal,
+              alignment: TimelineAlign.start,
+              endChild: _orderDetails!.delivery_status == "reached"
+                  ? const Padding(
+                      padding: EdgeInsets.only(top: 5.0),
+                      child: Text(
+                        "Reached",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+              indicatorStyle: IndicatorStyle(
+                color: _stepIndex >= 5 ? Colors.green : MyTheme.medium_grey,
+                height: 30,
+                width: 30,
+                padding: const EdgeInsets.all(0),
+                indicator: Container(
+                  decoration: BoxDecoration(
+                    color: _stepIndex >= 5 ? Colors.green : MyTheme.medium_grey,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _orderDetails!.delivery_status == "reached"
+                          ? Colors.green
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.storefront_outlined,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+              beforeLineStyle: _stepIndex >= 5
+                  ? const LineStyle(color: Colors.green, thickness: 4)
+                  : LineStyle(color: MyTheme.medium_grey, thickness: 3),
+              afterLineStyle: _stepIndex >= 6
+                  ? const LineStyle(color: Colors.green, thickness: 4)
+                  : LineStyle(color: MyTheme.medium_grey, thickness: 3),
+            ),
+          ),
+
+          // ----------------------------------------------------------------
+          // STEP 5: Delivered
           // ----------------------------------------------------------------
           Expanded(
             child: TimelineTile(
@@ -1104,13 +1157,13 @@ class _OrderDetailsState extends State<OrderDetails> {
                     )
                   : SizedBox.shrink(),
               indicatorStyle: IndicatorStyle(
-                color: _stepIndex >= 5 ? Colors.green : MyTheme.medium_grey,
+                color: _stepIndex >= 6 ? Colors.green : MyTheme.medium_grey,
                 height: 30,
                 width: 30,
                 padding: const EdgeInsets.all(0),
                 indicator: Container(
                   decoration: BoxDecoration(
-                    color: _stepIndex >= 5 ? Colors.green : MyTheme.medium_grey,
+                    color: _stepIndex >= 6 ? Colors.green : MyTheme.medium_grey,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: _orderDetails!.delivery_status == "delivered"
@@ -1126,7 +1179,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                   ),
                 ),
               ),
-              beforeLineStyle: _stepIndex >= 5
+              beforeLineStyle: _stepIndex >= 6
                   ? const LineStyle(color: Colors.green, thickness: 4)
                   : LineStyle(color: MyTheme.medium_grey, thickness: 3),
             ),
@@ -1218,6 +1271,10 @@ class _OrderDetailsState extends State<OrderDetails> {
     final pickupPoint = order.pickupPoint;
     final hasShippingAddress = shippingAddress != null;
     final hasPickupPoint = pickupPoint != null;
+    final isPickupReached =
+        order.shipping_type == 'pickup_point' &&
+        order.delivery_status == 'reached' &&
+        hasPickupPoint;
 
     return Container(
       decoration: BoxDecorations.buildBoxDecoration_1(),
@@ -1270,60 +1327,16 @@ class _OrderDetailsState extends State<OrderDetails> {
               ),
             ),
 
-            // Seller Address, GSTIN, and Delivery Status / Payment Status Row
+            // Payment Status and Delivery Status Row
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left Column: Seller Address and GSTIN
+                // Left Column: Payment Status
                 Expanded(
                   flex: 6,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      headingText('Seller Address'),
-                      const SizedBox(height: 2),
-                      Text(
-                        _displayText(order.seller_address),
-                        style: addressStyle,
-                      ),
-                      const SizedBox(height: 5),
-
-                      if (order.gstin != null &&
-                          order.gstin!.trim().isNotEmpty &&
-                          order.gst_amount != null &&
-                          order.gst_amount!.trim().isNotEmpty &&
-                          order.gst_amount != convertPrice("0"))
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            headingText("GSTIN"),
-                            Text(
-                              order.gstin!,
-                              maxLines: 2,
-                              style: addressStyle,
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-
-                // Right Column: Delivery Status and Payment Status
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Delivery Status
-                      headingText(
-                        AppLocalizations.of(context)!.delivery_status_ucf,
-                      ),
-                      const SizedBox(height: 2),
-                      hedingValue(_displayText(order.delivery_status_string)),
-
-                      const SizedBox(height: 8),
-
-                      // Payment Status
                       headingText(
                         AppLocalizations.of(context)!.payment_status_ucf,
                       ),
@@ -1343,10 +1356,28 @@ class _OrderDetailsState extends State<OrderDetails> {
                     ],
                   ),
                 ),
+
+                // Right Column: Delivery Status
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      headingText(
+                        AppLocalizations.of(context)!.delivery_status_ucf,
+                      ),
+                      const SizedBox(height: 2),
+                      hedingValue(_displayText(order.delivery_status_string)),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 14),
-            _buildOrderVerificationQr(order.code),
+            if (isPickupReached)
+              _buildPickupReadyQrCard(order)
+            else
+              _buildOrderVerificationQr(order.code),
 
             // Total Amount Row
             Row(
@@ -1923,9 +1954,24 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   Widget _buildDeliveryBoyActions() {
     final deliveryBoy = _orderDetails?.delivery_boy;
-    if (deliveryBoy == null) {
+    final rawDeliveryStatus =
+        (_orderDetails?.delivery_status ??
+                _orderDetails?.delivery_status_string ??
+                '')
+            .trim()
+            .toLowerCase();
+    final normalizedDeliveryStatus = rawDeliveryStatus.replaceAll(' ', '_');
+
+    final shouldHideForDelivered =
+        normalizedDeliveryStatus == 'delivered' ||
+        normalizedDeliveryStatus.contains('delivered');
+
+    final hasAssignedDeliveryBoy = deliveryBoy?.id != null;
+
+    if (!hasAssignedDeliveryBoy || shouldHideForDelivered) {
       return const SizedBox.shrink();
     }
+    final hasCallNumber = (deliveryBoy?.phone ?? '').trim().isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -1951,7 +1997,7 @@ class _OrderDetailsState extends State<OrderDetails> {
           ),
           const SizedBox(height: 4),
           Text(
-            _displayText(deliveryBoy.name, fallback: 'Assigned delivery boy'),
+            _displayText(deliveryBoy?.name, fallback: 'Assigned delivery boy'),
             style: TextStyle(
               color: MyTheme.font_grey,
               fontSize: 13,
@@ -1975,29 +2021,31 @@ class _OrderDetailsState extends State<OrderDetails> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Btn.basic(
-                  onPressed: _callDeliveryBoy,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(
-                      color: MyTheme.accent_color.withValues(alpha: .35),
+              if (hasCallNumber) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Btn.basic(
+                    onPressed: _callDeliveryBoy,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(
+                        color: MyTheme.accent_color.withValues(alpha: .35),
+                      ),
                     ),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    'Voice Call',
-                    style: TextStyle(
-                      color: MyTheme.accent_color,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Voice Call',
+                      style: TextStyle(
+                        color: MyTheme.accent_color,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ],
@@ -2005,8 +2053,14 @@ class _OrderDetailsState extends State<OrderDetails> {
     );
   }
 
-  void _showQrPreview(String? code) {
-    final qrUrl = _buildOrderQrUrl(code, size: 320);
+  void _showQrPreview({
+    String? qrValue,
+    String? imageUrl,
+    String? displayLabel,
+    String? helperText,
+  }) {
+    final qrUrl = imageUrl ?? _buildOrderQrUrl(qrValue, size: 320);
+    final previewLabel = _displayText(displayLabel);
 
     showDialog(
       context: context,
@@ -2090,20 +2144,22 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  _displayText(code),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: MyTheme.dark_font_grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Show this QR during delivery verification',
+                  helperText ?? 'Show this QR during delivery verification',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
                 ),
+                if (previewLabel.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    previewLabel,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: MyTheme.dark_font_grey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -2136,7 +2192,7 @@ class _OrderDetailsState extends State<OrderDetails> {
         ),
         const SizedBox(height: 10),
         GestureDetector(
-          onTap: () => _showQrPreview(code),
+          onTap: () => _showQrPreview(qrValue: code, displayLabel: code),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -2186,6 +2242,131 @@ class _OrderDetailsState extends State<OrderDetails> {
             color: MyTheme.dark_font_grey,
             fontSize: 12,
             fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildPickupReadyQrCard(DetailedOrder order) {
+    final pickupPoint = order.pickupPoint;
+    final qrUrl =
+        order.customerPickupQrImage ??
+        _buildOrderQrUrl(order.customerPickupQrPayload ?? order.code, size: 120);
+    final daysLeft = pickupPoint?.pickupWindowDaysLeft;
+    final isExpired = pickupPoint?.isReturnDue == true;
+    final deadline = _displayText(
+      pickupPoint?.pickupWindowDeadline,
+      fallback: '-',
+    );
+
+    return Column(
+      children: [
+        const Divider(),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xffFFF7F3),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: MyTheme.accent_color.withValues(alpha: .18),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.storefront_outlined,
+                    color: MyTheme.accent_color,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Pickup QR Ready',
+                      style: TextStyle(
+                        color: MyTheme.dark_font_grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isExpired
+                          ? Colors.red.withValues(alpha: .12)
+                          : Colors.green.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      isExpired
+                          ? 'Expired'
+                          : (daysLeft == null
+                              ? 'Ready'
+                              : '$daysLeft day${daysLeft == 1 ? '' : 's'} left'),
+                      style: TextStyle(
+                        color: isExpired ? Colors.red : Colors.green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Show this QR at ${_displayText(pickupPoint?.name, fallback: 'your pickup point')} before $deadline.',
+                style: TextStyle(
+                  color: MyTheme.font_grey,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: GestureDetector(
+                  onTap: () => _showQrPreview(
+                    qrValue: order.customerPickupQrPayload ?? order.code,
+                    imageUrl: qrUrl,
+                    displayLabel: order.code,
+                    helperText:
+                        'Show this QR at the pickup point for verification',
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: MyTheme.accent_color.withValues(alpha: .22),
+                      ),
+                    ),
+                    child: qrUrl == null
+                        ? _buildQrFallback(120)
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              qrUrl,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _buildQrFallback(120),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),

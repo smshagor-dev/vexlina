@@ -1,5 +1,12 @@
 <div class="row gutters-16">
     @php
+    $products = $products ?? [];
+    $product_variation = $product_variation ?? [];
+    $pickup_point_list = $pickup_point_list ?? [];
+    $carrier_list = $carrier_list ?? collect();
+    $carts = $carts ?? collect();
+    $shipping_info = $shipping_info ?? null;
+    $owner_id = $owner_id ?? 0;
     $physical = false;
     $col_val = 'col-12';
     foreach ($products as $key => $cartItem){
@@ -80,7 +87,7 @@
             </div>
             @endif
             <!-- Local Pickup -->
-            @if ($pickup_point_list)
+            @if (count($pickup_point_list) > 0)
             <div class="col-6">
                 <label class="aiz-megabox d-block bg-white mb-0">
                     <input
@@ -94,7 +101,7 @@
                         required>
                     <span class="d-flex aiz-megabox-elem rounded-0" style="padding: 0.75rem 1.2rem;">
                         <span class="aiz-rounded-check flex-shrink-0 mt-1"></span>
-                        <span class="flex-grow-1 pl-3 fw-600">{{ translate('Local Pickup') }}</span>
+                        <span class="flex-grow-1 pl-3 fw-600">{{ translate('Pickup Point') }}</span>
                     </span>
                 </label>
             </div>
@@ -102,10 +109,13 @@
         </div>
 
         <!-- Pickup Point List -->
-        @if ($pickup_point_list)
+        @if (count($pickup_point_list) > 0)
         <div class="mt-3 pickup_point_id_{{ $owner_id }} d-none">
+            <div class="alert alert-soft-info fs-12 mb-2 pickup-point-location-note d-none">
+                {{ translate('Showing nearest pickup points based on your current location.') }}
+            </div>
             <select
-                class="form-control aiz-selectpicker rounded-0"
+                class="form-control aiz-selectpicker rounded-0 pickup-point-select"
                 name="pickup_point_id_{{ $owner_id }}"
                 data-live-search="true"
                 onchange="updateDeliveryInfo('pickup_point', this.value, {{ $owner_id }})">
@@ -113,10 +123,17 @@
                 @foreach ($pickup_point_list as $pick_up_point)
                 <option
                     value="{{ $pick_up_point->id }}"
+                    data-latitude="{{ $pick_up_point->latitude }}"
+                    data-longitude="{{ $pick_up_point->longitude }}"
                     data-content="<span class='d-block'>
                                                 <span class='d-block fs-16 fw-600 mb-2'>{{ $pick_up_point->getTranslation('name') }}</span>
                                                 <span class='d-block opacity-50 fs-12'><i class='las la-map-marker'></i> {{ $pick_up_point->getTranslation('address') }}</span>
                                                 <span class='d-block opacity-50 fs-12'><i class='las la-phone'></i>{{ $pick_up_point->phone }}</span>
+                                                <span class='d-block opacity-50 fs-12'><i class='las la-clock'></i> {{ $pick_up_point->workingHoursLabel() }}</span>
+                                                <span class='d-block opacity-50 fs-12'><i class='las la-box'></i> {{ translate('Pickup Hold') }}: {{ $pick_up_point->holdDays() }} {{ translate('days') }}</span>
+                                                @if($pick_up_point->instructions)
+                                                <span class='d-block opacity-50 fs-12'><i class='las la-info-circle'></i> {{ $pick_up_point->instructions }}</span>
+                                                @endif
                                             </span>">
                 </option>
                 @endforeach
@@ -168,3 +185,98 @@
     </div>
     @endif
 </div>
+
+<script>
+    (function () {
+        if (window.__pickupPointGeoInit) {
+            return;
+        }
+        window.__pickupPointGeoInit = true;
+
+        function toNumber(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function distanceInKm(lat1, lon1, lat2, lon2) {
+            const toRad = (deg) => (deg * Math.PI) / 180;
+            const earthRadiusKm = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return earthRadiusKm * c;
+        }
+
+        function sortPickupPointSelects(userLatitude, userLongitude) {
+            document.querySelectorAll('.pickup-point-select').forEach(function (select) {
+                const placeholderOption = select.querySelector('option[value=""]');
+                const pickupPointOptions = Array.from(select.querySelectorAll('option'))
+                    .filter(function (option) {
+                        return option.value !== '';
+                    })
+                    .map(function (option) {
+                        const latitude = toNumber(option.dataset.latitude);
+                        const longitude = toNumber(option.dataset.longitude);
+                        const distance = latitude !== null && longitude !== null
+                            ? distanceInKm(userLatitude, userLongitude, latitude, longitude)
+                            : Number.POSITIVE_INFINITY;
+
+                        option.dataset.distance = Number.isFinite(distance)
+                            ? distance.toFixed(2)
+                            : '';
+
+                        return {
+                            option: option,
+                            distance: distance,
+                        };
+                    })
+                    .sort(function (first, second) {
+                        return first.distance - second.distance;
+                    });
+
+                pickupPointOptions.forEach(function (entry) {
+                    select.appendChild(entry.option);
+                });
+
+                const note = select.parentElement.querySelector('.pickup-point-location-note');
+                if (note && pickupPointOptions.length > 0 && Number.isFinite(pickupPointOptions[0].distance)) {
+                    note.classList.remove('d-none');
+                }
+
+                if (window.jQuery && window.jQuery.fn.selectpicker) {
+                    window.jQuery(select).selectpicker('refresh');
+                }
+            });
+        }
+
+        function resolveLocationAndSort() {
+            if (!navigator.geolocation) {
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    sortPickupPointSelects(position.coords.latitude, position.coords.longitude);
+                },
+                function () {
+                    // Keep the existing order when location access is denied/unavailable.
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000,
+                }
+            );
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', resolveLocationAndSort);
+        } else {
+            resolveLocationAndSort();
+        }
+    })();
+</script>

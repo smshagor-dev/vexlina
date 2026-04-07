@@ -138,6 +138,9 @@ class OrderController extends Controller
                 $order_detail->price = cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
                 $order_detail->tax = cart_product_tax($cartItem, $product, false) * $cartItem['quantity'];
                 $order_detail->shipping_type = $cartItem['shipping_type'];
+                if ($cartItem['shipping_type'] == 'pickup_point') {
+                    $order_detail->pickup_point_id = $cartItem['pickup_point'];
+                }
                 $order_detail->product_referral_code = $cartItem['product_referral_code'];
                 $order_detail->shipping_cost = $cartItem['shipping_cost'];
 

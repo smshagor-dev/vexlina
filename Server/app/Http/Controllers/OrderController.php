@@ -153,7 +153,7 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::findOrFail(decrypt($id));
+        $order = Order::with(['pickup_point', 'delivery_boy', 'carrier', 'orderDetails.product'])->findOrFail(decrypt($id));
         
         $order_shipping_address = json_decode($order->shipping_address);
         $delivery_boys = User::where('city', $order_shipping_address->city)
@@ -314,6 +314,9 @@ class OrderController extends Controller
                 $order_detail->price = cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
                 $order_detail->tax = cart_product_tax($cartItem, $product, false) * $cartItem['quantity'];
                 $order_detail->shipping_type = $cartItem['shipping_type'];
+                if ($cartItem['shipping_type'] == 'pickup_point') {
+                    $order_detail->pickup_point_id = $cartItem['pickup_point'];
+                }
                 $order_detail->product_referral_code = $cartItem['product_referral_code'];
                 $order_detail->shipping_cost = $cartItem['shipping_cost'];
                 $order_detail->coupon_discount = $cartItem['discount'];
@@ -530,6 +533,13 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($request->order_id);
 
+        if (in_array($request->status, ['reached', 'returned'], true) && $order->shipping_type !== 'pickup_point') {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Reached and returned statuses are only available for pickup point orders.'),
+            ], 422);
+        }
+
         if ($request->status === 'delivered') {
             $verification = (new OrderDeliveryVerificationService())->ensureVerifiedForDelivery(
                 $order,
@@ -553,16 +563,19 @@ class OrderController extends Controller
         if($request->status == 'delivered'){
             $order->delivered_date = date("Y-m-d H:i:s");
             $order->save();
+        } elseif ($request->status == 'returned') {
+            $order->delivered_date = null;
+            $order->save();
         }
         
-        if ($request->status == 'cancelled' && $order->payment_type == 'wallet') {
+        if (in_array($request->status, ['cancelled', 'returned'], true) && $order->payment_type == 'wallet') {
             $user = User::where('id', $order->user_id)->first();
             $user->balance += $order->grand_total;
             $user->save();
         }
 
         // If the order is cancelled and the seller commission is calculated, deduct seller earning
-        if($request->status == 'cancelled' && $order->user->user_type == 'seller' && $order->payment_status == 'paid' && $order->commission_calculated == 1){
+        if(in_array($request->status, ['cancelled', 'returned'], true) && $order->user->user_type == 'seller' && $order->payment_status == 'paid' && $order->commission_calculated == 1){
             $sellerEarning = $order->commissionHistory->seller_earning;
             $shop = $order->shop;
             $shop->admin_to_pay -= $sellerEarning;
@@ -574,7 +587,7 @@ class OrderController extends Controller
                 $orderDetail->delivery_status = $request->status;
                 $orderDetail->save();
 
-                if ($request->status == 'cancelled') {
+                if (in_array($request->status, ['cancelled', 'returned'], true)) {
                     product_restock($orderDetail);
                 }
             }
@@ -584,12 +597,12 @@ class OrderController extends Controller
                 $orderDetail->delivery_status = $request->status;
                 $orderDetail->save();
 
-                if ($request->status == 'cancelled') {
+                if (in_array($request->status, ['cancelled', 'returned'], true)) {
                     product_restock($orderDetail);
                 }
 
                 if (addon_is_activated('affiliate_system')) {
-                    if (($request->status == 'delivered' || $request->status == 'cancelled') &&
+                    if (in_array($request->status, ['delivered', 'cancelled', 'returned'], true) &&
                         $orderDetail->product_referral_code
                     ) {
 
@@ -599,7 +612,7 @@ class OrderController extends Controller
                         if ($request->status == 'delivered') {
                             $no_of_delivered = $orderDetail->quantity;
                         }
-                        if ($request->status == 'cancelled') {
+                        if (in_array($request->status, ['cancelled', 'returned'], true)) {
                             $no_of_canceled = $orderDetail->quantity;
                         }
 

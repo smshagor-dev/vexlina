@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Conversation;
 use App\Models\BusinessSetting;
 use App\Models\Message;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use Auth;
 use Mail;
 use App\Mail\ConversationMailManager;
@@ -133,6 +135,42 @@ class ConversationController extends Controller
         return view('frontend.user.conversations.show', compact('conversation'));
     }
 
+    public function openCustomerDeliveryConversation($orderId)
+    {
+        $order = Order::with(['delivery_boy', 'user'])
+            ->where('id', decrypt($orderId))
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if (!$order->assign_delivery_boy || !$order->delivery_boy) {
+            flash(translate('Delivery boy is not assigned yet'))->warning();
+            return back();
+        }
+
+        $conversation = $this->findOrCreateDeliveryConversation($order, Auth::user(), $order->delivery_boy);
+
+        return redirect()->route('conversations.show', encrypt($conversation->id));
+    }
+
+    public function openDeliveryBoyConversation($orderId)
+    {
+        $order = Order::with('user')
+            ->where('id', decrypt($orderId))
+            ->where('assign_delivery_boy', Auth::id())
+            ->firstOrFail();
+
+        $conversation = $this->findOrCreateDeliveryConversation($order, Auth::user(), $order->user);
+
+        if ($conversation->sender_id == Auth::id()) {
+            $conversation->sender_viewed = 1;
+        } elseif ($conversation->receiver_id == Auth::id()) {
+            $conversation->receiver_viewed = 1;
+        }
+        $conversation->save();
+
+        return view('delivery_boys.conversation_show', compact('conversation', 'order'));
+    }
+
 
     /**
      * Display the specified resource.
@@ -151,6 +189,37 @@ class ConversationController extends Controller
             $conversation->save();
         }
         return view('frontend.partials.messages', compact('conversation'));
+    }
+
+    protected function findOrCreateDeliveryConversation(Order $order, User $currentUser, User $otherUser): Conversation
+    {
+        $title = translate('Delivery Order') . ' #' . $order->code;
+
+        $conversation = Conversation::where('title', $title)
+            ->where(function ($query) use ($currentUser, $otherUser) {
+                $query->where(function ($subQuery) use ($currentUser, $otherUser) {
+                    $subQuery->where('sender_id', $currentUser->id)
+                        ->where('receiver_id', $otherUser->id);
+                })->orWhere(function ($subQuery) use ($currentUser, $otherUser) {
+                    $subQuery->where('sender_id', $otherUser->id)
+                        ->where('receiver_id', $currentUser->id);
+                });
+            })
+            ->first();
+
+        if ($conversation) {
+            return $conversation;
+        }
+
+        $conversation = new Conversation();
+        $conversation->sender_id = $currentUser->id;
+        $conversation->receiver_id = $otherUser->id;
+        $conversation->title = $title;
+        $conversation->sender_viewed = 1;
+        $conversation->receiver_viewed = 0;
+        $conversation->save();
+
+        return $conversation;
     }
 
     /**

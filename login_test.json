@@ -14,5 +14,10 @@
     "email": "mdshahanurislams584@gmail.com",
     "password": "1234567890",
     "type": "seller"
+  },
+  {
+    "email": "ptclab.adspro@gmail.com",
+    "password": "1234567890",
+    "type": "pickup_point"
   }
 ]

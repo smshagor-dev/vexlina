@@ -17,6 +17,7 @@ class ChatRepository {
       headers: {
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       middleware: BannedUser(),
     );
@@ -34,6 +35,7 @@ class ChatRepository {
       headers: {
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       middleware: BannedUser(),
     );
@@ -57,6 +59,7 @@ class ChatRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),
@@ -75,6 +78,7 @@ class ChatRepository {
       headers: {
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       middleware: BannedUser(),
     );
@@ -100,6 +104,7 @@ class ChatRepository {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${access_token.$}",
         "App-Language": app_language.$!,
+        "System-Key": AppConfig.system_key,
       },
       body: postBody,
       middleware: BannedUser(),

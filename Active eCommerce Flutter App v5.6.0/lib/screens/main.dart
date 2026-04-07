@@ -25,7 +25,6 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   int _currentIndex = 0;
-  late final List<Widget> _children;
   final CartCounter counter = CartCounter();
 
   bool _dialogShowing = false;
@@ -33,15 +32,6 @@ class _MainState extends State<Main> {
   @override
   void initState() {
     super.initState();
-
-    _children = [
-      const Home(),
-      const RealsScreen(),
-      const Wallet(),
-      Cart(hasBottomnav: true, fromNavigation: true, counter: counter),
-      CategoryList(slug: "", isBaseCategory: true),
-      const Profile(),
-    ];
 
     _fetchAll();
 
@@ -304,6 +294,15 @@ class _MainState extends State<Main> {
 
   @override
   Widget build(BuildContext context) {
+    final children = [
+      const Home(),
+      RealsScreen(isVisible: _currentIndex == 1),
+      const Wallet(),
+      Cart(hasBottomnav: true, fromNavigation: true, counter: counter),
+      CategoryList(slug: "", isBaseCategory: true),
+      const Profile(),
+    ];
+
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: _handlePop,
@@ -316,7 +315,7 @@ class _MainState extends State<Main> {
           resizeToAvoidBottomInset: false,
           body: SafeArea(
             bottom: false,
-            child: IndexedStack(index: _currentIndex, children: _children),
+            child: IndexedStack(index: _currentIndex, children: children),
           ),
           bottomNavigationBar: _bottomNavigation(context),
         ),

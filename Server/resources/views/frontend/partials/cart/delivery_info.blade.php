@@ -1,4 +1,7 @@
 @php
+    $carts = $carts ?? collect();
+    $carrier_list = $carrier_list ?? collect();
+    $shipping_info = $shipping_info ?? null;
     $admin_products = array();
     $seller_products = array();
     $admin_product_variation = array();
@@ -21,10 +24,7 @@
         }
     }
 
-    $pickup_point_list = array();
-    if (get_setting('pickup_point') == 1) {
-        $pickup_point_list = get_all_pickup_points();
-    }
+    $pickup_point_list = get_all_pickup_points();
 @endphp
 
 <!-- Inhouse Products -->
@@ -34,7 +34,15 @@
             <h5 class="fs-16 fw-700 text-dark mb-0">{{ get_setting('site_name') }} {{ translate('Inhouse Products') }} ({{ sprintf("%02d", count($admin_products)) }})</h5>
         </div>
         <div class="card-body p-0">
-            @include('frontend.partials.cart.delivery_info_details', ['products' => $admin_products, 'product_variation' => $admin_product_variation, 'owner_id' => get_admin()->id ])
+            @include('frontend.partials.cart.delivery_info_details', [
+                'products' => $admin_products,
+                'product_variation' => $admin_product_variation,
+                'owner_id' => get_admin()->id,
+                'pickup_point_list' => $pickup_point_list,
+                'carrier_list' => $carrier_list,
+                'carts' => $carts,
+                'shipping_info' => $shipping_info,
+            ])
         </div>
     </div>
 @endif
@@ -47,7 +55,15 @@
                 <h5 class="fs-16 fw-700 text-dark mb-0">{{ get_shop_by_user_id($key)->name }} {{ translate('Products') }} ({{ sprintf("%02d", count($seller_product)) }})</h5>
             </div>
             <div class="card-body p-0">
-                @include('frontend.partials.cart.delivery_info_details', ['products' => $seller_product, 'product_variation' => $seller_product_variation, 'owner_id' => $key ])
+                @include('frontend.partials.cart.delivery_info_details', [
+                    'products' => $seller_product,
+                    'product_variation' => $seller_product_variation,
+                    'owner_id' => $key,
+                    'pickup_point_list' => $pickup_point_list,
+                    'carrier_list' => $carrier_list,
+                    'carts' => $carts,
+                    'shipping_info' => $shipping_info,
+                ])
             </div>
         </div>
     @endforeach

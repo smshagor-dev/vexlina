@@ -43,6 +43,10 @@ class DeliveryStatus {
     return <DeliveryStatus>[
       DeliveryStatus('', AppLocalizations.of(OneContext().context!)!.all_ucf),
       DeliveryStatus(
+        'pending',
+        AppLocalizations.of(OneContext().context!)!.pending_ucf,
+      ),
+      DeliveryStatus(
         'confirmed',
         AppLocalizations.of(OneContext().context!)!.confirmed_ucf,
       ),
@@ -257,65 +261,81 @@ class _OrderListState extends State<OrderList> {
   buildBottomAppBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: BoxDecorations.buildBoxDecoration_1(),
-            padding: EdgeInsets.symmetric(horizontal: 14),
-            height: 36,
-            width: MediaQuery.of(context).size.width * .4,
-            child: DropdownButton<PaymentStatus>(
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              icon: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Icon(Icons.expand_more, color: Colors.black54),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                decoration: BoxDecorations.buildBoxDecoration_1(),
+                padding: EdgeInsets.symmetric(horizontal: 14),
+                height: 36,
+                width: MediaQuery.of(context).size.width * .4,
+                child: DropdownButton<PaymentStatus>(
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  icon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.expand_more, color: Colors.black54),
+                  ),
+                  hint: Text(
+                    AppLocalizations.of(context)!.all_payments_ucf,
+                    style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
+                  ),
+                  iconSize: 14,
+                  underline: SizedBox(),
+                  value: _selectedPaymentStatus,
+                  items: _dropdownPaymentStatusItems,
+                  onChanged: (PaymentStatus? selectedFilter) {
+                    setState(() {
+                      _selectedPaymentStatus = selectedFilter;
+                    });
+                    reset();
+                    fetchData();
+                  },
+                ),
               ),
-              hint: Text(
-                AppLocalizations.of(context)!.all_payments_ucf,
-                style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
+              Container(
+                decoration: BoxDecorations.buildBoxDecoration_1(),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                height: 36,
+                width: MediaQuery.of(context).size.width * .4,
+                child: DropdownButton<DeliveryStatus>(
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  icon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.expand_more, color: Colors.black54),
+                  ),
+                  hint: Text(
+                    AppLocalizations.of(context)!.all_deliveries_ucf,
+                    style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
+                  ),
+                  iconSize: 14,
+                  underline: SizedBox(),
+                  value: _selectedDeliveryStatus,
+                  items: _dropdownDeliveryStatusItems,
+                  onChanged: (DeliveryStatus? selectedFilter) {
+                    setState(() {
+                      _selectedDeliveryStatus = selectedFilter;
+                    });
+                    reset();
+                    fetchData();
+                  },
+                ),
               ),
-              iconSize: 14,
-              underline: SizedBox(),
-              value: _selectedPaymentStatus,
-              items: _dropdownPaymentStatusItems,
-              onChanged: (PaymentStatus? selectedFilter) {
-                setState(() {
-                  _selectedPaymentStatus = selectedFilter;
-                });
-                reset();
-                fetchData();
-              },
-            ),
+            ],
           ),
-          Container(
-            decoration: BoxDecorations.buildBoxDecoration_1(),
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            height: 36,
-            width: MediaQuery.of(context).size.width * .4,
-            child: DropdownButton<DeliveryStatus>(
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              icon: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Icon(Icons.expand_more, color: Colors.black54),
-              ),
-              hint: Text(
-                AppLocalizations.of(context)!.all_deliveries_ucf,
-                style: TextStyle(color: MyTheme.font_grey, fontSize: 12),
-              ),
-              iconSize: 14,
-              underline: SizedBox(),
-              value: _selectedDeliveryStatus,
-              items: _dropdownDeliveryStatusItems,
-              onChanged: (DeliveryStatus? selectedFilter) {
-                setState(() {
-                  _selectedDeliveryStatus = selectedFilter;
-                });
-                reset();
-                fetchData();
-              },
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: _deliveryStatusList
+                  .where((status) => status.optionKey.isNotEmpty)
+                  .map((status) => _buildDeliveryStatusTab(status))
+                  .toList(),
             ),
           ),
         ],
@@ -323,9 +343,48 @@ class _OrderListState extends State<OrderList> {
     );
   }
 
+  Widget _buildDeliveryStatusTab(DeliveryStatus status) {
+    final isSelected = _selectedDeliveryStatus?.optionKey == status.optionKey;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: () {
+          setState(() {
+            _selectedDeliveryStatus = status;
+          });
+          reset();
+          fetchData();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected ? MyTheme.accent_color : Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isSelected
+                  ? MyTheme.accent_color
+                  : MyTheme.grey_153.withValues(alpha: .35),
+            ),
+          ),
+          child: Text(
+            status.name,
+            style: TextStyle(
+              color: isSelected ? Colors.white : MyTheme.dark_font_grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   buildAppBar(BuildContext context) {
     return PreferredSize(
-      preferredSize: Size.fromHeight(104.0),
+      preferredSize: Size.fromHeight(152.0),
       child: AppBar(
         centerTitle: false,
         backgroundColor: MyTheme.mainColor,
@@ -469,6 +528,13 @@ class _OrderListState extends State<OrderList> {
 
   buildOrderListItemCard(int index) {
     final order = _orderList[index];
+    final isPickupReady =
+        order.shippingType == "pickup_point" &&
+        order.deliveryStatus == "reached";
+    final qrImageUrl = isPickupReady
+        ? (order.customerPickupQrImage ??
+              _buildOrderQrUrl(order.customerPickupQrPayload ?? order.code))
+        : _buildOrderQrUrl(order.code);
 
     return Container(
       decoration: BoxDecorations.buildBoxDecoration_1(),
@@ -550,7 +616,9 @@ class _OrderListState extends State<OrderList> {
                             child: Text(
                               _displayText(order.deliveryStatusString),
                               style: TextStyle(
-                                color: MyTheme.dark_font_grey,
+                                color: isPickupReady
+                                    ? Colors.green
+                                    : MyTheme.dark_font_grey,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -558,11 +626,37 @@ class _OrderListState extends State<OrderList> {
                           ),
                         ],
                       ),
+                      if (isPickupReady)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: .10),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              _buildPickupDeadlineText(order),
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 14),
-                _buildOrderQrCard(order.code, size: 80),
+                _buildOrderQrCard(
+                  order.customerPickupQrPayload ?? order.code,
+                  size: 80,
+                  imageUrl: qrImageUrl,
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -594,8 +688,8 @@ class _OrderListState extends State<OrderList> {
     );
   }
 
-  Widget _buildOrderQrCard(String? code, {double size = 80}) {
-    final qrUrl = _buildOrderQrUrl(code, size: size.toInt());
+  Widget _buildOrderQrCard(String? code, {double size = 80, String? imageUrl}) {
+    final qrUrl = imageUrl ?? _buildOrderQrUrl(code, size: size.toInt());
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -749,6 +843,31 @@ class _OrderListState extends State<OrderList> {
       return fallback;
     }
     return normalized;
+  }
+
+  String _buildPickupDeadlineText(dynamic order) {
+    final bool isReturnDue = order.pickupPoint?.isReturnDue == true;
+    final int? daysLeft = order.pickupPoint?.pickupWindowDaysLeft;
+    final String deadline = _displayText(
+      order.pickupPoint?.pickupWindowDeadline,
+      fallback: '',
+    );
+
+    if (isReturnDue) {
+      return deadline.isEmpty ? 'Pickup window expired' : 'Expired on $deadline';
+    }
+
+    if (daysLeft == null) {
+      return deadline.isEmpty ? 'Ready for pickup' : 'Collect by $deadline';
+    }
+
+    if (daysLeft <= 0) {
+      return deadline.isEmpty ? 'Pickup today' : 'Collect by $deadline';
+    }
+
+    return deadline.isEmpty
+        ? '$daysLeft day${daysLeft == 1 ? '' : 's'} left'
+        : '$daysLeft day${daysLeft == 1 ? '' : 's'} left · $deadline';
   }
 
   Container buildPaymentStatusCheckContainer(String paymentStatus) {

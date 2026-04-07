@@ -35,8 +35,11 @@
                     <th data-breakpoints="lg" width="10%">#</th>
                     <th>{{translate('Name')}}</th>
                     <th data-breakpoints="lg">{{translate('Manager')}}</th>
+                    <th data-breakpoints="lg">{{translate('Branch Meta')}}</th>
                     <th data-breakpoints="lg">{{translate('Location')}}</th>
                     <th data-breakpoints="lg">{{translate('Pickup Station Contact')}}</th>
+                    <th data-breakpoints="lg">{{translate('Commission')}}</th>
+                    <th data-breakpoints="lg">{{translate('Return Commission')}}</th>
                     <th>{{translate('Status')}}</th>
                     <th width="10%" class="text-right">{{translate('Options')}}</th>
                 </tr>
@@ -53,8 +56,29 @@
                                 {{ translate('No Manager') }}
                             </div></td>
                         @endif
+                        <td>
+                            <div class="fs-12 text-secondary">
+                                <div><strong>{{ translate('Code') }}:</strong> {{ $pickup_point->internal_code ?: '-' }}</div>
+                                <div><strong>{{ translate('Hours') }}:</strong> {{ $pickup_point->workingHoursLabel() }}</div>
+                                <div><strong>{{ translate('Hold') }}:</strong> {{ $pickup_point->holdDays() }} {{ translate('days') }}</div>
+                            </div>
+                        </td>
                         <td>{{$pickup_point->getTranslation('address')}}</td>
                         <td>{{$pickup_point->phone}}</td>
+                        <td>
+                            @if ($pickup_point->commission_type == 'percent')
+                                {{ $pickup_point->commission_amount + 0 }}%
+                            @else
+                                {{ single_price($pickup_point->commission_amount) }}
+                            @endif
+                        </td>
+                        <td>
+                            @if (($pickup_point->return_commission_type ?? 'percent') == 'percent')
+                                {{ ($pickup_point->return_commission_amount ?? 0) + 0 }}%
+                            @else
+                                {{ single_price($pickup_point->return_commission_amount ?? 0) }}
+                            @endif
+                        </td>
                         <td>
                             @if ($pickup_point->pick_up_status != 1)
                                 <div class="badge badge-inline badge-danger">
@@ -67,6 +91,9 @@
                             @endif
                         </td>
 						<td class="text-right">
+                            <a class="btn btn-soft-info btn-icon btn-circle btn-sm" href="{{ route('pick_up_points.show', $pickup_point->id) }}" title="{{ translate('View Activity') }}">
+                                <i class="las la-eye"></i>
+                            </a>
 							<a class="btn btn-soft-primary btn-icon btn-circle btn-sm" href="{{route('pick_up_points.edit', ['id'=>$pickup_point->id, 'lang'=>env('DEFAULT_LANGUAGE')] )}}" title="{{ translate('Edit') }}">
 								<i class="las la-edit"></i>
 							</a>

@@ -16,11 +16,31 @@
                     $admin_user_id = get_admin()->id;
 				    $first_order = $order->orderDetails->first();
                     $shipping_method = $order->shipping_method ?? null;
+                    $isPickupPointOrder = $order->shipping_type === 'pickup_point';
+                    $pickupPointDetails = null;
+
+                    if ($isPickupPointOrder) {
+                        $pickupPointDetails = $order->pickup_point;
+
+                        if (!$pickupPointDetails && !empty($order->pickup_point_id)) {
+                            $pickupPointDetails = \App\Models\PickupPoint::find($order->pickup_point_id);
+                        }
+
+                        if (!$pickupPointDetails) {
+                            $pickupOrderDetail = $order->orderDetails->first(function ($detail) {
+                                return !empty($detail->pickup_point_id);
+                            });
+
+                            if ($pickupOrderDetail) {
+                                $pickupPointDetails = $pickupOrderDetail->pickup_point;
+                            }
+                        }
+                    }
                 @endphp
                 @if ($order->seller_id == $admin_user_id || get_setting('product_manage_by_admin') == 1)
 
                     <!--Assign Delivery Boy-->
-                    @if (addon_is_activated('delivery_boy'))
+                    @if (!$isPickupPointOrder && addon_is_activated('delivery_boy'))
                     @if ($shipping_method != 'shiprocket')
                         <div class="col-md-2 ml-auto">
                             <label for="assign_deliver_boy">{{ translate('Assign Deliver Boy') }}</label>
@@ -63,7 +83,7 @@
                         <label for="update_delivery_status">{{ translate('Delivery Status') }}</label>
                         @if ($order->shipping_method == 'shiprocket')
                             <input type="text" class="form-control" value="{{ ucfirst(str_replace('_', ' ', $delivery_status)) }}" disabled>
-                        @elseif (auth()->user()->can('update_order_delivery_status') && $delivery_status != 'delivered' && $delivery_status != 'cancelled')
+                        @elseif (auth()->user()->can('update_order_delivery_status') && $delivery_status != 'delivered' && $delivery_status != 'cancelled' && $delivery_status != 'returned')
                             <select class="form-control aiz-selectpicker" data-minimum-results-for-search="Infinity"
                                 id="update_delivery_status">
                                 <option value="pending" @if ($delivery_status == 'pending') selected @endif>
@@ -78,9 +98,19 @@
                                 <option value="on_the_way" @if ($delivery_status == 'on_the_way') selected @endif>
                                     {{ translate('On The Way') }}
                                 </option>
+                                @if ($order->shipping_type == 'pickup_point')
+                                    <option value="reached" @if ($delivery_status == 'reached') selected @endif>
+                                        {{ translate('Reached') }}
+                                    </option>
+                                @endif
                                 <option value="delivered" @if ($delivery_status == 'delivered') selected @endif>
                                     {{ translate('Delivered') }}
                                 </option>
+                                @if ($order->shipping_type == 'pickup_point')
+                                    <option value="returned" @if ($delivery_status == 'returned') selected @endif>
+                                        {{ translate('Returned') }}
+                                    </option>
+                                @endif
                                 <option value="cancelled" @if ($delivery_status == 'cancelled') selected @endif>
                                     {{ translate('Cancel') }}
                                 </option>
@@ -89,7 +119,7 @@
                             <input type="text" class="form-control" value="{{ $delivery_status }}" disabled>
                         @endif
                     </div>
-                    @if (addon_is_activated('shiprocket'))
+                    @if (!$isPickupPointOrder && addon_is_activated('shiprocket'))
                     @php
                         $shipping_systems = App\Models\ShippingSystem::where('active', 1)->get();
                     @endphp
@@ -121,15 +151,17 @@
                         </div>
                     @endif
                     @endif
-                    <div class="col-md-2 ml-auto">
-                        <label for="update_tracking_code">
-                            {{ translate('Tracking Code (optional)') }}
-                        </label>
-                        <input type="text" class="form-control" id="update_tracking_code"
-                            value="{{ $order->tracking_code }}" disabled>
-                    </div>
+                    @if (!$isPickupPointOrder)
+                        <div class="col-md-2 ml-auto">
+                            <label for="update_tracking_code">
+                                {{ translate('Tracking Code (optional)') }}
+                            </label>
+                            <input type="text" class="form-control" id="update_tracking_code"
+                                value="{{ $order->tracking_code }}" disabled>
+                        </div>
+                    @endif
                     
-                    @if(!$order->steadfast_synced)
+                    @if(!$isPickupPointOrder && !$order->steadfast_synced)
                         <div class="col-md-2 ml-auto d-flex align-items-end">
                             <form action="{{ route('orders.send_to_steadfast', $order->id) }}" method="POST" class="w-100">
                                 @csrf
@@ -148,7 +180,7 @@
                                 </button>
                             </form>
                         </div>
-                    @else
+                    @elseif(!$isPickupPointOrder)
                     
                     {{-- Show Consignment ID --}}
                         <div class="col-md-2 ml-auto">
@@ -167,6 +199,60 @@
 
                 @endif
             </div>
+            @if ($isPickupPointOrder)
+                <div class="row gutters-6 mt-3">
+                    <div class="col-lg-8 ml-auto">
+                        <label class="d-block">{{ translate('Pickup Point Details') }}</label>
+                        <div class="border rounded p-3" style="background: #fff9f7; border-color: #fa3e0033 !important;">
+                            @if ($pickupPointDetails)
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Pickup Point') }}:</strong>
+                                        {{ $pickupPointDetails->getTranslation('name') }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Branch / Station Code') }}:</strong>
+                                        {{ $pickupPointDetails->internal_code ?: '-' }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Phone') }}:</strong>
+                                        {{ $pickupPointDetails->phone ?: '-' }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Working Hours') }}:</strong>
+                                        {{ $pickupPointDetails->workingHoursLabel() }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Pickup Hold Days') }}:</strong>
+                                        {{ $pickupPointDetails->holdDays() }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>{{ translate('Supports Return') }}:</strong>
+                                        {{ $pickupPointDetails->supportsReturn() ? translate('Yes') : translate('No') }}
+                                    </div>
+                                    <div class="col-12 mb-0">
+                                        <strong>{{ translate('Address') }}:</strong>
+                                        {{ $pickupPointDetails->getTranslation('address') }}
+                                    </div>
+                                    @if (!empty($pickupPointDetails->instructions))
+                                        <div class="col-12 mt-2">
+                                            <strong>{{ translate('Instructions') }}:</strong>
+                                            {{ $pickupPointDetails->instructions }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="text-warning">
+                                    {{ translate('Pickup point details are not linked to this order yet.') }}
+                                    @if (!empty($order->pickup_point_id))
+                                        {{ translate('Pickup Point ID') }}: {{ $order->pickup_point_id }}
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="mb-3 mt-3">
                 @php
                     $removedXML = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -348,8 +434,8 @@
                                         @if ($order->shipping_type != null && $order->shipping_type == 'home_delivery')
                                             {{ translate('Home Delivery') }}
                                         @elseif ($order->shipping_type == 'pickup_point')
-                                            @if ($order->pickup_point != null)
-                                                {{ $order->pickup_point->getTranslation('name') }}
+                                            @if ($pickupPointDetails != null)
+                                                {{ $pickupPointDetails->getTranslation('name') }}
                                                 ({{ translate('Pickup Point') }})
                                             @else
                                                 {{ translate('Pickup Point') }}

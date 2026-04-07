@@ -54,6 +54,8 @@ class User {
     this.avatar_original,
     this.phone,
     this.emailVerified,
+    this.pickupPointId,
+    this.pickupPointName,
   });
 
   int? id;
@@ -64,6 +66,8 @@ class User {
   String? avatar_original;
   String? phone;
   bool? emailVerified;
+  int? pickupPointId;
+  String? pickupPointName;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json["id"],
@@ -74,6 +78,8 @@ class User {
     avatar_original: json["avatar_original"],
     phone: json["phone"],
     emailVerified: json["email_verified"],
+    pickupPointId: json["pickup_point_id"],
+    pickupPointName: json["pickup_point_name"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -85,5 +91,7 @@ class User {
     "avatar_original": avatar_original,
     "phone": phone,
     "email_verified": emailVerified,
+    "pickup_point_id": pickupPointId,
+    "pickup_point_name": pickupPointName,
   };
 }

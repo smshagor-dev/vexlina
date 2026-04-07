@@ -913,7 +913,11 @@
                 @endif
 
                 <!-- Customers -->
-                @canany(['view_all_customers','view_classified_products','view_classified_packages'])
+                @php
+                    \Spatie\Permission\Models\Permission::findOrCreate('view_reels');
+                    \Spatie\Permission\Models\Permission::findOrCreate('delete_reels');
+                @endphp
+                @canany(['view_all_customers','view_classified_products','view_classified_packages','view_reels'])
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <div class="aiz-side-nav-icon">
@@ -958,6 +962,14 @@
                             <a href="{{ route('customer_packages.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['customer_packages.index', 'customer_packages.create', 'customer_packages.edit'])}}">
                                 <span class="aiz-side-nav-text">{{ translate('Classified Packages') }}</span>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('view_reels')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('admin.reels.index') }}"
+                                class="aiz-side-nav-link {{ areActiveRoutes(['admin.reels.index'])}}">
+                                <span class="aiz-side-nav-text">{{ translate('Reels') }}</span>
                             </a>
                         </li>
                         @endcan

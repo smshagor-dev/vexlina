@@ -68,6 +68,7 @@ use App\Http\Controllers\PickupController;
 use App\Http\Controllers\ShippingBoxSizeController;
 use App\Http\Controllers\ShippingSystemController;
 use App\Http\Controllers\Admin\AdminLottaryController;
+use App\Http\Controllers\AdminReelController;
 use App\Http\Controllers\Admin\UserLottaryController;
 use App\Http\Controllers\SteadfastKeyController;
 
@@ -283,6 +284,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin', 'prevent-ba
         Route::get('/customers/destroy/{id}', 'destroy')->name('customers.destroy');
         Route::post('/bulk-customer-delete', 'bulk_customer_delete')->name('bulk-customer-delete');
         Route::get('/unverified-customers', 'unverifiedCustomers')->name('customers.unverified.index');
+    });
+
+    Route::controller(AdminReelController::class)->group(function () {
+        Route::get('/reels', 'index')->name('admin.reels.index');
+        Route::get('/reels/destroy/{id}', 'destroy')->name('admin.reels.destroy');
     });
 
     // Newsletter
@@ -622,6 +628,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin', 'prevent-ba
     Route::controller(PickupPointController::class)->group(function () {
         Route::get('/pick_up_points/edit/{id}', 'edit')->name('pick_up_points.edit');
         Route::get('/pick_up_points/destroy/{id}', 'destroy')->name('pick_up_points.destroy');
+        Route::post('/pick_up_points/payout-requests/{id}/process', 'processPayoutRequest')->name('pick_up_points.payout_requests.process');
     });
 
     //conversation of seller customer

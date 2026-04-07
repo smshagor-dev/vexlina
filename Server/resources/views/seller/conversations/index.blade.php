@@ -14,6 +14,9 @@
         <ul class="list-group list-group-flush">
           @foreach ($conversations as $key => $conversation)
               @if ($conversation->receiver != null && $conversation->sender != null)
+                    @php
+                        $lastMessage = $conversation->messages->last();
+                    @endphp
                     <li class="list-group-item px-0">
                       <div class="row gutters-10">
                           <div class="col-auto">
@@ -36,7 +39,7 @@
                                   @endif
                                   <br>
                                   <span class="opacity-50">
-                                      {{ date('h:i:m d-m-Y', strtotime($conversation->messages->last()->created_at)) }}
+                                      {{ $lastMessage ? date('h:i:m d-m-Y', strtotime($lastMessage->created_at)) : translate('No messages yet') }}
                                   </span>
                               </p>
                           </div>
@@ -56,7 +59,7 @@
                                           </div>
                                       </div>
                                       <p class="mb-0 opacity-50">
-                                          {{ $conversation->messages->last()->message }}
+                                          {{ optional($lastMessage)->message ?? translate('No messages yet') }}
                                       </p>
                                   </div>
                               </div>

@@ -532,6 +532,13 @@ class CheckoutProvider extends ChangeNotifier {
     ShippingOption option, {
     int? pickupPointId,
   }) async {
+    if (option == ShippingOption.PickUpPoint &&
+        pickupPointId == null &&
+        _deliveryInfoList[sellerIndex].pickupPoints != null &&
+        _deliveryInfoList[sellerIndex].pickupPoints!.isNotEmpty) {
+      pickupPointId = _deliveryInfoList[sellerIndex].pickupPoints!.first.id;
+    }
+
     _sellerWiseShippingOption[sellerIndex].shippingOption = option;
     if (option == ShippingOption.PickUpPoint) {
       _sellerWiseShippingOption[sellerIndex].shippingId = pickupPointId;

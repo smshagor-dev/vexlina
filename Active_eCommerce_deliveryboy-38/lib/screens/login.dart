@@ -6,6 +6,7 @@ import 'package:active_flutter_delivery_app/custom/lang_text.dart';
 import 'package:active_flutter_delivery_app/custom/toast_component.dart';
 import 'package:active_flutter_delivery_app/helpers/auth_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/biometric_helper.dart';
+import 'package:active_flutter_delivery_app/helpers/portal_helper.dart';
 import 'package:active_flutter_delivery_app/helpers/shared_value_helper.dart';
 import 'package:active_flutter_delivery_app/my_theme.dart';
 import 'package:active_flutter_delivery_app/repositories/auth_repository.dart';
@@ -206,7 +207,7 @@ class _LoginState extends State<Login> {
     final email = _supportEmailController.text.trim();
     final phone = _supportPhoneController.text.trim();
     final message = _supportMessageController.text.trim();
-    const subject = "Delivery Boy Login Support";
+    final subject = "${PortalHelper.loginTitle} Login Support";
 
     if (name.isEmpty || email.isEmpty || message.isEmpty) {
       ToastComponent.showDialog(

@@ -38,6 +38,8 @@ class CartController extends Controller
                 'grand_total_value' => 0.00,
                 'coupon_code' => "",
                 'coupon_applied' => false,
+                'total_items' => 0,
+                'club_point' => 0,
             ]);
         }
 
@@ -45,11 +47,15 @@ class CartController extends Controller
         $subtotal = 0.00;
         $tax = 0.00;
         $gst = 0.00;
+        $totalClubPoint = 0;
         foreach ($items as $cartItem) {
             $product = Product::find($cartItem['product_id']);
             $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
             $tax += cart_product_tax($cartItem, $product, false) * $cartItem['quantity'];
             $gst += cart_product_gst($cartItem, $product, false);
+            if (addon_is_activated('club_point') && $product != null) {
+                $totalClubPoint += ((int) ($product->earn_point ?? 0)) * ((int) $cartItem['quantity']);
+            }
         }
 
         $shipping_cost = $items->sum('shipping_cost');
@@ -78,6 +84,8 @@ class CartController extends Controller
             'grand_total_value' => convert_price($sum_after_wallet_discount),
             'coupon_code' => $items[0]->coupon_code,
             'coupon_applied' => $items[0]->coupon_applied == 1,
+            'total_items' => $items->count(),
+            'club_point' => $totalClubPoint,
         ]);
     }
 

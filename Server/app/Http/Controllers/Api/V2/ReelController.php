@@ -106,6 +106,7 @@ class ReelController extends Controller
             'caption' => 'nullable|string|max:2000',
             'product_id' => 'nullable|integer|exists:products,id',
             'allow_comments' => 'nullable|boolean',
+            'duration_seconds' => 'nullable|integer|max:30',
             'video' => 'required|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm|max:51200',
             'thumbnail' => 'nullable|image|max:5120',
         ]);
@@ -145,6 +146,35 @@ class ReelController extends Controller
         return response()->json([
             'result' => true,
             'message' => 'Reel removed successfully.',
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = auth()->user();
+        $reel = ReelPost::with(['user', 'product', 'video', 'thumbnail'])
+            ->where('user_id', $user->id)
+            ->where('status', '!=', 'deleted')
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'caption' => 'nullable|string|max:2000',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'allow_comments' => 'nullable|boolean',
+        ]);
+
+        $reel->caption = $validated['caption'] ?? null;
+        $reel->product_id = $validated['product_id'] ?? null;
+        if (array_key_exists('allow_comments', $validated)) {
+            $reel->allow_comments = $request->boolean('allow_comments');
+        }
+        $reel->save();
+        $reel->load(['user', 'product', 'video', 'thumbnail']);
+
+        return response()->json([
+            'result' => true,
+            'message' => 'Reel updated successfully.',
+            'data' => $this->formatReel($reel, $user),
         ]);
     }
 
@@ -362,7 +392,11 @@ class ReelController extends Controller
                 'slug' => $product->slug,
                 'name' => $product->name,
                 'thumbnail_image' => uploaded_asset($product->thumbnail_img),
-                'price' => single_price($product->unit_price),
+                'price' => home_discounted_base_price($product),
+                'main_price' => home_discounted_base_price($product),
+                'stroked_price' => home_base_price($product),
+                'has_discount' => home_base_price($product, false) != home_discounted_base_price($product, false),
+                'discount' => "-" . discount_in_percentage($product) . "%",
                 'link' => route('product', $product->slug),
             ] : null,
             'link' => route('reels.show', $reel->id),

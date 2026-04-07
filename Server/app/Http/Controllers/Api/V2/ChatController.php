@@ -18,7 +18,13 @@ class ChatController extends Controller
 
     public function conversations()
     {
-        $conversations = Conversation::where('sender_id', auth()->user()->id)->latest('id')->paginate(10);
+        $conversations = Conversation::with(['sender.shop', 'receiver.shop'])
+            ->where(function ($query) {
+                $query->where('sender_id', auth()->id())
+                    ->orWhere('receiver_id', auth()->id());
+            })
+            ->latest('updated_at')
+            ->paginate(10);
         return new ConversationCollection($conversations);
     }
 

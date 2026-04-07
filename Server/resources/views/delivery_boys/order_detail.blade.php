@@ -42,6 +42,12 @@
                             <td class="w-50 fw-600">{{ translate('Shipping address')}}:</td>
                             <td>{{ json_decode($order->shipping_address)->address }}, {{ json_decode($order->shipping_address)->city }}, {{ json_decode($order->shipping_address)->postal_code }}, {{ json_decode($order->shipping_address)->country }}</td>
                         </tr>
+                        @if ($order->user?->phone)
+                            <tr>
+                                <td class="w-50 fw-600">{{ translate('Customer phone')}}:</td>
+                                <td>{{ $order->user->phone }}</td>
+                            </tr>
+                        @endif
                     </table>
                 </div>
                 <div class="col-lg-6">
@@ -207,6 +213,27 @@
                     </div>
                 </div>
             @endif
+
+            <div class="card mt-4 shadow-none rounded-0 border">
+                <div class="card-header border-bottom-0">
+                    <b class="fs-16 fw-700 text-dark">{{ translate('Customer Contact') }}</b>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted fs-13 mb-3">
+                        {{ translate('Message or call the customer for delivery updates.') }}
+                    </p>
+                    <a href="{{ route('delivery-boy.conversations.order', encrypt($order->id)) }}"
+                       class="btn btn-primary btn-block rounded-0 mb-2">
+                        <i class="las la-comment-dots mr-1"></i>{{ translate('Message Customer') }}
+                    </a>
+                    @if ($order->user?->phone)
+                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $order->user->phone) }}"
+                           class="btn btn-soft-primary btn-block rounded-0">
+                            <i class="las la-phone mr-1"></i>{{ translate('Call Customer') }}
+                        </a>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 @endsection

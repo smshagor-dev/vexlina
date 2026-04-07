@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'package:active_ecommerce_cms_demo_app/custom/btn.dart';
 import 'package:active_ecommerce_cms_demo_app/helpers/shared_value_helper.dart';
+import 'package:active_ecommerce_cms_demo_app/presenter/unRead_notification_counter.dart';
 import 'package:active_ecommerce_cms_demo_app/repositories/profile_repository.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/auth/login.dart';
+import 'package:active_ecommerce_cms_demo_app/screens/notification/notification_list.dart';
 import 'package:active_ecommerce_cms_demo_app/screens/orders/order_details.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:one_context/one_context.dart';
+import 'package:provider/provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -35,8 +38,13 @@ class PushNotificationService {
         ?.createNotificationChannel(channel);
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    const DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings();
     const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsDarwin,
+        );
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
@@ -56,36 +64,63 @@ class PushNotificationService {
     }
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
+      _refreshUnreadNotificationCount();
       _handleMessageNavigation(initialMessage.data);
     }
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _showLocalNotification(message);
+      _refreshUnreadNotificationCount();
     });
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _refreshUnreadNotificationCount();
       _handleMessageNavigation(message.data);
     });
   }
 
   void _showLocalNotification(RemoteMessage message) {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
+    final RemoteNotification? notification = message.notification;
+    final Map<String, dynamic> payloadData = Map<String, dynamic>.from(
+      message.data,
+    );
 
-    if (notification != null && android != null) {
-      flutterLocalNotificationsPlugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            channelDescription: channel.description,
-            icon: android.smallIcon,
-          ),
-        ),
-        payload: jsonEncode(message.data),
-      );
+    final String? title =
+        notification?.title ??
+        payloadData['title']?.toString() ??
+        payloadData['item_type']?.toString().replaceAll('_', ' ');
+    final String? body =
+        notification?.body ??
+        payloadData['body']?.toString() ??
+        payloadData['text']?.toString();
+
+    if ((title == null || title.isEmpty) && (body == null || body.isEmpty)) {
+      return;
     }
+
+    if (title != null && !payloadData.containsKey('title')) {
+      payloadData['title'] = title;
+    }
+
+    if (body != null && !payloadData.containsKey('body')) {
+      payloadData['body'] = body;
+    }
+
+    flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: message.notification?.android?.smallIcon ?? '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      payload: jsonEncode(payloadData),
+    );
   }
 
   void _handleMessageNavigation(Map<String, dynamic> data) {
@@ -111,7 +146,32 @@ class PushNotificationService {
           print('print:$e');
         }
       }
+      return;
     }
+
+    try {
+      OneContext().push(
+        MaterialPageRoute(builder: (_) => const NotificationList()),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('print:$e');
+      }
+    }
+  }
+
+  void _refreshUnreadNotificationCount() {
+    try {
+      final context = OneContext().context;
+      if (context == null) {
+        return;
+      }
+
+      Provider.of<UnReadNotificationCounter>(
+        context,
+        listen: false,
+      ).getCount();
+    } catch (_) {}
   }
 
   void _showLoginDialog() {

@@ -172,6 +172,7 @@ class AuthController extends Controller
 
         $delivery_boy_condition = $request->has('user_type') && $request->user_type == 'delivery_boy';
         $seller_condition = $request->has('user_type') && $request->user_type == 'seller';
+        $pickup_point_condition = $request->has('user_type') && $request->user_type == 'pickup_point';
         $req_email = $request->email;
 
         $userQuery = function ($query) use ($req_email) {
@@ -181,6 +182,11 @@ class AuthController extends Controller
 
         if ($delivery_boy_condition) {
             $user = User::whereIn('user_type', ['delivery_boy'])
+                ->where($userQuery)
+                ->first();
+        } elseif ($pickup_point_condition) {
+            $user = User::where('user_type', 'staff')
+                ->whereHas('staff.pick_up_point')
                 ->where($userQuery)
                 ->first();
         } elseif ($seller_condition) {
@@ -203,7 +209,8 @@ class AuthController extends Controller
                         return response()->json(['result' => false, 'message' => translate('Your seller account is under review. We will notify you once approved.'), 'user' => null], 401);
                     }else{
                         $tempUserId = $request->has('temp_user_id') ? $request->temp_user_id : null;
-                        return $this->loginSuccess($user,'', $tempUserId);
+                        $responseUserType = $pickup_point_condition ? 'pickup_point' : null;
+                        return $this->loginSuccess($user,'', $tempUserId, $responseUserType);
                     }
 
                 } else {
@@ -401,9 +408,12 @@ class AuthController extends Controller
         return $this->loginSuccess($user);
     }
 
-    public function loginSuccess($user, $token = null, $tempUserId = null)
+    public function loginSuccess($user, $token = null, $tempUserId = null, $responseUserType = null)
     {
         $walletCardDetails = $user->ensureWalletCardDetails();
+        $pickupPoint = optional(optional($user->staff)->pick_up_point);
+        $resolvedUserType = $this->resolveApiUserType($user, $responseUserType, $pickupPoint);
+        $pickupPoint = $resolvedUserType === 'pickup_point' ? $pickupPoint : null;
 
         if (!$token) {
             $token = $user->createToken('API Token')->plainTextToken;
@@ -433,12 +443,14 @@ class AuthController extends Controller
             'expires_at' => null,
             'user' => [
                 'id' => $user->id,
-                'type' => $user->user_type,
+                'type' => $resolvedUserType,
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar,
                 'avatar_original' => uploaded_asset($user->avatar_original),
                 'phone' => $user->phone,
+                'pickup_point_id' => $pickupPoint?->id,
+                'pickup_point_name' => $pickupPoint?->getTranslation('name'),
                 'wallet_card_number' => $walletCardDetails['number'],
                 'wallet_card_expiry_month' => $walletCardDetails['expiry_month'],
                 'wallet_card_expiry_year' => $walletCardDetails['expiry_year'],
@@ -446,6 +458,21 @@ class AuthController extends Controller
                 'email_verified' => $user->email_verified_at != null
             ]
         ]);
+    }
+
+    protected function resolveApiUserType($user, $responseUserType = null, $pickupPoint = null)
+    {
+        if (!empty($responseUserType)) {
+            return $responseUserType;
+        }
+
+        $pickupPoint = $pickupPoint ?: optional(optional($user->staff)->pick_up_point);
+
+        if ($user->user_type === 'staff' && optional($pickupPoint)->id) {
+            return 'pickup_point';
+        }
+
+        return $user->user_type;
     }
 
     public function deliverySupportMessage(Request $request)
@@ -456,6 +483,11 @@ class AuthController extends Controller
     public function sellerSupportMessage(Request $request)
     {
         return $this->handleSupportMessage($request, 'Seller App Login Support', 'Seller support message failed');
+    }
+
+    public function pickupPointSupportMessage(Request $request)
+    {
+        return $this->handleSupportMessage($request, 'Pickup Point App Login Support', 'Pickup point support message failed');
     }
 
     protected function handleSupportMessage(Request $request, string $source, string $logContext)

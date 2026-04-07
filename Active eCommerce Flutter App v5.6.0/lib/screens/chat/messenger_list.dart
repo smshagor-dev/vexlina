@@ -23,6 +23,7 @@ class _MessengerListState extends State<MessengerList> {
   int _page = 1;
   int? _totalData = 0;
   bool _showLoadingContainer = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -43,14 +44,26 @@ class _MessengerListState extends State<MessengerList> {
   }
 
   fetchData() async {
-    var conversatonResponse = await ChatRepository().getConversationResponse(
-      page: _page,
-    );
-    _list.addAll(conversatonResponse.conversationItemList);
-    _isInitial = false;
-    _totalData = conversatonResponse.meta.total;
-    _showLoadingContainer = false;
-    setState(() {});
+    try {
+      var conversatonResponse = await ChatRepository().getConversationResponse(
+        page: _page,
+      );
+      _list.addAll(conversatonResponse.conversationItemList ?? []);
+      _isInitial = false;
+      _totalData = conversatonResponse.meta?.total ?? _list.length;
+      _showLoadingContainer = false;
+      _errorMessage = null;
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      _isInitial = false;
+      _showLoadingContainer = false;
+      _errorMessage = AppLocalizations.of(context)!.no_data_is_available;
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   reset() {
@@ -59,6 +72,7 @@ class _MessengerListState extends State<MessengerList> {
     _totalData = 0;
     _page = 1;
     _showLoadingContainer = false;
+    _errorMessage = null;
     setState(() {});
   }
 
@@ -179,7 +193,9 @@ class _MessengerListState extends State<MessengerList> {
         ),
       );
     } else if (_totalData == 0) {
-      return Center(child: Text(LangText(context).local.no_data_is_available));
+      return Center(
+        child: Text(_errorMessage ?? LangText(context).local.no_data_is_available),
+      );
     } else {
       return Container();
     }

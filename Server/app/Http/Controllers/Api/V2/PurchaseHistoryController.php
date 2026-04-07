@@ -36,7 +36,10 @@ class PurchaseHistoryController extends Controller
 
     public function details($id)
     {
-        $order_detail = Order::where('id', $id)->where('user_id', auth()->user()->id)->get();
+        $order_detail = Order::with(['delivery_boy'])
+            ->where('id', $id)
+            ->where('user_id', auth()->user()->id)
+            ->get();
         // $order_query = auth()->user()->orders->where('id', $id);
 
         // return new PurchaseHistoryCollection($order_query->get());

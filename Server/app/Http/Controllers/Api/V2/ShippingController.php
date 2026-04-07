@@ -130,11 +130,8 @@ class ShippingController extends Controller
                 $shop['owner_id'] = (int) $owner_id;
                 $shop['cart_items'] = $shop_items_data;
                 $shop['carriers'] = seller_base_carrier_list($owner_id, $userId, $tempUserId, $shipping_info);
-                $shop['pickup_points'] = [];
-                if (get_setting('pickup_point') == 1) {
-                    $pickup_point_list = PickupPoint::where('pick_up_status', 1)->get();
-                    $shop['pickup_points'] = PickupPointResource::collection($pickup_point_list);
-                }
+                $pickup_point_list = PickupPoint::where('pick_up_status', 1)->get();
+                $shop['pickup_points'] = PickupPointResource::collection($pickup_point_list);
                 $shops[] = $shop;
             }
         }

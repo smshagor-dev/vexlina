@@ -7,6 +7,22 @@ use App\Models\User;
 
 class OrderDeliveryVerificationService
 {
+    public function buildPickupQrPayload(Order $order): string
+    {
+        return json_encode([
+            'type' => 'pickup_handover',
+            'order_id' => (int) $order->id,
+            'order_code' => (string) $order->code,
+            'shipping_type' => (string) $order->shipping_type,
+        ]);
+    }
+
+    public function buildPickupQrImageUrl(Order $order): string
+    {
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='
+            . urlencode($this->buildPickupQrPayload($order));
+    }
+
     public function verify(Order $order, ?string $verificationCode, User $actor, string $source = 'web'): array
     {
         if (!$this->canVerify($order, $actor)) {
@@ -34,7 +50,9 @@ class OrderDeliveryVerificationService
             ];
         }
 
-        if (!hash_equals((string) $order->code, $normalizedCode)) {
+        $resolvedOrderCode = $this->extractOrderCodeFromPayload($normalizedCode);
+
+        if (!hash_equals((string) $order->code, $resolvedOrderCode)) {
             return [
                 'success' => false,
                 'message' => translate('Invalid verification code.'),
@@ -93,5 +111,27 @@ class OrderDeliveryVerificationService
         }
 
         return in_array($actor->user_type, ['admin', 'staff'], true);
+    }
+
+    public function extractOrderCodeFromPayload(?string $verificationCode): string
+    {
+        $normalizedCode = trim((string) $verificationCode);
+
+        if ($normalizedCode === '') {
+            return '';
+        }
+
+        if (str_starts_with($normalizedCode, 'VEXLINA-PICKUP::')) {
+            return trim(substr($normalizedCode, strlen('VEXLINA-PICKUP::')));
+        }
+
+        if (str_starts_with($normalizedCode, '{') && str_ends_with($normalizedCode, '}')) {
+            $decoded = json_decode($normalizedCode, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return trim((string) ($decoded['order_code'] ?? $decoded['code'] ?? ''));
+            }
+        }
+
+        return $normalizedCode;
     }
 }

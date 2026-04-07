@@ -1,0 +1,32 @@
+[2026-04-03 18:03:04] local.ERROR: SQLSTATE[HY000] [1045] Access denied for user 'vexlyrpd_main'@'localhost' (using password: YES) (Connection: mysql, SQL: select `reel_posts`.`id`, `reel_posts`.`caption`, `uploads`.`extension`, `uploads`.`file_name` from `reel_posts` left join `uploads` on `uploads`.`id` = `reel_posts`.`video_upload_id` order by `reel_posts`.`id` desc limit 10) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 1045): SQLSTATE[HY000] [1045] Access denied for user 'vexlyrpd_main'@'localhost' (using password: YES) (Connection: mysql, SQL: select `reel_posts`.`id`, `reel_posts`.`caption`, `uploads`.`extension`, `uploads`.`file_name` from `reel_posts` left join `uploads` on `uploads`.`id` = `reel_posts`.`video_upload_id` order by `reel_posts`.`id` desc limit 10) at D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:829)
+[stacktrace]
+#0 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(783): Illuminate\\Database\\Connection->runQueryCallback('select `reel_po...', Array, Object(Closure))
+#1 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(414): Illuminate\\Database\\Connection->run('select `reel_po...', Array, Object(Closure))
+#2 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2913): Illuminate\\Database\\Connection->select('select `reel_po...', Array, true)
+#3 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2902): Illuminate\\Database\\Query\\Builder->runSelect()
+#4 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(3456): Illuminate\\Database\\Query\\Builder->Illuminate\\Database\\Query\\{closure}()
+#5 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2901): Illuminate\\Database\\Query\\Builder->onceWithColumns(Array, Object(Closure))
+#6 Standard input code(11): Illuminate\\Database\\Query\\Builder->get()
+#7 {main}
+
+[previous exception] [object] (PDOException(code: 1045): SQLSTATE[HY000] [1045] Access denied for user 'vexlyrpd_main'@'localhost' (using password: YES) at D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connectors\\Connector.php:65)
+[stacktrace]
+#0 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connectors\\Connector.php(65): PDO->__construct('mysql:host=loca...', 'vexlyrpd_main', Object(SensitiveParameterValue), Array)
+#1 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connectors\\Connector.php(44): Illuminate\\Database\\Connectors\\Connector->createPdoConnection('mysql:host=loca...', 'vexlyrpd_main', 'SmShagor1@1', Array)
+#2 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connectors\\MySqlConnector.php(24): Illuminate\\Database\\Connectors\\Connector->createConnection('mysql:host=loca...', Array, Array)
+#3 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connectors\\ConnectionFactory.php(184): Illuminate\\Database\\Connectors\\MySqlConnector->connect(Array)
+#4 [internal function]: Illuminate\\Database\\Connectors\\ConnectionFactory->Illuminate\\Database\\Connectors\\{closure}()
+#5 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(1339): call_user_func(Object(Closure))
+#6 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(1375): Illuminate\\Database\\Connection->getPdo()
+#7 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(528): Illuminate\\Database\\Connection->getReadPdo()
+#8 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(423): Illuminate\\Database\\Connection->getPdoForSelect(true)
+#9 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(816): Illuminate\\Database\\Connection->Illuminate\\Database\\{closure}('select `reel_po...', Array)
+#10 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(783): Illuminate\\Database\\Connection->runQueryCallback('select `reel_po...', Array, Object(Closure))
+#11 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(414): Illuminate\\Database\\Connection->run('select `reel_po...', Array, Object(Closure))
+#12 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2913): Illuminate\\Database\\Connection->select('select `reel_po...', Array, true)
+#13 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2902): Illuminate\\Database\\Query\\Builder->runSelect()
+#14 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(3456): Illuminate\\Database\\Query\\Builder->Illuminate\\Database\\Query\\{closure}()
+#15 D:\\project\\Vexlina\\Server\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(2901): Illuminate\\Database\\Query\\Builder->onceWithColumns(Array, Object(Closure))
+#16 Standard input code(11): Illuminate\\Database\\Query\\Builder->get()
+#17 {main}
+"} 
